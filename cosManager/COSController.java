@@ -11,68 +11,46 @@ import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 public class COSController
 {
     public static void main(String[] args) throws Exception
     {
-        ServerSocketChannel listenerChannel = ServerSocketChannel.open();
-        ServerSocket listener = listenerChannel.socket();
-        listener.bind( new InetSocketAddress(9999));
-        //listenerChannel.configureBlocking(false);
+        ServerSocket listener = new ServerSocket(9999, 25);
+        listener.setSoTimeout(5000);
+        LinkedList<Socket> sockets = new LinkedList<Socket>();
+        BufferedReader in = null;
 
-        Selector selector = Selector.open();
-        if( listenerChannel.validOps() != SelectionKey.OP_ACCEPT)
-        {
-            System.out.println("Something is wrong.");
-            return;
-        }
-        listenerChannel.register(selector, listenerChannel.validOps());
-        System.out.println("Preparing to listen!");
+        System.out.println( "Beginning to listen" );
         while(true)
         {
-            //System.out.println("I want messages!");
-            Iterator<SelectionKey> it =  selector.selectedKeys().iterator(); 
-
-            System.out.println( Integer.toString( selector.select() ));
-
-            while(it.hasNext())
+            Socket newsock = null;
+            try
             {
-                //System.out.println("I have messages!");
-                SelectionKey selkey = it.next();
-                it.remove();
+                newsock = listener.accept();
+            }
+            catch(Exception e)
+            {
+                //Don't worry
+            }
+            if( newsock != null)
+            {
+                newsock.setSoTimeout(5000);
+                sockets.add(newsock);
+            }
 
-                if( !selkey.isValid())
+            for( Socket sock : sockets )
+            {
+                in = new BufferedReader( new InputStreamReader( sock.getInputStream()));
+                String message = null;
+                try
                 {
-                    System.out.println("Key isn't valid");
-                    continue;
+                    message = in.readLine();
+                    System.out.println(message); 
                 }
-
-                if( selkey.isAcceptable() )
+                catch(Exception e)
                 {
-                    System.out.println("Incoming connection");
-                    Socket newsock = listener.accept();
-                    SocketChannel newsockc = newsock.getChannel();
-                    //newsockc.configureBlocking(false);
-                    newsockc.register(selector, SelectionKey.OP_READ);
-                }
-                else if( selkey.isReadable() )
-                {
-                    System.out.println("Reading from connection");
-                    SocketChannel sc =(SocketChannel) selkey.channel();
-                    BufferedReader in = new BufferedReader( new InputStreamReader(
-                                                            sc.socket().getInputStream()));
-                    //ByteBuffer alpha = ByteBuffer.allocateDirect(1024);
-                    //sc.read(alpha);
-                    //Charset charset = Charset.defaultCharset();
-                    //CharsetDecoder decoder = charset.newDecoder();
-                    //String message = decoder.decode(alpha).toString();
-                    String message = in.readLine();
-                    System.out.println(message);
-                }
-                else
-                {
-                    System.out.println("Other");
                 }
             }
         }
