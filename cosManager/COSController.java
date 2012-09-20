@@ -1,3 +1,5 @@
+package cosManager;
+
 import java.io.*;
 import java.lang.System;
 import java.net.InetSocketAddress;
@@ -18,7 +20,7 @@ public class COSController
     public static void main(String[] args) throws Exception
     {
         ServerSocket listener = new ServerSocket(9999, 25);
-        listener.setSoTimeout(5000);
+        listener.setSoTimeout(500);
         LinkedList<Socket> sockets = new LinkedList<Socket>();
         BufferedReader in = null;
 
@@ -36,17 +38,21 @@ public class COSController
             }
             if( newsock != null)
             {
-                newsock.setSoTimeout(5000);
+                newsock.setSoTimeout(500);
                 sockets.add(newsock);
             }
 
             for( Socket sock : sockets )
             {
                 in = new BufferedReader( new InputStreamReader( sock.getInputStream()));
+                if( sock.isClosed() )
+                    continue;
                 String message = null;
                 try
                 {
                     message = in.readLine();
+                    if( message == null)
+                        continue;
                     System.out.println(message); 
                 }
                 catch(Exception e)

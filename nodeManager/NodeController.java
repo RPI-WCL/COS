@@ -1,3 +1,5 @@
+package nodeManager;
+
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.lang.Thread;
@@ -17,5 +19,6 @@ public class NodeController
             Thread.sleep(500);
         }
         out.flush();
+        Thread.sleep(100000);
     }
 }
