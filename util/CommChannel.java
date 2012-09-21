@@ -1,6 +1,7 @@
 package util;
 
 import java.io.*;
+import java.net.*;
 
 public class CommChannel
 {
@@ -11,9 +12,21 @@ public class CommChannel
     CommChannel( Socket sock )
     {
         m_sock = sock;
-        m_sock.setSoTimeout(50); //50 miliseconds
-        in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-        out = new PrintWriter(sock.getOutputStream(), true);
+        try
+        {
+            m_sock.setSoTimeout(50); //50 miliseconds
+            in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            out = new PrintWriter(sock.getOutputStream(), true);
+        }
+        catch(SocketException s)
+        {
+            //TODO handle it.
+        }
+        catch(IOException io)
+        {
+            //TODO handle it.
+        }
+        
     }
 
     void write( String message )
@@ -28,10 +41,12 @@ public class CommChannel
         String message = null;
         try
         {
-            message = in.readline();
+            message = in.readLine();
+            return message;
         }
-        catch()
+        catch(IOException e)
         {
+           return null; 
         }
     }
 }
