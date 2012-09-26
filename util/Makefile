@@ -6,6 +6,7 @@ JC = javac
 
 CLASSES = \
         CommChannel.java \
+		Lambda.java \
 
 default: classes
 
