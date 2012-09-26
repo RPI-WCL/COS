@@ -15,14 +15,16 @@ import java.nio.charset.CharsetDecoder;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import util.CommChannel;
+
 public class COSController
 {
     public static void main(String[] args) throws Exception
     {
         ServerSocket listener = new ServerSocket(9999, 25);
-        listener.setSoTimeout(500);
-        LinkedList<Socket> sockets = new LinkedList<Socket>();
-        BufferedReader in = null;
+        listener.setSoTimeout(50);
+        //LinkedList<Socket> sockets = new LinkedList<Socket>();
+        LinkedList<CommChannel> sockets = new LinkedList<CommChannel>();
 
         System.out.println( "Beginning to listen" );
         while(true)
@@ -38,25 +40,19 @@ public class COSController
             }
             if( newsock != null)
             {
-                newsock.setSoTimeout(500);
-                sockets.add(newsock);
+//                newsock.setSoTimeout(50);
+//                sockets.add(newsock);
+                sockets.add( new CommChannel(newsock));
             }
 
-            for( Socket sock : sockets )
+            for( CommChannel sock : sockets )
             {
-                in = new BufferedReader( new InputStreamReader( sock.getInputStream()));
                 if( sock.isClosed() )
                     continue;
-                String message = null;
-                try
+                String message = sock.read();
+                if( message != null)
                 {
-                    message = in.readLine();
-                    if( message == null)
-                        continue;
-                    System.out.println(message); 
-                }
-                catch(Exception e)
-                {
+                    System.out.println(message);
                 }
             }
         }

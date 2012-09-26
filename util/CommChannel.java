@@ -9,7 +9,7 @@ public class CommChannel
     BufferedReader in;
     PrintWriter out;
 
-    CommChannel( Socket sock )
+    public CommChannel( Socket sock )
     {
         m_sock = sock;
         try
@@ -29,12 +29,12 @@ public class CommChannel
         
     }
 
-    void write( String message )
+    public void write( String message )
     {
         out.println(message);
     }
 
-    String read()
+    public String read()
     {
         if( m_sock.isClosed() )
             return null;
@@ -48,5 +48,10 @@ public class CommChannel
         {
            return null; 
         }
+    }
+
+    public boolean isClosed()
+    {
+        return m_sock.isClosed();
     }
 }
