@@ -5,9 +5,7 @@ JC = javac
 	$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-        CommChannel.java \
-        Messages.java \
-		Lambda.java \
+        Controller.java \
 
 default: classes
 
