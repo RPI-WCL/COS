@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.net.*;
 
-
 public class Messages
 {
     private static String get_host_address_string()
@@ -22,48 +21,54 @@ public class Messages
         return host.getHostAddress();
     }
 
-    public static String create_vm_request()
+    private static boolean add_sender(StringBuilder builder )
+    {
+        String return_addr = get_host_address_string();
+        if( return_addr == null ) return false;
+        addStringAndSpace(builder, return_addr);
+        return true;
+    }
+
+    private static void addStringAndSpace(StringBuilder builder, String msg)
+    {
+        builder.append(msg);
+        builder.append(" ");
+    }
+
+    public static String create_vm_request(String vmCfgFile, Iterable<String> peerTheaters)
     {
         StringBuilder msg = new StringBuilder("create_vm_request ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        addStringAndSpace(msg, vmCfgFile);
+        for( String s: peerTheaters )
+            addStringAndSpace(msg, s);
+        return msg.toString().trim();
     }
 
-    public static String create_vm_response()
+    public static String create_vm_response(String result, String address)
     {
         StringBuilder msg = new StringBuilder("create_vm_response ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        addStringAndSpace(msg, result);
+        if( address != null) addStringAndSpace(msg, address);
+        return msg.toString().trim();
     }
 
-    public static String destroy_vm_request()
+    public static String destroy_vm_request(String vmName)
     {
         StringBuilder msg = new StringBuilder("destroy_vm_request ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        addStringAndSpace(msg, vmName);
+        return msg.toString().trim();
     }
 
-    public static String destroy_vm_response()
+    public static String destroy_vm_response(String result, String vmName)
     {
         StringBuilder msg = new StringBuilder("destroy_vm_response ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        addStringAndSpace(msg, result);
+        addStringAndSpace(msg, vmName);
+        return msg.toString().trim();
     }
 
     public static List<String> get_params(String msg)
@@ -101,56 +106,43 @@ public class Messages
     public static String notify_high_cpu_usage(double load)
     {
         StringBuilder msg = new StringBuilder("notify_high_cpu_usage ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
+        if(!add_sender(msg)) return null;
         msg.append(Double.toString(load));
-        return msg.toString();
+        return msg.toString().trim();
     }
 
-    public static String notify_low_cpu_usage()
+    public static String notify_low_cpu_usage(double load)
     {
         StringBuilder msg = new StringBuilder("notify_low_cpu_usage ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        msg.append(Double.toString(load));
+        return msg.toString().trim();
     }
 
-    public static String notify_vm_started()
+    public static String notify_vm_started(String vmMonAddr, String theater)
     {
         StringBuilder msg = new StringBuilder("notify_vm_started ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        addStringAndSpace(msg, vmMonAddr);
+        addStringAndSpace(msg, theater);
+        return msg.toString().trim();
     }
 
-    public static String shutdown_theater_request()
+    public static String shutdown_theater_request(String vmMonAddr, String theater)
     {
         StringBuilder msg = new StringBuilder("shutdown_theater_request ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        addStringAndSpace(msg, vmMonAddr);
+        addStringAndSpace(msg, theater);
+        return msg.toString().trim();
     }
 
-    public static String shutdown_theater_response()
+    public static String shutdown_theater_response(String result, String vmMonAddr)
     {
         StringBuilder msg = new StringBuilder("shutdown_theater_response ");
-        String return_addr = get_host_address_string();
-        if( return_addr == null )
-            return null;
-        msg.append(return_addr);
-        msg.append(" ");
-        return msg.toString();
+        if(!add_sender(msg)) return null;
+        addStringAndSpace(msg, result);
+        addStringAndSpace(msg, vmMonAddr);
+        return msg.toString().trim();
     }
 }
