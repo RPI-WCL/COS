@@ -62,12 +62,12 @@ public class Messages
         return msg.toString().trim();
     }
 
-    public static String destroy_vm_response(String result, String vmName)
+    public static String destroy_vm_response(String result, String vmAddr)
     {
         StringBuilder msg = new StringBuilder("destroy_vm_response ");
         if(!add_sender(msg)) return null;
         addStringAndSpace(msg, result);
-        addStringAndSpace(msg, vmName);
+        addStringAndSpace(msg, vmAddr);
         return msg.toString().trim();
     }
 
@@ -133,6 +133,13 @@ public class Messages
         if(!add_sender(msg)) return null;
         addStringAndSpace(msg, vmMonAddr);
         addStringAndSpace(msg, theater);
+        return msg.toString().trim();
+    }
+
+    public static String shutdown_request()
+    {
+        StringBuilder msg = new StringBuilder("shutdown_request ");
+        if(!add_sender(msg)) return null;
         return msg.toString().trim();
     }
 

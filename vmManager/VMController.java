@@ -1,5 +1,7 @@
 package vmManager;
 
+import java.io.*;
+import java.util.*;
 import java.net.Socket;
 import java.lang.Thread;
 
@@ -20,6 +22,25 @@ public class VMController
 
     public void handleMsg(String msg)
     {
+        switch(Messages.get_request_type(msg))
+        {
+            case "shutdown_theater_request":
+
+                //Runtime.getRuntime().exec("ls");
+                break;
+            case "create_theater_request":
+                break;
+            case "shutdown_request":
+                try
+                {
+                    Runtime.getRuntime().exec("shutdown -h now");
+                }
+                catch(IOException e)
+                {
+                    //Report out to Node Controller. Tell it to destroy me.
+                }
+                break;
+        }
     }
 
     public void run()
