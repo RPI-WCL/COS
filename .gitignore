@@ -1,4 +1,6 @@
-#Compiled Soruces#
-##################
 *.class
 
+# Package Files #
+*.jar
+*.war
+*.ear
