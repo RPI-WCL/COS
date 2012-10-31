@@ -119,6 +119,14 @@ public class Messages
         return msg.toString().trim();
     }
 
+    public static String notify_cpu_usage(double load)
+    {
+        StringBuilder msg = new StringBuilder("notify_cpu_usage ");
+        if(!add_sender(msg)) return null;
+        msg.append(Double.toString(load));
+        return msg.toString().trim();
+    }
+
     public static String notify_vm_started(String vmMonAddr, String theater)
     {
         StringBuilder msg = new StringBuilder("notify_vm_started ");

@@ -18,19 +18,43 @@ public class VMController
         lambda = Lambda.getInstance();
     }
 
+    public void handleMsg(String msg)
+    {
+    }
+
     public void run()
     {
-        for( int i = 0; i < 25; i++)
+        double load;
+        String msg;
+        while(true)
         {
-            double load = lambda.getWeightedSystemLoadAverage(); 
-            String msg = Messages.notify_high_cpu_usage(load);
-            hostNode.write(msg);
+            msg = hostNode.read();
+            //We just got a letter!
+            if(msg != null)
+            {
+                handleMsg(msg);
+            }
+
+            load = lambda.getWeightedSystemLoadAverage();
+            if( load < .1 )
+            {
+                msg = Messages.notify_low_cpu_usage(load);
+                hostNode.write(msg);
+
+            }
+            else if( load > .9 )
+            {
+                msg = Messages.notify_high_cpu_usage(load);
+                hostNode.write(msg);
+            }
+
             try
             {
                 Thread.sleep( 3000 );
             }
             catch(Exception e)
             {
+                //Who cares if we get interrupted?
             }
         }
     }

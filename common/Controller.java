@@ -1,6 +1,7 @@
 package common;
 
 import java.io.*;
+import java.lang.Thread;
 import java.net.*;
 import java.util.LinkedList;
 
@@ -11,6 +12,7 @@ public abstract class Controller
     private ServerSocket listener;
     private LinkedList<CommChannel> sockets;
     abstract public void handleMessage(String message, CommChannel sock);
+    abstract public void periodic();
 
     public Controller(int port) 
     {
@@ -57,6 +59,15 @@ public abstract class Controller
                 {
                     handleMessage(message, sock);
                 }
+            }
+            periodic();
+            try
+            {
+                Thread.sleep(3000);
+            }
+            catch(Exception e)
+            {
+                //Don't care if we get interrupted from sleeping
             }
         }
     }

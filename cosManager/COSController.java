@@ -17,6 +17,10 @@ public class COSController extends Controller
         super(9999);
     }
 
+    public void periodic()
+    {
+    }
+
     public void handleMessage( String message, CommChannel sock)
     {
         System.out.println(message);
