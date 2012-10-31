@@ -25,10 +25,12 @@ public abstract class Controller
         catch( SocketException s)
         {
             //Should log this.
+            //
         }
         catch( IOException e )
         {
             //Should log this.
+            //
         }
     }
 
@@ -63,6 +65,7 @@ public abstract class Controller
             periodic();
             try
             {
+                //Avoid busy polling.
                 Thread.sleep(3000);
             }
             catch(Exception e)

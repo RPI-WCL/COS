@@ -46,6 +46,7 @@ public class NodeController extends Controller
                 }
                 catch( IOException e)
                 {
+                    //Should send failure message.
                 }
                 break;
             default:
