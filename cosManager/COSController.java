@@ -17,13 +17,17 @@ public class COSController extends Controller
 
     HashMap<String, ConStat> vmList;
     final int maxVm = 10;
-    final String vmCfgFile = "/etc/xen/cos/ubuntu.cfg";
+    final int minVm = 1;
+    final long timestep = 2 * 60;
+    final String vmCfgFile = "/etc/xen/cos/jcos01.cfg";
     final String theaterFile = "./theaters.txt";
+    long timeDelay;
 
     public COSController()
     {
         super(9999);
         vmList = new HashMap<String, ConStat>();
+        timeDelay = 0;
     }
 
     public void newHook(CommChannel newbie)
@@ -42,19 +46,23 @@ public class COSController extends Controller
     public void periodic()
     {
         double avg = ConStat.avg(vmList);
-        if( avg < .3 )
+        long next = System.currentTimeMillis();
+
+        if( avg < .3 && next - timeDelay < timestep && vmList.size() > minVm )
         {
             String key = ConStat.findMinVm(vmList);
             ConStat alpha = vmList.get(key);
             String msg = Messages.destroy_vm_request(key);
             alpha.getParent().write(msg);
+            timeDelay = System.currentTimeMillis();
         }
-        else if( avg > .9 )
+        else if( avg > .9 && next - timeDelay < timestep && vmList.size() < maxVm )
         {
             CommChannel node = ConStat.findMinNode(socketStats);
             //And empty iterable defaults to using "./theaters.txt"
             String msg = Messages.create_vm_request(vmCfgFile, new LinkedList<String>());
             node.write(msg);
+            timeDelay = System.currentTimeMillis();
         }
     }
 
@@ -64,11 +72,6 @@ public class COSController extends Controller
         String return_addr;
         List<String> params;
 
-//        if( !socketStats.containsKey(sock) )
-//        {
-//            ConStat newbie = new ConStat();
-//            socketStats.put(sock, newbie);
-//        }
         Lambda.debugPrint("COS Controller recvd message: " + message);
 
         switch(Messages.get_request_type(message))
