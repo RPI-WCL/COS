@@ -10,6 +10,7 @@ import common.Controller;
 import cosManager.ConStat;
 import util.CommChannel;
 import util.Messages;
+import util.Lambda;
 
 public class COSController extends Controller
 {
@@ -63,11 +64,12 @@ public class COSController extends Controller
         String return_addr;
         List<String> params;
 
-        if( !socketStats.containsKey(sock) )
-        {
-            ConStat newbie = new ConStat();
-            socketStats.put(sock, newbie);
-        }
+//        if( !socketStats.containsKey(sock) )
+//        {
+//            ConStat newbie = new ConStat();
+//            socketStats.put(sock, newbie);
+//        }
+        Lambda.debugPrint("COS Controller recvd message: " + message);
 
         switch(Messages.get_request_type(message))
         {

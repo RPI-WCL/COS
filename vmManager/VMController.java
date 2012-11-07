@@ -22,6 +22,7 @@ public class VMController
 
     public void handleMsg(String msg)
     {
+        Lambda.debugPrint("VM recvd message: " + msg);
         switch(Messages.get_request_type(msg))
         {
             case "shutdown_theater_request":

@@ -62,6 +62,8 @@ public class NodeController extends Controller
     public void handleMessage( String message, CommChannel sock)
     {
         String msg;
+
+        Lambda.debugPrint("Node Manager recvd message: " + message);
         switch(Messages.get_request_type(message))
         {
             case "notify_low_cpu_usage":
