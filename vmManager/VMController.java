@@ -13,17 +13,19 @@ public class VMController
 {
     CommChannel hostNode;
     Lambda lambda;
+    Messages msgHandler;
 
     public VMController(String addr, int port)
     {
         hostNode = new CommChannel(addr, port);
         lambda = Lambda.getInstance();
+        msgHandler = new Messages(hostNode);
     }
 
     public void handleMsg(String msg)
     {
         Lambda.debugPrint("VM recvd message: " + msg);
-        switch(Messages.get_request_type(msg))
+        switch(msgHandler.get_request_type(msg))
         {
             case "shutdown_theater_request":
 
@@ -60,13 +62,13 @@ public class VMController
             load = lambda.getWeightedSystemLoadAverage();
             if( load < .1 )
             {
-                msg = Messages.notify_low_cpu_usage(load);
+                msg = msgHandler.notify_low_cpu_usage(load);
                 hostNode.write(msg);
 
             }
             else if( load > .9 )
             {
-                msg = Messages.notify_high_cpu_usage(load);
+                msg = msgHandler.notify_high_cpu_usage(load);
                 hostNode.write(msg);
             }
 

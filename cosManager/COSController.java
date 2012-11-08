@@ -22,18 +22,23 @@ public class COSController extends Controller
     final String vmCfgFile = "/etc/xen/cos/jcos01.cfg";
     final String theaterFile = "./theaters.txt";
     long timeDelay;
+    Messages msgHandler;
 
     public COSController()
     {
         super(9999);
         vmList = new HashMap<String, ConStat>();
         timeDelay = 0;
+        msgHandler = null;
     }
 
     public void newHook(CommChannel newbie)
     {
-       ConStat constat = new ConStat();
-       socketStats.put(newbie, constat);
+        ConStat constat = new ConStat();
+        socketStats.put(newbie, constat);
+        if( msgHandler == null )
+            msgHandler = new Messages(newbie);
+       
     }
 
     public void droppedHook(CommChannel dropped)
@@ -52,7 +57,7 @@ public class COSController extends Controller
         {
             String key = ConStat.findMinVm(vmList);
             ConStat alpha = vmList.get(key);
-            String msg = Messages.destroy_vm_request(key);
+            String msg = msgHandler.destroy_vm_request(key);
             alpha.getParent().write(msg);
             timeDelay = System.currentTimeMillis();
         }
@@ -60,7 +65,7 @@ public class COSController extends Controller
         {
             CommChannel node = ConStat.findMinNode(socketStats);
             //And empty iterable defaults to using "./theaters.txt"
-            String msg = Messages.create_vm_request(vmCfgFile, new LinkedList<String>());
+            String msg = msgHandler.create_vm_request(vmCfgFile, new LinkedList<String>());
             node.write(msg);
             timeDelay = System.currentTimeMillis();
         }
@@ -74,10 +79,10 @@ public class COSController extends Controller
 
         Lambda.debugPrint("COS Controller recvd message: " + message);
 
-        switch(Messages.get_request_type(message))
+        switch(msgHandler.get_request_type(message))
         {
             case "create_vm_response":
-                params = Messages.get_params(message);
+                params = msgHandler.get_params(message);
                 if(params.get(0).equals("success"))
                 {
                     String ip_addr = params.get(1);
@@ -93,7 +98,7 @@ public class COSController extends Controller
                 }
                 break;
             case "destroy_vm_response":
-                params = Messages.get_params(message);
+                params = msgHandler.get_params(message);
                 if(params.get(0).equals("success"))
                 {
                     String ip_addr = params.get(1);
@@ -105,17 +110,17 @@ public class COSController extends Controller
                 }
                 break;
             case "notify_high_cpu_usage":
-                cpu_usage = Messages.get_params(message).get(0);
-                return_addr = Messages.get_return_addr(message);
+                cpu_usage = msgHandler.get_params(message).get(0);
+                return_addr = msgHandler.get_return_addr(message);
                 vmList.get(return_addr).update(Double.parseDouble(cpu_usage));
                 break;
             case "notify_low_cpu_usage":
-                cpu_usage = Messages.get_params(message).get(0);
-                return_addr = Messages.get_return_addr(message);
+                cpu_usage = msgHandler.get_params(message).get(0);
+                return_addr = msgHandler.get_return_addr(message);
                 vmList.get(return_addr).update(Double.parseDouble(cpu_usage));
                 break;
             case "notify_cpu_usage":
-                cpu_usage = Messages.get_params(message).get(0);
+                cpu_usage = msgHandler.get_params(message).get(0);
                 socketStats.get(sock).update(Double.parseDouble(cpu_usage));
                 break;
         }

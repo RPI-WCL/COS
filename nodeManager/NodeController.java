@@ -15,6 +15,7 @@ public class NodeController extends Controller
 {
     CommChannel cos;
     Lambda lambda;
+    Messages msgHandler;
 
     public NodeController(String cos_addr, int cos_port, int listen_port)
     {
@@ -23,11 +24,12 @@ public class NodeController extends Controller
        //Add it to sockeets so we can listen to responses.
        sockets.add(cos);
        lambda = Lambda.getInstance();
+       msgHandler = new Messages(cos);
     }
 
     public void periodic()
     {
-       String msg = Messages.notify_cpu_usage(lambda.getWeightedSystemLoadAverage());
+       String msg = msgHandler.notify_cpu_usage(lambda.getWeightedSystemLoadAverage());
        cos.write(msg);
     }
 
@@ -49,13 +51,13 @@ public class NodeController extends Controller
         String ip_addr = newbie.getRemoteAddr();
         constat.setIpAddr(ip_addr);
         socketStats.put(newbie, constat);
-        cos.write(Messages.create_vm_response("success", ip_addr));
+        cos.write(msgHandler.create_vm_response("success", ip_addr));
     }
 
     public void droppedHook(CommChannel dropped)
     {
         String ip_addr = socketStats.get(dropped).getIpAddr();
-        cos.write(Messages.destroy_vm_response("success", ip_addr));
+        cos.write(msgHandler.destroy_vm_response("success", ip_addr));
         socketStats.remove(dropped);
     }
 
@@ -64,7 +66,7 @@ public class NodeController extends Controller
         String msg;
 
         Lambda.debugPrint("Node Manager recvd message: " + message);
-        switch(Messages.get_request_type(message))
+        switch(msgHandler.get_request_type(message))
         {
             case "notify_low_cpu_usage":
                 cos.write(message);
@@ -75,7 +77,7 @@ public class NodeController extends Controller
             case "create_vm_request":
                 try
                 {
-                    List<String> params = Messages.get_params(message);
+                    List<String> params = msgHandler.get_params(message);
                     Runtime.getRuntime().exec("xm create " + params.get(0) ); 
                 }
                 catch( IOException e)
@@ -84,9 +86,9 @@ public class NodeController extends Controller
                 }
                 break;
             case "destroy_vm_request":
-                String target = Messages.get_params(message).get(0);
+                String target = msgHandler.get_params(message).get(0);
                 CommChannel victim = findChannelByAddress(target);
-                victim.write(Messages.shutdown_request());
+                victim.write(msgHandler.shutdown_request());
             default:
                 System.out.println("NodeController recvd message: " + message);
                 cos.write(message);

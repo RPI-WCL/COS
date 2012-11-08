@@ -79,6 +79,11 @@ public class CommChannel
         return m_sock.getRemoteSocketAddress().toString();
     }
 
+    public String getLocalAddr()
+    {
+        return m_sock.getLocalSocketAddress().toString();
+    }
+
     public boolean isClosed()
     {
         return m_sock.isClosed();
