@@ -15,11 +15,36 @@ public class VMController
     Lambda lambda;
     Messages msgHandler;
 
+    final String salsaPath = "/home/user/salsa/salsa0.7.2.jar";
+    final String iosPath = "/home/user/ios/ios0.4.jar";
+    final String launchIOS = "java -cp " + salsaPath + ":" + iosPath +
+                             " src.testing.reachability.Full theaters.txt";
+
+
     public VMController(String addr, int port)
     {
         hostNode = new CommChannel(addr, port);
         lambda = Lambda.getInstance();
         msgHandler = new Messages(hostNode);
+    }
+
+    public void createTheater(Iterable<String> theaters)
+    {
+        try
+        {
+            FileWriter fstream = new FileWriter("theaters.txt");
+            BufferedWriter out = new BufferedWriter(fstream);
+            for( String s: theaters)
+                out.write( theaters + "\n" );
+            out.close();
+
+            
+            Runtime.getRuntime().exec(launchIOS);
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public void handleMsg(String msg)
@@ -32,6 +57,8 @@ public class VMController
                 //Runtime.getRuntime().exec("ls");
                 break;
             case "create_theater_request":
+                List<String> theaters = msgHandler.get_params(msg);
+
                 break;
             case "shutdown_request":
                 try

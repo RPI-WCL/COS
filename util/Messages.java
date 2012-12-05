@@ -63,6 +63,15 @@ public class Messages
         return msg.toString().trim();
     }
 
+    public String create_theater(Iterable<String> peerTheaters)
+    {
+        StringBuilder msg = new StringBuilder("create_theater ");
+        addStringAndSpace(msg, localhost);
+        for( String s: peerTheaters )
+            addStringAndSpace(msg, s);
+        return msg.toString().trim();
+    }
+
     public String destroy_vm_request(String vmName)
     {
         StringBuilder msg = new StringBuilder("destroy_vm_request ");
