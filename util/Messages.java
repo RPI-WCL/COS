@@ -66,7 +66,7 @@ public class Messages
     public String create_theater(Iterable<String> peerTheaters)
     {
         StringBuilder msg = new StringBuilder("create_theater ");
-        addStringAndSpace(msg, localhost);
+        addStringAndSpace(msg, localHost);
         for( String s: peerTheaters )
             addStringAndSpace(msg, s);
         return msg.toString().trim();
@@ -137,11 +137,26 @@ public class Messages
         return msg.toString().trim();
     }
 
-    public String notify_cpu_usage(double load)
+    public String notify_node_cpu_usage(double load)
     {
-        StringBuilder msg = new StringBuilder("notify_cpu_usage ");
+        StringBuilder msg = new StringBuilder("notify_node_cpu_usage ");
         addStringAndSpace(msg, localHost);
         msg.append(Double.toString(load));
+        return msg.toString().trim();
+    }
+
+    public String notify_vm_cpu_usage(double load)
+    {
+        StringBuilder msg = new StringBuilder("notify_vm_cpu_usage ");
+        addStringAndSpace(msg, localHost);
+        msg.append(Double.toString(load));
+        return msg.toString().trim();
+    }
+
+    public String get_cpu_usage()
+    {
+        StringBuilder msg = new StringBuilder("get_cpu_usage ");
+        addStringAndSpace(msg, localHost);
         return msg.toString().trim();
     }
 

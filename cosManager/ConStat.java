@@ -2,28 +2,26 @@ package cosManager;
 
 import util.CommChannel;
 import java.util.*;
+import java.lang.*;
 
 public class ConStat
 {
-    double cur_cpu;
-    double prev_cpu;
+
+    static final double lower =.25;
+    static final double upper =.75;
+    static final double ideal =.50;
+    double cpu;
     String ip_addr;
     CommChannel parent;
 
     public ConStat()
     {
-        cur_cpu = 0;
-        prev_cpu = 0;
+        cpu = 0;
     }
 
     public double getCur()
     {
-        return cur_cpu;
-    }
-
-    public double getPrev()
-    {
-        return prev_cpu;
+        return cpu;
     }
 
     public void setParent(CommChannel par)
@@ -48,18 +46,82 @@ public class ConStat
 
     public void update(double val)
     {
-        prev_cpu = cur_cpu;
-        cur_cpu = val;
+        cpu = val;
     }
 
-    public static double avg(Map<String, ConStat> map)
+    public static double magnitude( Map<String, ConStat> map )
     {
-        double sum = 0; 
-        for( ConStat x: map.values())
+        double total = 0;
+        for(Map.Entry<String, ConStat> entry : map.entrySet() )
         {
-            sum += x.getCur();
+           total += Math.abs( entry.getValue().getCur() - ideal ); 
         }
-        return sum / map.size();
+        return total;
+    }
+
+    public static double signedSum(Map<String, ConStat> map )
+    {
+        double total = 0;
+        for(Map.Entry<String, ConStat> entry : map.entrySet() )
+        {
+           total += entry.getValue().getCur() - ideal; 
+        }
+        return total;
+    }
+
+    public static double predictCreate( Map<String, ConStat> map )
+    {
+        double total = 0;
+        for(Map.Entry<String, ConStat> entry : map.entrySet() )
+        {
+            double cur = entry.getValue().getCur();
+            if( cur > ideal )
+            {
+                total += cur * (1 - 1/ map.size()) - ideal;
+            }
+            else
+            {
+                total += Math.abs( cur - ideal ); 
+            }
+        }
+        return total;
+    }
+
+    public static double predictDestroy( Map<String, ConStat> map )
+    {
+        double total = 0;
+        for(Map.Entry<String, ConStat> entry : map.entrySet() )
+        {
+            double cur = entry.getValue().getCur();
+            if( cur < ideal )
+            {
+                total += cur * (1 + 1/ map.size()) - ideal;
+            }
+            else
+            {
+                total += Math.abs( cur - ideal ); 
+            }
+        }
+        return total;
+    }
+
+    public static boolean canChange( Map<String, ConStat> map)
+    {
+        boolean high = false;
+        boolean low = false;
+        for(Map.Entry<String, ConStat> entry : map.entrySet() )
+        {
+            double cur = entry.getValue().getCur();
+            if( cur > upper )
+                high = true;
+            if( cur < lower )
+                low = true;
+            if( high && low )
+                break;
+        }
+        if( high == true && low == true )
+            return false;
+        else return true;
     }
 
     public static String findMinVm( Map<String, ConStat> map)
@@ -77,6 +139,18 @@ public class ConStat
         return minKey;
     }
 
+    public static List<String> get_theaters( Map<String, ConStat> map)
+    {
+        LinkedList<String> theaters = new LinkedList<String>();
+        for( String s: map.keySet() )
+        {
+            String stripped = s.substring(s.indexOf('/') + 1, s.indexOf(':'));
+            stripped = "rmsp://" + stripped + ":4040/";
+            theaters.add(stripped);
+        }
+        return theaters;
+    }
+
     public static CommChannel findMinNode( Map<CommChannel, ConStat> map)
     {
         double min = 0;
@@ -91,5 +165,6 @@ public class ConStat
         }
         return minKey;
     }
+
 
 }

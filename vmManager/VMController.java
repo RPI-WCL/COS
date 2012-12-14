@@ -50,16 +50,23 @@ public class VMController
     public void handleMsg(String msg)
     {
         Lambda.debugPrint("VM recvd message: " + msg);
+        String resp;
         switch(msgHandler.get_request_type(msg))
         {
             case "shutdown_theater_request":
 
                 //Runtime.getRuntime().exec("ls");
                 break;
-            case "create_theater_request":
+            case "create_theater":
                 List<String> theaters = msgHandler.get_params(msg);
-
+                createTheater(theaters);
                 break;
+            case "get_cpu_usage":
+                double load = lambda.getWeightedSystemLoadAverage();
+                resp = msgHandler.notify_vm_cpu_usage(load);
+                hostNode.write(resp);
+                break;
+                
             case "shutdown_request":
                 try
                 {
@@ -87,13 +94,13 @@ public class VMController
             }
 
             load = lambda.getWeightedSystemLoadAverage();
-            if( load < .1 )
+            if( load < .25 )
             {
                 msg = msgHandler.notify_low_cpu_usage(load);
                 hostNode.write(msg);
 
             }
-            else if( load > .9 )
+            else if( load > .75 )
             {
                 msg = msgHandler.notify_high_cpu_usage(load);
                 hostNode.write(msg);
@@ -101,7 +108,7 @@ public class VMController
 
             try
             {
-                Thread.sleep( 3000 );
+                Thread.sleep( 10000 );
             }
             catch(Exception e)
             {

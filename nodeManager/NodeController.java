@@ -16,6 +16,7 @@ public class NodeController extends Controller
     CommChannel cos;
     Lambda lambda;
     Messages msgHandler;
+    List<String> theaters;
 
     public NodeController(String cos_addr, int cos_port, int listen_port)
     {
@@ -25,12 +26,11 @@ public class NodeController extends Controller
        sockets.add(cos);
        lambda = Lambda.getInstance();
        msgHandler = new Messages(cos);
+       theaters = null;
     }
 
     public void periodic()
     {
-       String msg = msgHandler.notify_cpu_usage(lambda.getWeightedSystemLoadAverage());
-       cos.write(msg);
     }
 
     private CommChannel findChannelByAddress(String addr)
@@ -47,11 +47,22 @@ public class NodeController extends Controller
 
     public void newHook(CommChannel newbie)
     {
+        //Set up so we can track the new vm
         ConStat constat = new ConStat();
         String ip_addr = newbie.getRemoteAddr();
         constat.setIpAddr(ip_addr);
         socketStats.put(newbie, constat);
+
+        //Let COS know a VM has started.
         cos.write(msgHandler.create_vm_response("success", ip_addr));
+
+        //Bring the IOS theater online.
+        if( theaters != null )
+        {
+            String message = msgHandler.create_theater(theaters);
+            newbie.write(message);
+        }
+
     }
 
     public void droppedHook(CommChannel dropped)
@@ -74,11 +85,25 @@ public class NodeController extends Controller
             case "notify_high_cpu_usage":
                 cos.write(message);
                 break;
+            case "notify_vm_cpu_usage":
+                cos.write(message);
+                break;
+            case "get_cpu_usage":
+                for( CommChannel c: socketStats.keySet() )
+                {
+                    c.write(message);
+                }
+                
+               String nodecpu = msgHandler.notify_node_cpu_usage(lambda.getWeightedSystemLoadAverage());
+               cos.write(nodecpu);
+               break;
             case "create_vm_request":
                 try
                 {
                     List<String> params = msgHandler.get_params(message);
                     Runtime.getRuntime().exec("xm create " + params.get(0) ); 
+                    theaters = params;
+                    theaters.remove(0);
                 }
                 catch( IOException e)
                 {
@@ -89,8 +114,8 @@ public class NodeController extends Controller
                 String target = msgHandler.get_params(message).get(0);
                 CommChannel victim = findChannelByAddress(target);
                 victim.write(msgHandler.shutdown_request());
+                break;
             default:
-                System.out.println("NodeController recvd message: " + message);
                 cos.write(message);
                 break;
         }

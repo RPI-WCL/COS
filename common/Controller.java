@@ -78,7 +78,7 @@ public abstract class Controller
             try
             {
                 //Avoid busy polling.
-                Thread.sleep(3000);
+                Thread.sleep(300);
             }
             catch(Exception e)
             {
