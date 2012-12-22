@@ -23,7 +23,7 @@ public abstract class Controller
         try
         {
             listener = new ServerSocket(port, 64);
-            listener.setSoTimeout(32);
+            listener.setSoTimeout(5000);
             sockets = new LinkedList<CommChannel>();
             socketStats = new HashMap<CommChannel, ConStat>();
         }

@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.util.*;
 
 import common.Controller;
+import common.Constants;
 import cosManager.ConStat;
 import util.CommChannel;
 import util.Messages;
@@ -37,7 +38,7 @@ public class COSController extends Controller
 
     public COSController()
     {
-        super(9999);
+        super(Constants.COS_PORT);
         vmList = new HashMap<String, ConStat>();
         timeDelay = 0;
         error = 0;

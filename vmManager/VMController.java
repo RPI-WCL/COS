@@ -5,6 +5,7 @@ import java.util.*;
 import java.net.Socket;
 import java.lang.Thread;
 
+import common.Constants;
 import util.CommChannel;
 import util.Messages;
 import util.Lambda;
@@ -124,10 +125,10 @@ public class VMController
      */
     public static void main( String [] args) throws Exception
     {
-        if( args.length != 2)
+        if( args.length != 1)
             return;
 
-        VMController runner = new VMController( args[0], Integer.parseInt(args[1]));
+        VMController runner = new VMController( args[0], Constants.NODE_PORT);
         runner.run();
     }
 }

@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.lang.Thread;
 
 import common.Controller;
+import common.Constants;
 import cosManager.ConStat;
 import util.CommChannel;
 import util.Lambda;
@@ -123,10 +124,9 @@ public class NodeController extends Controller
 
     public static void main( String [] args ) throws Exception
     {
-        if( args.length != 3)
+        if( args.length != 1)
             return;
-        NodeController runner = new NodeController( args[0], 
-                                    Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+        NodeController runner = new NodeController( args[0], Constants.COS_PORT, Constants.NODE_PORT );
         runner.checkMessages();
     }
 }
