@@ -4,77 +4,75 @@ import java.io.*;
 import java.util.*;
 import java.net.Socket;
 import java.lang.Thread;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import common.Constants;
+import common.ConnectionHandler;
+import common.Message;
+import common.MessageFactory;
 import util.CommChannel;
-import util.Messages;
-import util.Lambda;
+import util.Utility;
 
 public class VMController
 {
-    CommChannel hostNode;
-    Lambda lambda;
-    Messages msgHandler;
+    private CommChannel hostNode;
+    LinkedBlockingQueue<Message> mailbox;
+    MessageFactory msgFactory;
 
     final String salsaPath = "/home/user/salsa/salsa0.7.2.jar";
     final String iosPath = "/home/user/ios/ios0.4.jar";
     final String launchIOS = "java -cp " + salsaPath + ":" + iosPath +
                              " src.testing.reachability.Full theaters.txt";
 
-
-    public VMController(String addr, int port)
-    {
+    public VMController(String addr, int port){
         hostNode = new CommChannel(addr, port);
-        lambda = Lambda.getInstance();
-        msgHandler = new Messages(hostNode);
+        mailbox = new LinkedBlockingQueue<Message>();
+        ConnectionHandler listenLoop = new ConnectionHandler(hostNode, mailbox);
+        new Thread(listenLoop, "Socket Listener").start();
+        
+        msgFactory = new MessageFactory("VM", hostNode);
     }
 
-    public void createTheater(Iterable<String> theaters)
-    {
-        try
-        {
+    public void createTheater(Iterable<String> theaters){
+        try{
             FileWriter fstream = new FileWriter("theaters.txt");
             BufferedWriter out = new BufferedWriter(fstream);
             for( String s: theaters)
                 out.write( theaters + "\n" );
             out.close();
 
-            
             Runtime.getRuntime().exec(launchIOS);
         }
-        catch(IOException e)
-        {
+        catch(IOException e){
             e.printStackTrace();
         }
     }
 
-    public void handleMsg(String msg)
-    {
-        Lambda.debugPrint("VM recvd message: " + msg);
-        String resp;
-        switch(msgHandler.get_request_type(msg))
+    public void handleMessage(Message msg){
+        Utility.debugPrint("VM recvd message: " + msg.getMethod());
+        Message resp;
+        switch(msg.getMethod())
         {
             case "shutdown_theater_request":
 
                 //Runtime.getRuntime().exec("ls");
                 break;
-            case "create_theater":
-                List<String> theaters = msgHandler.get_params(msg);
-                createTheater(theaters);
-                break;
+//            This needs to be redone with the new messages
+//            case "create_theater":
+//                List<String> theaters = msgHandler.get_params(msg);
+//                createTheater(theaters);
+//                break;
             case "get_cpu_usage":
-                double load = lambda.getWeightedSystemLoadAverage();
-                resp = msgHandler.notify_vm_cpu_usage(load);
+                double load = Utility.getWeightedSystemLoadAverage();
+                resp = msgFactory.cpuUsageResp(load); 
                 hostNode.write(resp);
                 break;
                 
             case "shutdown_request":
-                try
-                {
+                try{
                     Runtime.getRuntime().exec("shutdown -h now");
-                }
-                catch(IOException e)
-                {
+                } catch(IOException e){
                     //Report out to Node Controller. Tell it to destroy me.
                 }
                 break;
@@ -84,36 +82,25 @@ public class VMController
     public void run()
     {
         double load;
-        String msg;
+        Message msg;
         while(true)
         {
-            msg = hostNode.read();
-            //We just got a letter!
-            if(msg != null)
-            {
-                handleMsg(msg);
+            try{
+                msg = mailbox.poll(10L, TimeUnit.SECONDS);
+                if( msg != null )
+                    handleMessage(msg);
+            } catch(InterruptedException e){
+                e.printStackTrace();
             }
 
-            load = lambda.getWeightedSystemLoadAverage();
-            if( load < .25 )
+            load = Utility.getWeightedSystemLoadAverage();
+            System.out.println("Checking if should write message");
+            System.out.println("Load is " + load);
+            if( load > Constants.HIGH_CPU || load < Constants.LOW_CPU || true )
             {
-                msg = msgHandler.notify_low_cpu_usage(load);
+                System.out.println("Writing Message");
+                msg = msgFactory.notifyCpuUsage(load);;
                 hostNode.write(msg);
-
-            }
-            else if( load > .75 )
-            {
-                msg = msgHandler.notify_high_cpu_usage(load);
-                hostNode.write(msg);
-            }
-
-            try
-            {
-                Thread.sleep( 10000 );
-            }
-            catch(Exception e)
-            {
-                //Who cares if we get interrupted?
             }
         }
     }
@@ -123,8 +110,7 @@ public class VMController
      * args[1] = hostNode socket
      *
      */
-    public static void main( String [] args) throws Exception
-    {
+    public static void main( String [] args) throws Exception{
         if( args.length != 1)
             return;
 

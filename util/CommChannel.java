@@ -1,91 +1,61 @@
 package util;
 
+import common.Message;
+
 import java.io.*;
 import java.net.*;
 
 public class CommChannel
 {
     Socket m_sock;
-    BufferedReader in;
-    PrintWriter out;
+    ObjectOutputStream out;
+    ObjectInputStream in;
 
-    public CommChannel( Socket sock )
-    {
+    public CommChannel( Socket sock ){
         m_sock = sock;
-        try
-        {
-            m_sock.setSoTimeout(50); //50 miliseconds
-            in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            out = new PrintWriter(sock.getOutputStream(), true);
+        try{
+            out = new ObjectOutputStream(sock.getOutputStream());
+            in = new ObjectInputStream(sock.getInputStream());
         }
-        catch(SocketException s)
-        {
-            //TODO handle it.
+        catch(Exception s){
+            s.printStackTrace();
         }
-        catch(IOException io)
-        {
-            //TODO handle it.
-        }
-        
     }
 
-    public CommChannel( String addr, int port)
-    {
-        try
-        {
+    public CommChannel( String addr, int port){
+        try{
             m_sock = new Socket(addr, port);
-            m_sock.setSoTimeout(50); //50 miliseconds
-            in = new BufferedReader(new InputStreamReader(m_sock.getInputStream()));
-            out = new PrintWriter(m_sock.getOutputStream(), true);
-        }
-        catch(UnknownHostException h)
-        {  
-            //TODO error out
-        }
-        catch(SocketException s)
-        {
-            //TODO handle it.
-        }
-        catch(IOException io)
-        {
-            //TODO handle it.
-        }
+            out = new ObjectOutputStream(m_sock.getOutputStream());
+            in = new ObjectInputStream(m_sock.getInputStream());
+        } catch(Exception e){ e.printStackTrace();}
 
     }
 
-    public void write( String message )
-    {
-        out.println(message);
+    public void write( Message message ){
+        try{
+            out.writeObject(message);
+        }catch(Exception e){}
     }
 
-    public String read()
-    {
-        if( m_sock.isClosed() )
-            return null;
-        String message = null;
-        try
-        {
-            message = in.readLine();
+    public Message read(){
+        try{
+            Message message = (Message) in.readObject();
             return message;
         }
-        catch(IOException e)
-        {
+        catch(Exception e){
            return null; 
         }
     }
 
-    public String getRemoteAddr()
-    {
+    public String getRemoteAddr(){
         return m_sock.getRemoteSocketAddress().toString();
     }
 
-    public String getLocalAddr()
-    {
+    public String getLocalAddr(){
         return m_sock.getLocalSocketAddress().toString();
     }
 
-    public boolean isClosed()
-    {
+    public boolean isClosed(){
         return m_sock.isClosed();
     }
 }

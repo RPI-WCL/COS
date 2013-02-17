@@ -7,23 +7,22 @@ import java.net.Socket;
 import java.util.*;
 
 import common.Controller;
+import common.Message;
+import common.MessageFactory;
 import common.Constants;
-import cosManager.ConStat;
+import nodeManager.NodeInfo;
 import util.CommChannel;
-import util.Messages;
-import util.Lambda;
+import util.Utility;
+import vmManager.VmInfo;
 
 public class COSController extends Controller
 {
 
-    HashMap<String, ConStat> vmList;
-    final int maxVm = 2;
-    final int minVm = 1;
+    HashMap<String, VmInfo> vmTable;
+    HashMap<String, NodeInfo> nodeTable;
+
     final long timestep = 2 * 60;
-    final String vmCfgFile = "/etc/xen/cos/jcos01.cfg";
-    final String theaterFile = "./theaters.txt";
     long timeDelay;
-    Messages msgHandler;
     boolean isWaitingResponses;
     int remaining;
     int errorcount;
@@ -36,186 +35,155 @@ public class COSController extends Controller
     boolean destroyed;
     boolean lock;
 
-    public COSController()
-    {
+    public COSController(){
         super(Constants.COS_PORT);
-        vmList = new HashMap<String, ConStat>();
+        vmTable = new HashMap<String, VmInfo>();
+        nodeTable = new HashMap<String, NodeInfo>();
         timeDelay = 0;
         error = 0;
         timebackoff = 1;
         errorcount = 0;
-        msgHandler = null;
         isWaitingResponses = false;
         created = false;
         destroyed = false;
         lock = false;
+
+        //We have to wait until we get a connection to set this up.
+        msgFactory = null;
     }
 
-    public void newHook(CommChannel newbie)
-    {
-        ConStat constat = new ConStat();
-        socketStats.put(newbie, constat);
-        if( msgHandler == null )
-            msgHandler = new Messages(newbie);
-       
+
+    public void adapt(){
+//        if( !ConStat.canChange(vmList) ){
+//            System.out.println("Can't do shit.");
+//            return;
+//        }
+//
+//
+//        long next = System.currentTimeMillis();
+//        double magnitude = ConStat.magnitude(vmList);
+//        double sum = ConStat.signedSum(vmList);
+//        if(created || destroyed){
+//            if(destroyed && prev_mag < magnitude ){
+//                    errorcount++;
+//            }
+//            if( created ){
+//                if( prev_mag < magnitude && prev_sum  > sum ){
+//                    errorcount++;
+//                }
+//            }
+//            created = false;
+//            destroyed = false;
+//        }
+//        error = Math.abs(prev_mag - magnitude);
+//        
+//
+//        if( magnitude - ConStat.predictDestroy(vmList) > error * errorcount / timebackoff  && vmList.size() -1 > minVm){
+//            prev_mag = magnitude;
+//            System.out.println("Destroy!");
+//            String key = ConStat.findMinVm(vmList);
+//            ConStat alpha = vmList.get(key);
+//            String msg = msgHandler.destroy_vm_request(key);
+//            alpha.getParent().write(msg);
+//            timeDelay = System.currentTimeMillis();
+//            lock = true;
+//        }
+//        else if( magnitude - ConStat.predictCreate(vmList) > error * errorcount / timebackoff &&  vmList.size() < maxVm ){
+//            prev_mag = magnitude;
+//            System.out.println("CREATE!");
+//            CommChannel node = ConStat.findMinNode(socketStats);
+//            String msg = msgHandler.create_vm_request(vmCfgFile, new LinkedList<String>());
+//            node.write(msg);
+//            timeDelay = System.currentTimeMillis();
+//            lock = true;
+//        }
     }
 
-    public void droppedHook(CommChannel dropped)
+    public void handleMessage( Message msg )
     {
-        socketStats.remove(dropped);
-        //Ignore for now. Should mark it as disabled with
-        //the option of waking it with a magic packet.
-    }
-
-    public void periodic()
-    {
-        if( remaining != 0 || lock )
-        {
-            return;
-        }
-        isWaitingResponses = false;
-        if( !ConStat.canChange(vmList) )
-        {
-            System.out.println("Can't do shit.");
-            return;
-        }
-
-
-        long next = System.currentTimeMillis();
-        double magnitude = ConStat.magnitude(vmList);
-        double sum = ConStat.signedSum(vmList);
-        if(created || destroyed)
-        {
-            if(destroyed && prev_mag < magnitude )
-            {
-                    errorcount++;
-            }
-            if( created )
-            {
-                if( prev_mag < magnitude && prev_sum  > sum )
-                {
-                    errorcount++;
-                }
-            }
-            created = false;
-            destroyed = false;
-        }
-        error = Math.abs(prev_mag - magnitude);
-        
-
-        if( magnitude - ConStat.predictDestroy(vmList) > error * errorcount / timebackoff  && vmList.size() -1 > minVm)
-        {
-            prev_mag = magnitude;
-            System.out.println("Destroy!");
-            String key = ConStat.findMinVm(vmList);
-            ConStat alpha = vmList.get(key);
-            String msg = msgHandler.destroy_vm_request(key);
-            alpha.getParent().write(msg);
-            timeDelay = System.currentTimeMillis();
-            lock = true;
-        }
-        else if( magnitude - ConStat.predictCreate(vmList) > error * errorcount / timebackoff &&  vmList.size() < maxVm )
-        {
-            prev_mag = magnitude;
-            System.out.println("CREATE!");
-            CommChannel node = ConStat.findMinNode(socketStats);
-            String msg = msgHandler.create_vm_request(vmCfgFile, new LinkedList<String>());
-            node.write(msg);
-            timeDelay = System.currentTimeMillis();
-            lock = true;
-        }
-    }
-
-    public void handleMessage( String message, CommChannel sock)
-    {
-        String cpu_usage;
+        double cpu_usage;
         String return_addr;
         List<String> params;
+        Message payload;
 
-        Lambda.debugPrint("COS Controller recvd message: " + message);
-
-        switch(msgHandler.get_request_type(message))
+        Utility.debugPrint("COS recieved: " + msg.getMethod());
+        switch(msg.getMethod())
         {
-            case "create_vm_response":
-                params = msgHandler.get_params(message);
-                lock = false;
-                if(params.get(0).equals("success"))
-                {
-                    String ip_addr = params.get(1);
-                    ConStat newbie = new ConStat();
-                    newbie.setParent(sock);
-                    newbie.setIpAddr(ip_addr);
+            case "cpu_usage_resp":
+                updateCpuStats(msg);
+                break;
+            case "new_connection":
+                newNode(msg);
+                break;
+            case "notify_extreme_cpu_usage":
+                cpu_usage = (double) msg.getParam("load");
+                return_addr = msg.getSender();
 
-                    vmList.put(ip_addr, newbie); 
-                }
-                else
-                {
-                    //VM creation failed. It should attempt to be created again.
-                }
-                break;
-            case "destroy_vm_response":
-                params = msgHandler.get_params(message);
-                lock = false;
-                if(params.get(0).equals("success"))
-                {
-                    String ip_addr = params.get(1);
-                    vmList.remove(ip_addr);
-                }
-                else
-                {
-                    //VM deletion failed. It should be attempted again
-                }
-                break;
-            case "notify_high_cpu_usage":
-                cpu_usage = msgHandler.get_params(message).get(0);
-                return_addr = msgHandler.get_return_addr(message);
-                vmList.get(return_addr).update(Double.parseDouble(cpu_usage));
-                if( !isWaitingResponses )
-                {
-                    String payload = msgHandler.get_cpu_usage();
+                if( !isWaitingResponses ){
+                    payload = msgFactory.getCpuUsage();
                     broadcast(payload);
                     isWaitingResponses = true;
-                    remaining = vmList.size() + socketStats.size();
+                    remaining = vmTable.size() + children.size();
                 }
                 break;
-            case "notify_low_cpu_usage":
-                cpu_usage = msgHandler.get_params(message).get(0);
-                return_addr = msgHandler.get_return_addr(message);
-                vmList.get(return_addr).update(Double.parseDouble(cpu_usage));
-                if( !isWaitingResponses )
-                {
-                    String payload = msgHandler.get_cpu_usage();
-                    broadcast(payload);
-                    isWaitingResponses = true;
-                    remaining = vmList.size() + socketStats.size();
-                }
+            case "vm_creation":
+                newVM(msg);
                 break;
-            case "notify_vm_cpu_usage":
-                cpu_usage = msgHandler.get_params(message).get(0);
-                return_addr = msgHandler.get_return_addr(message);
-                vmList.get(return_addr).update(Double.parseDouble(cpu_usage));
-                remaining--;
+            case "vm_destruction":
+                deleteVM(msg);
                 break;
-            case "notify_node_cpu_usage":
-                cpu_usage = msgHandler.get_params(message).get(0);
-                socketStats.get(sock).update(Double.parseDouble(cpu_usage));
-                remaining--;
+            default:
+                System.out.println(msg.getMethod());
                 break;
         }
     }
 
-    public void broadcast(String payload)
-    {
-        for( CommChannel c: socketStats.keySet() )
-        {
-            c.write(payload);
-        }
-    }
-
-    public static void main(String[] args) throws Exception
-    {
+    public static void main(String[] args) throws Exception{
         COSController runner = new COSController();
         runner.checkMessages();
+    }
+
+    private void updateCpuStats(Message msg){
+        double load = (double) msg.getParam("load");
+        String addr = msg.getSender();
+        String type = (String) msg.getParam("type");
+        switch(type){
+            case "VM":
+                vmTable.get(addr).updateCpu(load);
+                break;
+            case "NODE":
+                nodeTable.get(addr).updateCpu(load);
+                break;
+        }
+        remaining--;
+
+        if(remaining == 0){
+            isWaitingResponses = false;
+            adapt();
+        }
+
+    }
+
+    private void newNode(Message msg){
+        if( msgFactory == null ){
+            msgFactory = new MessageFactory("COS", msg.getReply());
+        }
+
+        children.add(msg.getReply());
+        nodeTable.put(msg.getSender(), new NodeInfo(msg.getSender(),  msg.getReply()));
+    }
+
+
+    private void newVM(Message msg){
+        String vm_address = (String) msg.getParam("vm_address");
+        vmTable.put(vm_address, new VmInfo(vm_address, msg.getReply()));
+        nodeTable.get(msg.getSender()).addVm();
+    }
+
+    private void deleteVM(Message msg){
+        String vm_address = (String) msg.getParam("vm_address");
+        vmTable.remove(vm_address);
+        nodeTable.get(msg.getSender()).removeVm();
     }
 }
 
