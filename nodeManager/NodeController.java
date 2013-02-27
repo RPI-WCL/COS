@@ -10,7 +10,6 @@ import common.Constants;
 import common.ConnectionHandler;
 import common.MessageFactory;
 import common.Message;
-import cosManager.ConStat;
 import util.CommChannel;
 import util.Utility;
 import util.Messages;
@@ -42,7 +41,7 @@ public class NodeController extends Controller
         return null;
     }
 
-    public void handleNewConnection(Message msg){
+    private void handleNewConnection(Message msg){
         children.add(msg.getReply());
 
         //We have a new connection. We should let COS know.
@@ -52,7 +51,24 @@ public class NodeController extends Controller
         //TODO: Tell the VM to start running a theater.
     }
 
-    public void droppedHook(CommChannel dropped){
+    private void droppedConnection(Message msg){
+        String addr = (String) msg.getParam("dropped_connection");
+        Message result = msgFactory.vmDestruction(addr);
+        cos.write(result);
+        children.remove(msg.getReply());
+    }
+
+    private void create_vm(Message msg){
+        //TODO: Should fix this warning eventually,
+        theaters = (LinkedList<String>) msg.getParam("theaters");
+
+        try{
+            Runtime.getRuntime().exec("xm create " + Constants.PATH_TO_VM_IMAGE);
+        } catch(IOException e){
+            //TODO: Notify of failure
+        }
+
+
     }
 
     public void handleMessage( Message msg ){
@@ -67,24 +83,17 @@ public class NodeController extends Controller
             case "new_connection":
                 handleNewConnection(msg);
                 break;
-//            case "create_vm_request":
-//                try
-//                {
-//                    List<String> params = msgHandler.get_params(message);
-//                    Runtime.getRuntime().exec("xm create " + params.get(0) ); 
-//                    theaters = params;
-//                    theaters.remove(0);
-//                }
-//                catch( IOException e)
-//                {
-//                    //Should send failure message.
-//                }
-//                break;
-//            case "destroy_vm_request":
-//                String target = msgHandler.get_params(message).get(0);
-//                CommChannel victim = findChannelByAddress(target);
-//                victim.write(msgHandler.shutdown_request());
-//                break;
+            case "create_vm":
+                create_vm(msg);
+                break;
+            case "destroy_vm":
+                String addr = (String) msg.getParam("target_vm");
+                CommChannel target = findChannelByAddress(addr);
+                target.write(msg);
+                break;
+            case "dropped_connection":
+                droppedConnection(msg);
+                break;
             default:
                 //If we don't know how to deal with it, pass it up.
                 cos.write(msg);

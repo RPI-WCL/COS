@@ -1,5 +1,7 @@
 package common;
 
+import java.util.*;
+
 import common.Constants;
 import util.CommChannel;
 import util.Utility;
@@ -26,6 +28,18 @@ public class MessageFactory
         return payload;
     }
 
+    public Message createVm(LinkedList<String> theaters){
+        Message payload = init("create_vm");
+        payload.addParam("peers", theaters);
+        return payload;
+    }
+
+    public Message destroyVm(String address){
+        Message payload = init("destroy_vm");
+        payload.addParam("target_vm", address);
+        return payload;
+    }
+
     public Message cpuUsageResp(){
         double load = Utility.getWeightedSystemLoadAverage();
         return this.cpuUsageResp(load);
@@ -43,9 +57,27 @@ public class MessageFactory
         return payload;
     }
 
+    public Message vmDestruction(String address){
+        Message payload = init("vm_destruction");
+        payload.addParam("success", true);
+        payload.addParam("vm_address", address);
+        return payload;
+    }
+
+    public Message startTheater(LinkedList<String> peers){
+        Message payload = init("start_theater");
+        payload.addParam("peers", peers);
+        return payload;
+    }
+
     public static Message newConnection(CommChannel reply){
         Message payload = new Message("new_connection", reply.getRemoteAddr());
         payload.setReply(reply);
+        return payload;
+    }
+
+    public static Message droppedConnection(String addr) {
+        Message payload = new Message("dropped_connection", addr);
         return payload;
     }
 

@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.util.*;
 
 import common.Controller;
+import common.MachInfo;
 import common.Message;
 import common.MessageFactory;
 import common.Constants;
@@ -21,32 +22,26 @@ public class COSController extends Controller
     HashMap<String, VmInfo> vmTable;
     HashMap<String, NodeInfo> nodeTable;
 
-    final long timestep = 2 * 60;
-    long timeDelay;
-    boolean isWaitingResponses;
-    int remaining;
+    int remainingResponses;
     int errorcount;
     double error;
     double prediction;
-    double timebackoff;
     double prev_mag;
     double prev_sum;
     boolean created;
     boolean destroyed;
-    boolean lock;
+    boolean vmModificationInProgress;
 
     public COSController(){
         super(Constants.COS_PORT);
         vmTable = new HashMap<String, VmInfo>();
         nodeTable = new HashMap<String, NodeInfo>();
-        timeDelay = 0;
         error = 0;
-        timebackoff = 1;
         errorcount = 0;
-        isWaitingResponses = false;
         created = false;
         destroyed = false;
-        lock = false;
+        vmModificationInProgress = false;
+        remainingResponses = 0;
 
         //We have to wait until we get a connection to set this up.
         msgFactory = null;
@@ -54,49 +49,54 @@ public class COSController extends Controller
 
 
     public void adapt(){
-//        if( !ConStat.canChange(vmList) ){
-//            System.out.println("Can't do shit.");
-//            return;
-//        }
-//
-//
-//        long next = System.currentTimeMillis();
-//        double magnitude = ConStat.magnitude(vmList);
-//        double sum = ConStat.signedSum(vmList);
-//        if(created || destroyed){
-//            if(destroyed && prev_mag < magnitude ){
-//                    errorcount++;
-//            }
-//            if( created ){
-//                if( prev_mag < magnitude && prev_sum  > sum ){
-//                    errorcount++;
-//                }
-//            }
-//            created = false;
-//            destroyed = false;
-//        }
-//        error = Math.abs(prev_mag - magnitude);
-//        
-//
-//        if( magnitude - ConStat.predictDestroy(vmList) > error * errorcount / timebackoff  && vmList.size() -1 > minVm){
-//            prev_mag = magnitude;
-//            System.out.println("Destroy!");
-//            String key = ConStat.findMinVm(vmList);
-//            ConStat alpha = vmList.get(key);
-//            String msg = msgHandler.destroy_vm_request(key);
-//            alpha.getParent().write(msg);
-//            timeDelay = System.currentTimeMillis();
-//            lock = true;
-//        }
-//        else if( magnitude - ConStat.predictCreate(vmList) > error * errorcount / timebackoff &&  vmList.size() < maxVm ){
-//            prev_mag = magnitude;
-//            System.out.println("CREATE!");
-//            CommChannel node = ConStat.findMinNode(socketStats);
-//            String msg = msgHandler.create_vm_request(vmCfgFile, new LinkedList<String>());
-//            node.write(msg);
-//            timeDelay = System.currentTimeMillis();
-//            lock = true;
-//        }
+        if(!VmInfo.canAdapt(vmTable.values())){
+            return;
+        }
+        else if(vmModificationInProgress){
+            return;
+        }
+
+        Utility.debugPrint("Can adapt");
+        double magnitude = VmInfo.magnitude(vmTable.values());
+        double sum = VmInfo.signedSum(vmTable.values());
+        if(created || destroyed){
+            if(destroyed && prev_mag < magnitude){
+                    errorcount++;
+            }
+            if(created ){
+                if(prev_mag < magnitude && prev_sum > sum){
+                    errorcount++;
+                }
+            }
+            created = false;
+            destroyed = false;
+        }
+        error = Math.abs(prev_mag - magnitude);
+        
+        Message action = null;
+        MachInfo target = null;
+        Utility.debugPrint(Double.toString(magnitude));
+        Utility.debugPrint(Double.toString(VmInfo.predictDestroy(vmTable.values())));
+        if(magnitude - VmInfo.predictDestroy(vmTable.values()) >= error * errorcount && vmTable.size() >  Constants.MIN_VMS){
+            Utility.debugPrint("Trying to destroy VM");
+            target = MachInfo.findMinCpu(vmTable.values());
+            action = msgFactory.destroyVm(target.getAddress());
+        }
+        else if(magnitude - VmInfo.predictCreate(vmTable.values()) > error * errorcount &&  vmTable.size() < Constants.MAX_VMS){
+            //Create theaters
+            target = MachInfo.findMinCpu(nodeTable.values());
+            action = msgFactory.createVm(VmInfo.generateTheaters(vmTable.values()));
+        }
+        if(action != null){
+            if( target == null )
+                System.out.println("target is null!");
+            prev_mag = magnitude;
+            vmModificationInProgress = true;
+            if( target.getContact() == null)
+                System.out.println("Something is wrong");
+            target.getContact().write(action);
+        }
+
     }
 
     public void handleMessage( Message msg )
@@ -119,11 +119,10 @@ public class COSController extends Controller
                 cpu_usage = (double) msg.getParam("load");
                 return_addr = msg.getSender();
 
-                if( !isWaitingResponses ){
+                if(remainingResponses == 0 ){
                     payload = msgFactory.getCpuUsage();
                     broadcast(payload);
-                    isWaitingResponses = true;
-                    remaining = vmTable.size() + children.size();
+                    remainingResponses = vmTable.size() + children.size();
                 }
                 break;
             case "vm_creation":
@@ -133,7 +132,7 @@ public class COSController extends Controller
                 deleteVM(msg);
                 break;
             default:
-                System.out.println(msg.getMethod());
+                Utility.debugPrint(msg.getMethod());
                 break;
         }
     }
@@ -155,10 +154,9 @@ public class COSController extends Controller
                 nodeTable.get(addr).updateCpu(load);
                 break;
         }
-        remaining--;
+        remainingResponses--;
 
-        if(remaining == 0){
-            isWaitingResponses = false;
+        if(remainingResponses == 0){
             adapt();
         }
 
@@ -178,12 +176,14 @@ public class COSController extends Controller
         String vm_address = (String) msg.getParam("vm_address");
         vmTable.put(vm_address, new VmInfo(vm_address, msg.getReply()));
         nodeTable.get(msg.getSender()).addVm();
+        vmModificationInProgress = false;
     }
 
     private void deleteVM(Message msg){
         String vm_address = (String) msg.getParam("vm_address");
         vmTable.remove(vm_address);
         nodeTable.get(msg.getSender()).removeVm();
+        vmModificationInProgress = false;
     }
 }
 

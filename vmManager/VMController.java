@@ -17,24 +17,22 @@ import util.Utility;
 public class VMController
 {
     private CommChannel hostNode;
+    private LinkedList<Double> cpuHistory;
+    
     LinkedBlockingQueue<Message> mailbox;
     MessageFactory msgFactory;
 
-    final String salsaPath = "/home/user/salsa/salsa0.7.2.jar";
-    final String iosPath = "/home/user/ios/ios0.4.jar";
-    final String launchIOS = "java -cp " + salsaPath + ":" + iosPath +
-                             " src.testing.reachability.Full theaters.txt";
-
-    public VMController(String addr, int port){
+    private VMController(String addr, int port){
         hostNode = new CommChannel(addr, port);
         mailbox = new LinkedBlockingQueue<Message>();
+        cpuHistory = new LinkedList<Double>();
         ConnectionHandler listenLoop = new ConnectionHandler(hostNode, mailbox);
         new Thread(listenLoop, "Socket Listener").start();
         
         msgFactory = new MessageFactory("VM", hostNode);
     }
 
-    public void createTheater(Iterable<String> theaters){
+    private void createTheater(Iterable<String> theaters){
         try{
             FileWriter fstream = new FileWriter("theaters.txt");
             BufferedWriter out = new BufferedWriter(fstream);
@@ -42,34 +40,34 @@ public class VMController
                 out.write( theaters + "\n" );
             out.close();
 
-            Runtime.getRuntime().exec(launchIOS);
+            Runtime.getRuntime().exec(Constants.LAUNCH_IOS);
         }
         catch(IOException e){
             e.printStackTrace();
         }
     }
 
-    public void handleMessage(Message msg){
-        Utility.debugPrint("VM recvd message: " + msg.getMethod());
+    private void handleMessage(Message msg){
         Message resp;
+        Utility.debugPrint("VM recvd message: " + msg.getMethod());
         switch(msg.getMethod())
         {
             case "shutdown_theater_request":
-
                 //Runtime.getRuntime().exec("ls");
                 break;
-//            This needs to be redone with the new messages
-//            case "create_theater":
-//                List<String> theaters = msgHandler.get_params(msg);
-//                createTheater(theaters);
-//                break;
+            case "start_theater":
+                LinkedList<String> peers = (LinkedList<String>) msg.getParam("peers");
+                createTheater(peers);
+                break;
             case "get_cpu_usage":
                 double load = Utility.getWeightedSystemLoadAverage();
                 resp = msgFactory.cpuUsageResp(load); 
                 hostNode.write(resp);
                 break;
-                
-            case "shutdown_request":
+            case "destroy_vm":
+                if( true ){
+                    System.exit(1);
+                }
                 try{
                     Runtime.getRuntime().exec("shutdown -h now");
                 } catch(IOException e){
@@ -79,7 +77,7 @@ public class VMController
         }
     }
 
-    public void run()
+    private void run()
     {
         double load;
         Message msg;
@@ -94,15 +92,54 @@ public class VMController
             }
 
             load = Utility.getWeightedSystemLoadAverage();
-            System.out.println("Checking if should write message");
-            System.out.println("Load is " + load);
-            if( load > Constants.HIGH_CPU || load < Constants.LOW_CPU || true )
+            updateCpuHistory(load);
+            if( highCpuUsage() || lowCpuUsage())
             {
+                load = averageLoad();
                 System.out.println("Writing Message");
                 msg = msgFactory.notifyCpuUsage(load);;
                 hostNode.write(msg);
             }
         }
+    }
+
+    private void updateCpuHistory(double load){
+        if(cpuHistory.size() < Constants.VM_LOOK_BACK){
+            cpuHistory.addLast(load);
+        } else{
+            cpuHistory.removeFirst();
+            cpuHistory.addLast(load);
+        }
+    }
+
+    private boolean highCpuUsage(){
+        boolean all = true;
+        for(Double d: cpuHistory){
+            if(d < Constants.HIGH_CPU){
+                all = false;
+                break;
+            }
+        }
+        return all;
+    }
+
+    private boolean lowCpuUsage(){
+        boolean all = true;
+        for(Double d: cpuHistory){
+            if(d > Constants.LOW_CPU){
+                all = false;
+                break;
+            }
+        }
+        return all;
+    }
+
+    private double averageLoad(){
+        double load = 0;
+        for(Double d: cpuHistory){
+            load += d;
+        }
+        return load / cpuHistory.size();
     }
 
     /*
