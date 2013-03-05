@@ -87,6 +87,10 @@ public class COSController extends Controller
             target = MachInfo.findMinCpu(nodeTable.values());
             action = msgFactory.createVm(VmInfo.generateTheaters(vmTable.values()));
         }
+
+        System.out.println("Finished null check");
+
+
         if(action != null){
             if( target == null )
                 System.out.println("target is null!");
@@ -106,7 +110,7 @@ public class COSController extends Controller
         List<String> params;
         Message payload;
 
-        Utility.debugPrint("COS recieved: " + msg.getMethod());
+        Utility.debugPrint("COS recieved: " + msg.getMethod() + " From: " + msg.getSender());
         switch(msg.getMethod())
         {
             case "cpu_usage_resp":
@@ -126,6 +130,9 @@ public class COSController extends Controller
                 }
                 break;
             case "vm_creation":
+                if(msg.getReply()==null){
+                    System.out.println("Null before insert");
+                }
                 newVM(msg);
                 break;
             case "vm_destruction":
@@ -157,7 +164,7 @@ public class COSController extends Controller
         remainingResponses--;
 
         if(remainingResponses == 0){
-            adapt();
+            //adapt();
         }
 
     }
@@ -174,6 +181,9 @@ public class COSController extends Controller
 
     private void newVM(Message msg){
         String vm_address = (String) msg.getParam("vm_address");
+        if(msg.getReply() == null){
+            System.out.println("Error in insert");
+        }
         vmTable.put(vm_address, new VmInfo(vm_address, msg.getReply()));
         nodeTable.get(msg.getSender()).addVm();
         vmModificationInProgress = false;

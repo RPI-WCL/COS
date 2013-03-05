@@ -33,17 +33,25 @@ public class ConnectionHandler implements Runnable
             if(rcved instanceof Message) {
                 count = 0;
                 msg = (Message) rcved;
+                msg.setReply(channel);
                 try{
                     mailbox.put(msg);
                 }catch(InterruptedException e){
                     e.printStackTrace();
                 }
             }
+            else if(rcved == null) {
+                System.out.println("Read null");
+            }
             else{
+                System.out.println("Bad message");
+                try{
+                Thread.sleep(100);
+                }catch(Exception e){}
                 count++;
             }
 
-            if(count == 5) {
+            if(count == 16 && false) {
                 //Since the connection is most likely broken at this point
                 //a flag should probably be set.
                 msg = MessageFactory.droppedConnection(remoteAddr);
@@ -55,6 +63,7 @@ public class ConnectionHandler implements Runnable
                 return;
             }
 
+            msg = null;
         }
     }
 }

@@ -43,6 +43,7 @@ public class CommChannel
             return message;
         }
         catch(Exception e){
+           e.printStackTrace();
            return null; 
         }
     }
