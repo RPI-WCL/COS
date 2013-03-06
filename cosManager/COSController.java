@@ -75,29 +75,23 @@ public class COSController extends Controller
         
         Message action = null;
         MachInfo target = null;
-        Utility.debugPrint(Double.toString(magnitude));
-        Utility.debugPrint(Double.toString(VmInfo.predictDestroy(vmTable.values())));
-        if(magnitude - VmInfo.predictDestroy(vmTable.values()) >= error * errorcount && vmTable.size() >  Constants.MIN_VMS){
+        Utility.debugPrint("Magnitude: " + Double.toString(magnitude));
+        Utility.debugPrint("Predicted Destroy: " + Double.toString(VmInfo.predictDestroy(vmTable.values())));
+        Utility.debugPrint("Predicted Create: " + Double.toString(VmInfo.predictCreate(vmTable.values())));
+        if(magnitude - VmInfo.predictDestroy(vmTable.values()) > error * errorcount && vmTable.size() >  Constants.MIN_VMS){
             Utility.debugPrint("Trying to destroy VM");
             target = MachInfo.findMinCpu(vmTable.values());
             action = msgFactory.destroyVm(target.getAddress());
         }
         else if(magnitude - VmInfo.predictCreate(vmTable.values()) > error * errorcount &&  vmTable.size() < Constants.MAX_VMS){
-            //Create theaters
+            Utility.debugPrint("Trying to create VM");
             target = MachInfo.findMinCpu(nodeTable.values());
             action = msgFactory.createVm(VmInfo.generateTheaters(vmTable.values()));
         }
 
-        System.out.println("Finished null check");
-
-
         if(action != null){
-            if( target == null )
-                System.out.println("target is null!");
             prev_mag = magnitude;
             vmModificationInProgress = true;
-            if( target.getContact() == null)
-                System.out.println("Something is wrong");
             target.getContact().write(action);
         }
 
@@ -123,16 +117,13 @@ public class COSController extends Controller
                 cpu_usage = (double) msg.getParam("load");
                 return_addr = msg.getSender();
 
-                if(remainingResponses == 0 ){
+                if(remainingResponses == 0 && !vmModificationInProgress){
                     payload = msgFactory.getCpuUsage();
                     broadcast(payload);
                     remainingResponses = vmTable.size() + children.size();
                 }
                 break;
             case "vm_creation":
-                if(msg.getReply()==null){
-                    System.out.println("Null before insert");
-                }
                 newVM(msg);
                 break;
             case "vm_destruction":
@@ -164,7 +155,7 @@ public class COSController extends Controller
         remainingResponses--;
 
         if(remainingResponses == 0){
-            //adapt();
+            adapt();
         }
 
     }
@@ -181,9 +172,6 @@ public class COSController extends Controller
 
     private void newVM(Message msg){
         String vm_address = (String) msg.getParam("vm_address");
-        if(msg.getReply() == null){
-            System.out.println("Error in insert");
-        }
         vmTable.put(vm_address, new VmInfo(vm_address, msg.getReply()));
         nodeTable.get(msg.getSender()).addVm();
         vmModificationInProgress = false;

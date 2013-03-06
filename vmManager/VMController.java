@@ -61,6 +61,8 @@ public class VMController
                 break;
             case "get_cpu_usage":
                 double load = Utility.getWeightedSystemLoadAverage();
+                //Short circuit for testing
+                load = 1.0;
                 resp = msgFactory.cpuUsageResp(load); 
                 hostNode.write(resp);
                 break;
@@ -96,6 +98,8 @@ public class VMController
             if( highCpuUsage() || lowCpuUsage())
             {
                 load = averageLoad();
+                //Short circuit for testing
+                load = 1.0;
                 System.out.println("Writing Message");
                 msg = msgFactory.notifyCpuUsage(load);;
                 hostNode.write(msg);

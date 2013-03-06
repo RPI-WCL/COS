@@ -64,8 +64,9 @@ public class VmInfo extends MachInfo
         double total = 0;
         for(VmInfo vm: vms){
             double cpu = vm.getCpu();
+            System.out.println("CPU in create: " + Double.toString(cpu));
             if(cpu > Constants.IDEAL_CPU){
-                total += Math.abs((cpu * (1 - 1/vms.size()) - Constants.IDEAL_CPU));
+                total += Math.abs((cpu * (1 - 1.0/vms.size()) - Constants.IDEAL_CPU));
             } else{
                 total +=  Math.abs(cpu - Constants.IDEAL_CPU);
             }
@@ -77,7 +78,7 @@ public class VmInfo extends MachInfo
         for(VmInfo vm: vms){
             double cpu = vm.getCpu();
             if(cpu < Constants.IDEAL_CPU){
-                total += Math.abs((cpu * (1 - 1/vms.size()) - Constants.IDEAL_CPU));
+                total += Math.abs((cpu * (1 - 1.0/vms.size()) - Constants.IDEAL_CPU));
             } else{
                 total +=  Math.abs(cpu - Constants.IDEAL_CPU);
             }

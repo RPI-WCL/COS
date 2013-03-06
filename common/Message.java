@@ -14,7 +14,7 @@ public class Message implements Serializable
     
     private String method;
     private String sender;
-    private CommChannel reply;
+    transient private CommChannel reply;
     private TreeMap<String, Serializable> args;
 
     public Message(String method, String sender){

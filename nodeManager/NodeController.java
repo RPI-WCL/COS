@@ -63,8 +63,10 @@ public class NodeController extends Controller
         theaters = (LinkedList<String>) msg.getParam("theaters");
 
         try{
-            Runtime.getRuntime().exec("xm create " + Constants.PATH_TO_VM_IMAGE);
+            //Runtime.getRuntime().exec("xm create " + Constants.PATH_TO_VM_IMAGE);
+            Runtime.getRuntime().exec("Terminal -x java vmManager.VMController 127.0.0.1");
         } catch(IOException e){
+            e.printStackTrace();
             //TODO: Notify of failure
         }
 

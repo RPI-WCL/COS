@@ -40,18 +40,11 @@ public class ConnectionHandler implements Runnable
                     e.printStackTrace();
                 }
             }
-            else if(rcved == null) {
-                System.out.println("Read null");
-            }
             else{
-                System.out.println("Bad message");
-                try{
-                Thread.sleep(100);
-                }catch(Exception e){}
                 count++;
             }
 
-            if(count == 16 && false) {
+            if(count == 16) {
                 //Since the connection is most likely broken at this point
                 //a flag should probably be set.
                 msg = MessageFactory.droppedConnection(remoteAddr);
