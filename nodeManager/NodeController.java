@@ -18,7 +18,7 @@ public class NodeController extends Controller
 {
     CommChannel cos;
 
-    List<String> theaters;
+    LinkedList<String> theaters;
 
     public NodeController(String cos_addr, int cos_port, int listen_port){
         super(listen_port);
@@ -49,6 +49,8 @@ public class NodeController extends Controller
         cos.write(payload);
 
         //TODO: Tell the VM to start running a theater.
+        if( theaters != null)
+            msg.getReply().write(msgFactory.startTheater(theaters));
     }
 
     private void droppedConnection(Message msg){
@@ -61,10 +63,9 @@ public class NodeController extends Controller
     private void create_vm(Message msg){
         //TODO: Should fix this warning eventually,
         theaters = (LinkedList<String>) msg.getParam("theaters");
-
         try{
-            //Runtime.getRuntime().exec("xm create " + Constants.PATH_TO_VM_IMAGE);
-            Runtime.getRuntime().exec("Terminal -x java vmManager.VMController 127.0.0.1");
+            Runtime.getRuntime().exec("xm create " + Constants.PATH_TO_VM_IMAGE);
+            //Runtime.getRuntime().exec("Terminal -x java vmManager.VMController 127.0.0.1");
         } catch(IOException e){
             e.printStackTrace();
             //TODO: Notify of failure

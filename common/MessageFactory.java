@@ -30,7 +30,7 @@ public class MessageFactory
 
     public Message createVm(LinkedList<String> theaters){
         Message payload = init("create_vm");
-        payload.addParam("peers", theaters);
+        payload.addParam("theaters", theaters);
         return payload;
     }
 

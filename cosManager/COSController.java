@@ -56,7 +56,6 @@ public class COSController extends Controller
             return;
         }
 
-        Utility.debugPrint("Can adapt");
         double magnitude = VmInfo.magnitude(vmTable.values());
         double sum = VmInfo.signedSum(vmTable.values());
         if(created || destroyed){
@@ -83,9 +82,15 @@ public class COSController extends Controller
             target = MachInfo.findMinCpu(vmTable.values());
             action = msgFactory.destroyVm(target.getAddress());
         }
-        else if(magnitude - VmInfo.predictCreate(vmTable.values()) > error * errorcount &&  vmTable.size() < Constants.MAX_VMS){
+        else if(magnitude - VmInfo.predictCreate(vmTable.values()) >= error * errorcount &&  vmTable.size() < Constants.MAX_VMS){
             Utility.debugPrint("Trying to create VM");
-            target = MachInfo.findMinCpu(nodeTable.values());
+            
+            //target = MachInfo.findMinCpu(nodeTable.values());
+            for( NodeInfo s: nodeTable.values()) {
+                if( s.vmCount() == 0) {
+                    target = s;
+                }
+            }
             action = msgFactory.createVm(VmInfo.generateTheaters(vmTable.values()));
         }
 

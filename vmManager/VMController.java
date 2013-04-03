@@ -32,7 +32,22 @@ public class VMController
         msgFactory = new MessageFactory("VM", hostNode);
     }
 
-    private void createTheater(Iterable<String> theaters){
+    private void createTheater(LinkedList<String> theaters){
+        String launch_ios = "java -Dnetif=eth0 -Dconnection=\""
+                          + theaters.getFirst() + "io/protocolActor\" "
+                          + "-cp " + Constants.SALSA_PATH + ":" + Constants.IOS_PATH + " src.IOSTheater";
+        //>/home/user/iosLog.txt &
+        System.out.println(launch_ios);
+        String use_script = "/home/user/launch_theater.sh " + theaters.getFirst();
+        Process p;
+        try{
+            p = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", launch_ios});
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            return;
+        }
+        /*
         try{
             FileWriter fstream = new FileWriter("theaters.txt");
             BufferedWriter out = new BufferedWriter(fstream);
@@ -45,6 +60,29 @@ public class VMController
         catch(IOException e){
             e.printStackTrace();
         }
+        */
+
+        final BufferedReader input = new BufferedReader((new InputStreamReader(p.getInputStream())));
+        final BufferedReader errorInput = new BufferedReader((new InputStreamReader(p.getErrorStream())));
+        Runnable printOutput = new Runnable() {
+            public void run() { 
+                String s;
+                try{
+                    while( true) {
+                        s = input.readLine();
+                        if( s != null)
+                            System.out.println(s);
+                        s = errorInput.readLine();
+                        if( s != null)
+                            System.out.println(s);
+                    }
+                } catch( Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        new Thread(printOutput, "Printing theater output").start();
+
     }
 
     private void handleMessage(Message msg){
@@ -98,9 +136,6 @@ public class VMController
             if( highCpuUsage() || lowCpuUsage())
             {
                 load = averageLoad();
-                //Short circuit for testing
-                load = 1.0;
-                System.out.println("Writing Message");
                 msg = msgFactory.notifyCpuUsage(load);;
                 hostNode.write(msg);
             }

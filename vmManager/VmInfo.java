@@ -18,7 +18,7 @@ public class VmInfo extends MachInfo
 
         for(VmInfo vm : vms) {
             String addr = vm.getAddress();
-            String stripped = addr.substring(addr.indexOf('/' + 1), addr.indexOf(':'));
+            String stripped = addr.substring(addr.indexOf('/')+1, addr.indexOf(':'));
             String result = "rmsp://" + stripped + ":4040/";
             theaters.add(result);
         }

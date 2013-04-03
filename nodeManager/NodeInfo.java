@@ -17,6 +17,10 @@ public class NodeInfo extends MachInfo
         vm_count += 1;
     }
 
+    public int vmCount() {
+        return vm_count;
+    }
+
     public void removeVm(){
         vm_count -= 1;
     }

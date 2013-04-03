@@ -9,7 +9,7 @@ public class Constants
 
     //VM constraints
     public final static int MIN_VMS = 1;
-    public final static int MAX_VMS = 1 << 4;
+    public final static int MAX_VMS = 1 << 1;
 
     //COS options
     public final static int COS_PORT = 9999;
