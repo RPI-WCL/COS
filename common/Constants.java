@@ -20,10 +20,11 @@ public class Constants
 
     //VM options
     public final static int VM_LOOK_BACK = 8;
-    public final static String SALSA_PATH = "/home/user/salsa/salsa0.7.2.jar";
-    public final static String IOS_PATH = "/home/user/ios/ios0.4.jar";
-    public final static String LAUNCH_IOS = "java -cp " + SALSA_PATH + ":" + IOS_PATH +
-                                            " src.testing.reachability.Full theaters.txt";
+    public final static String SALSA_JAR = "/home/user/salsa/salsa0.7.2.jar";
+    public final static String IOS_JAR = "/home/user/ios/ios0.4.jar";
+    public final static String CLASS_PATH = SALSA_JAR + ":" + IOS_JAR;
+    public final static String LAUNCH_IOSTHEATER = "java -Dnetif=eth0 -cp " + CLASS_PATH + " src.IOSTheater > ios_log.txt";
+    public final static String CONNECT_THEATERS = "java -Dnetif=eth0 -cp " + CLASS_PATH + " src.testing.reachability.Full theaters.txt > connect_log.txt";
 
     public final static boolean DEBUG = true;
     private Constants(){}

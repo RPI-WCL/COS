@@ -13,6 +13,7 @@ import common.Message;
 import util.CommChannel;
 import util.Utility;
 import util.Messages;
+import vmManager.VmInfo;
 
 public class NodeController extends Controller
 {
@@ -48,9 +49,11 @@ public class NodeController extends Controller
         Message payload = msgFactory.vmCreation(msg.getSender());
         cos.write(payload);
 
-        //TODO: Tell the VM to start running a theater.
-        if( theaters != null)
+        if(theaters != null) {
+            String childRMSP = VmInfo.convertIPtoRMSP(msg.getReply().getRemoteAddr());
+            theaters.addLast(childRMSP);
             msg.getReply().write(msgFactory.startTheater(theaters));
+        }
     }
 
     private void droppedConnection(Message msg){

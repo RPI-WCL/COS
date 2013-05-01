@@ -33,55 +33,21 @@ public class VMController
     }
 
     private void createTheater(LinkedList<String> theaters){
-        String launch_ios = "java -Dnetif=eth0 -Dconnection=\""
-                          + theaters.getFirst() + "io/protocolActor\" "
-                          + "-cp " + Constants.SALSA_PATH + ":" + Constants.IOS_PATH + " src.IOSTheater";
-        //>/home/user/iosLog.txt &
-        System.out.println(launch_ios);
-        String use_script = "/home/user/launch_theater.sh " + theaters.getFirst();
         Process p;
+        Process q;
         try{
-            p = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", launch_ios});
+            FileWriter fstream = new FileWriter("theaters.txt");
+            BufferedWriter out = new BufferedWriter(fstream);
+            for( String s: theaters)
+                out.write(s + "\n" );
+            out.close();
+            p = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", Constants.LAUNCH_IOSTHEATER});
+            p = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", Constants.CONNECT_THEATERS});
         }
         catch(Exception e){
             e.printStackTrace();
             return;
         }
-        /*
-        try{
-            FileWriter fstream = new FileWriter("theaters.txt");
-            BufferedWriter out = new BufferedWriter(fstream);
-            for( String s: theaters)
-                out.write( theaters + "\n" );
-            out.close();
-
-            Runtime.getRuntime().exec(Constants.LAUNCH_IOS);
-        }
-        catch(IOException e){
-            e.printStackTrace();
-        }
-        */
-
-        final BufferedReader input = new BufferedReader((new InputStreamReader(p.getInputStream())));
-        final BufferedReader errorInput = new BufferedReader((new InputStreamReader(p.getErrorStream())));
-        Runnable printOutput = new Runnable() {
-            public void run() { 
-                String s;
-                try{
-                    while( true) {
-                        s = input.readLine();
-                        if( s != null)
-                            System.out.println(s);
-                        s = errorInput.readLine();
-                        if( s != null)
-                            System.out.println(s);
-                    }
-                } catch( Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        new Thread(printOutput, "Printing theater output").start();
 
     }
 
@@ -99,8 +65,6 @@ public class VMController
                 break;
             case "get_cpu_usage":
                 double load = Utility.getWeightedSystemLoadAverage();
-                //Short circuit for testing
-                load = 1.0;
                 resp = msgFactory.cpuUsageResp(load); 
                 hostNode.write(resp);
                 break;

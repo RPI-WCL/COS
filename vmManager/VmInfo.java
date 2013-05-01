@@ -26,6 +26,12 @@ public class VmInfo extends MachInfo
         return theaters;
     }
 
+    public static String convertIPtoRMSP(String s) {
+        String stripped = s.substring(s.indexOf('/')+1, s.indexOf(':'));
+        String result = "rmsp://" + stripped + ":4040/";
+        return result;
+    }
+
     public static boolean canAdapt(Collection<VmInfo> vms){
         boolean highCpu = false;
         boolean lowCpu = false;

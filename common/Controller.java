@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import util.CommChannel;
-import cosManager.ConStat;
 
 public abstract class Controller
 {
