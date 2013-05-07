@@ -179,6 +179,12 @@ public class Theater implements TheaterService {
                                         hostName = "localhost";
                                 }
                         }
+
+                        String externalIpAddr = System.getProperty( "extip" );
+                        if (externalIpAddr != null) {
+                            hostName = externalIpAddr;
+                        }
+
                         return hostName;
                 }
         }
