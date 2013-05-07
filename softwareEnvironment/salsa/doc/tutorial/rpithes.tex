@@ -1,0 +1,49 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%                                                                 %
+%                            ROOT FILE                            %
+%                                                                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ 
+\documentclass[chap]{thesis}
+
+% Use the first command below if you want captions over 1 line indented. A side
+% effect of this is to remove the use of bold for captions. To restore bold,
+% also include the second line below.
+\usepackage[hang]{caption2}      % to indent subsequent lines of captions
+\usepackage{graphicx}
+\usepackage{alltt}
+\usepackage{verbatim}
+\usepackage{listings}
+\usepackage{html}
+\renewcommand{\captionfont}{\bfseries} % bold caption (needed with caption 
+                                       % package; otherwise bold is default)
+\newcommand{\salsaversion}{1.1.2}
+
+\begin{document}
+%begin{latexonly} 
+\lstset{
+  language=Java,
+  morekeywords={token,self,behavior,join,currentContinuation,module},
+  basicstyle=\small, 
+  stringstyle=\ttfamily,
+  frame=single,
+  aboveskip=0pt,
+  belowskip=0pt  
+}
+%end{latexonly}
+\include{rpititle-mas}   % titlepage material for Master's thesis or project
+
+\include{rpichap1}
+\include{rpichap2}
+\include{rpichap3}
+\include{rpichap4}
+\include{rpichap5}
+\include{rpichap6}
+\specialhead{LITERATURE CITED}
+\begin{singlespace}
+\bibliographystyle{plain}
+\bibliography{mybib}
+\end{singlespace}
+\include{rpiapp}
+ 
+\end{document}

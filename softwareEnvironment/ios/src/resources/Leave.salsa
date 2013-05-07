@@ -1,0 +1,27 @@
+module src.resources;
+
+behavior Leave {
+	void act(String[] arguments) {
+		if (arguments.length < 1) {
+			System.err.println("Usage: java io.resources.Purge <ProtocolActor UAL>*");
+			System.err.println("removes all the protocol actors from their computations");
+		}
+
+		join {
+			for (int i = 0; i < arguments.length; i++) {
+				UAL ual = new UAL(arguments[i]);
+
+				if (ual.getIdentifier().equals("/io/protocolActor")) {
+					new UniversalActor(ual)<-leaveComputation() @
+					standardOutput<-println("Left computation: " + ual.toString());
+				} else {
+					standardOutput<-println("Invalid ual: " + ual.toString());
+				}
+			}
+		} @ standardOutput<-println("Finished.") @ completed();
+	}
+
+	void completed() {
+		System.exit(0);
+	}
+}

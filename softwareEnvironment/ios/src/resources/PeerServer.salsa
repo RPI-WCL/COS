@@ -1,0 +1,68 @@
+module src.resources;
+
+
+behavior PeerServer {
+
+	Vector peers = new Vector();
+
+	PeerServer() {
+		salsa.language.RunTime.receivedUniversalActor();
+	}
+
+	void act(String[] arguments) {
+		standardOutput<-println("PeerServer listening at UAL: " + getUAL());
+	}
+
+	void remove(ActorReference peer) {
+		standardOutput<-println("\tRemoving from registry: " + peer.getUAL().toString());
+		peers.remove(peer);
+	}
+
+	void register(ActorReference peer) {
+		standardOutput<-println("\tAdding to registry: " + peer.getUAL().toString());
+		if (!peers.contains(peer)) peers.add(peer);
+	}
+
+	Vector getPeers(int maxPeers) {
+		standardOutput<-println("\tReceived request for " + maxPeers + " actors.");
+
+		if (peers.size() == 0) return null;
+
+		Vector peersToSend = new Vector();
+		for (int i = 0; i < maxPeers; i++) {
+			peersToSend.add( peers.get((int)(java.lang.Math.random() * peers.size())) );
+		}
+		return peers;
+	}
+
+	String purgeAll() {
+		standardOutput<-println("\tPurging the entire computation.");
+
+		join {
+			if (peers.size() == 0) return "No connected theaters.\n";
+			for (int i = 0; i < peers.size(); i++) {
+				ActorReference target = (ActorReference)peers.get(i);
+				target<-purge() @
+				standardOutput<-println("\t\tPurged: " + target.getUAL().toString());
+			}
+		} @ combine(token) @ currentContinuation;
+	}
+
+	String statusAll() {
+		join {
+			if (peers.size() == 0) return "No connected theaters.\n";
+			for (int i = 0; i < peers.size(); i++) {
+				ActorReference target = (ActorReference)peers.get(i);
+				target<-status();
+			}
+		} @ combine(token) @ currentContinuation;
+	}
+
+	String combine(Object[] results) {
+		String statusAll = "";
+		for (int i = 0; i < results.length; i++) {
+			statusAll += (String)results[i] + "\n\n";
+		}
+		return statusAll;
+	}
+}

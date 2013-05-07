@@ -1,0 +1,102 @@
+module src.testing.benchmarks;
+
+import java.io.FileInputStream;
+import java.util.Vector;
+import java.util.StringTokenizer;
+
+behavior Unconnected {
+	public void act(String[] arguments) {
+		int size = 0;
+		int messageSendingDelay = 0;
+		int messageSize = 0;
+		int processingTime = 0;
+
+		String nameServer = "";
+		Vector theaters = new Vector();
+
+		try {
+			if (arguments.length != 5) {
+				System.err.println("Usage: ");
+				System.err.println("\tjava io.testing.benchmarks.Unconnected <naming/theater information file> " +
+						   "<size> <messageSendingDelay(ms)> <messageSize(bytes)> <processingTime(ms)>");
+				System.exit(0);
+			}
+	                //reads from file:
+	                //Name Server Address
+	                //Peer Theater Address1 ... PeerTheaterAddressN
+
+	                FileInputStream file;
+	                byte input[];
+
+	                try {
+	                        file = new FileInputStream(arguments[0]);
+	                        input = new byte[file.available()];
+	                        file.read(input);
+
+		                StringTokenizer st = new StringTokenizer(new String(input), "\n");
+                                
+		                nameServer = st.nextToken();
+		                while (st.hasMoreTokens()) {
+		                        theaters.add(st.nextToken());
+		                }
+	                } catch (Exception e) {
+	                        System.err.println("Error reading naming/theater information file: " + e);
+	                        System.exit(0);
+	                }
+	        
+			size = new Integer(arguments[1]).intValue();
+
+			messageSendingDelay = new Integer(arguments[2]).intValue();
+			messageSize = new Integer(arguments[3]).intValue();
+			processingTime = new Integer(arguments[4]).intValue();
+		} catch (Exception e) {
+			System.err.println("Usage: ");
+			System.err.println("\tjava io.testing.benchmarks.Unconnected <naming/theater information file> " +
+					   "<nodes> <messageSendingDelay(ms)> <messageSize(bytes)> <processingTime(ms)>");
+			System.exit(0);
+		}
+
+		standardOutput<-println("Creating a unconnected actor graph with: ") @
+		standardOutput<-println("\tnodes in unconnected actor graph: " + size) @
+		standardOutput<-println("\tdelay between message sends: " + messageSendingDelay + "(ms)") @
+		standardOutput<-println("\tsize of messages: " + messageSize + "(bytes)") @
+		standardOutput<-println("\tprocessing intensity of a message: " + processingTime + "(ms)") @
+
+		standardOutput<-println() @
+		standardOutput<-println("Using name server:") @ 
+		standardOutput<-println("\t" + nameServer) @
+		token synchToken = standardOutput<-println("Loading actor graph randomly on theater(s): ");
+
+		for (int i = 0; i < theaters.size(); i++) {
+			synchToken = standardOutput<-println("\t" + (String)theaters.get(i)) : waitfor(synchToken);
+		}
+
+		synchToken = standardOutput<-println() : waitfor(synchToken);
+
+		Node[] nodes = new Node[size];
+		for (int i = 0; i < size; i++) {
+			UAN uan = new UAN(nameServer + "benchmark/node_" + i);
+			UAL ual = new UAL(theaters.get(i%theaters.size()) + "benchmark/unconnected_node_" + i);
+
+			nodes[i] = new Node(messageSendingDelay, messageSize, processingTime) at (uan, ual);
+		}
+
+		standardOutput<-println("Generating links...") : waitfor(synchToken) @
+
+		join {
+			for (int i = 0; i < size; i++) {
+				nodes[i]<-addReference(nodes[i]) @
+				standardOutput<-println("\tGenerated link from node_" + i + " to node_" + i);
+			}
+		} @
+
+		standardOutput<-println("Starting computation...") @
+		join {
+			for (int i = 0; i < size; i++) {
+				nodes[i]<-startSending() @
+				standardOutput<-println("\tnode_" + i + " is now processing.");
+			}
+		} @
+		standardOutput<-println("finished.");
+	} 
+}

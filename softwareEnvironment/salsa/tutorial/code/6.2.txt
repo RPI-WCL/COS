@@ -1,0 +1,7 @@
+//lines 1-2 are equivalent to lines 3-5
+1. token x  = a<-m1();
+2. x = b<-m2(x);
+
+3. token x  = a<-m1();
+4. token y  = b<-m2(x);
+5. x = y;

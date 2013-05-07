@@ -1,0 +1,4 @@
+ret = this.method();  // sequentally execute method() of 'this actor' 
+// and return a value to ret
+System.out.println("Hello World");  // invoke println() of object System.out
+

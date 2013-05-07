@@ -1,0 +1,23 @@
+1. behavior JoinContinuation {
+2.
+3.   int multiply(Object numbers[]){
+4.     return ((Integer)numbers[0]).intValue() * 
+5.            ((Integer)numbers[1]).intValue() * 
+6.            ((Integer)numbers[2]).intValue();
+7.   }
+8.
+9.   int add(int n1, int n2) {
+10.    return n1 + n2;
+11.  }
+12.
+13.  void act(String args[]) {
+14.
+15.    standardOutput<-print("Value: ") @ 
+16.    join {
+17.      add(2,3);
+18.      add(3,4);
+19.      add(2,4);
+20.    } @ multiply( token ) @ standardOutput<-println( token );
+21.  }
+22.
+23.}

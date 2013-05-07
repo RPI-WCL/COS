@@ -1,0 +1,7 @@
+// The message compare(b) will be delivered to Actor a
+//  if Actors a and b has migrated to the target theater
+//  and after a delay of 1 second.
+token x = a<-migrate("rmsp://europa.cs.rpi.edu:4040");
+token y = b<-migrate("rmsp://europa.cs.rpi.edu:4040");
+a<-compare(b) : delayWaitfor(new Integer(1000),x,y); 
+

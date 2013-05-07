@@ -1,0 +1,101 @@
+module src.resources;
+
+
+behavior ObservationCollector {
+	long wait_time = 30000;
+	long iterations = 100;
+
+	String[] locations = new String[0];
+	ActorReference[] protocol_agents = new ActorReference[0];
+	ActorReference[] references = new ActorReference[0];
+
+	ObservationCollector(long wait_time, long iterations) {
+		this.wait_time = wait_time;
+		this.iterations = iterations;
+	}
+
+	void initiate_collection() {
+		System.err.println("Starting ObservationCollector.");
+		randomly_reconfigure_application();		
+	}
+
+	void register_actor(ActorReference actor) {
+		System.err.println("Registering actor: " + actor.getUAN());
+
+		int i;
+		ActorReference[] temp = new ActorReference[references.length+1];
+		for (i = 0; i < references.length; i++) {
+			temp[i] = references[i];
+		}
+		temp[i] = actor;
+		references = temp;
+	}
+
+	void register_location(String location) {
+		location = location.substring(0,location.length()-1);
+		System.err.println("Registering location: " + location);
+
+		System.err.println("locations.length: " + locations.length);
+		System.err.println("protocol_agents.length: " + protocol_agents.length);
+
+		int i = 0;
+		String[] temp = new String[locations.length+1];
+		ActorReference[] temp2 = new ActorReference[protocol_agents.length+1];
+		for (i = 0; i < locations.length; i++) {
+			temp[i] = locations[i];
+			temp2[i] = protocol_agents[i];
+		}
+		temp[i] = location;
+		temp2[i] = (ActorReference)UniversalActor.getReferenceByLocation(location + "/io/protocolActor");
+		locations = temp;
+		protocol_agents = temp2;
+	}
+
+	void gather_observations() {
+		System.err.println("Gathering observations");
+
+		join {
+			for (int i = 0; i < protocol_agents.length; i++) {
+				protocol_agents[i]<-gather_observation();
+			}
+		} @
+		print_responses(token) @
+		randomly_reconfigure_application();
+	}
+
+	void print_responses(Object[] responses) {
+		for (int i = 0; i < responses.length; i++) {
+			System.out.println(responses[i]);
+		}
+	}
+
+	void randomly_reconfigure_application() {
+		System.err.println("randomly reconfiguring application.");
+
+		if (iterations > 0) {
+			String random_location = locations[(int)(java.lang.Math.random()*(double)locations.length)];
+			token wait_token = references[0]<-migrate(random_location + references[0].getUAL().getIdentifier());
+
+			for (int i = 1; i < references.length; i++) {
+				random_location = locations[(int)(java.lang.Math.random()*(double)locations.length)];
+				wait_token = references[i]<-migrate(random_location + references[i].getUAL().getIdentifier()) : waitfor(wait_token);
+			}
+			reset_profiling_agents() : waitfor(wait_token);
+			iterations--;
+		}
+	}
+
+	void reset_profiling_agents() {
+		System.err.println("resetting profiling agents");
+
+		join {
+			for (int i = 0; i < protocol_agents.length; i++) {
+				protocol_agents[i]<-reset_profiling_agent();
+			}
+		} @ delay();
+	}
+
+	void delay() {
+		gather_observations() : delay(new Long(wait_time));
+	}
+}

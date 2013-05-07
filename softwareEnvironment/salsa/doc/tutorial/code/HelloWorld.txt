@@ -1,0 +1,8 @@
+1.  /* HelloWorld.salsa */
+2.  module examples;
+3.  behavior HelloWorld {
+4.    void act( String[] arguments ) {
+5.      standardOutput<-print( "Hello" )@ 
+6.      standardOutput<-print( "World!" );
+7.    }
+8.  }

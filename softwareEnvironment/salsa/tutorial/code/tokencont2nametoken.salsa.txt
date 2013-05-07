@@ -1,0 +1,5 @@
+//line 1 is equivalent to lines 2-3
+1. hello() @ standardOutput<-print(token);
+
+2. token x  = hello();
+3. standardOutput<-print(x);

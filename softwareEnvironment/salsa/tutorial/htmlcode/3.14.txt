@@ -1,0 +1,16 @@
+// The third example - with First-Class Continuation
+// One should see "Hello World" in the standard output 
+// after statement 3 is totally executed.
+...
+void saySomething() \{
+  boolean alwaysTrue=true;
+  if (alwaysTrue) \{
+    standardOutput <- print("Hello ") @ 
+    standardOutput <- print("World ") @ 
+    currentContinuation;
+  \}
+  standardOutput<-println("SALSA");
+\}
+....
+//statement 3 inside some method:
+saySomething() @  standardOutput <- println() ;

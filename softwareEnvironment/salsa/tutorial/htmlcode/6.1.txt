@@ -1,0 +1,6 @@
+1. token y  = a<-m1();
+2.
+3. token z = y;
+4.
+5. y = b<-m2(y);
+6. self<-m()@c<-m3(token, z, y);

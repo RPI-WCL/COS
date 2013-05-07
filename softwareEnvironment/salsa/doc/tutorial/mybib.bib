@@ -1,0 +1,1294 @@
+@string{ActInf = "Acta Informatica"}
+@string{CACM = "Communications of the {ACM}"}
+@string{CompJ = "Computer Journal"}
+@string{Dobbs = "Dr. Dobb's Journal"}
+@string{IPL = "Information Processing Letters"}
+@string{IEEETransComp = "IEEE Transactions on Computers"}
+@string{IEEETransSWE = "IEEE Transactions on Software Engineering"}
+@string{ISJ = "{IBM} Systems Journal"}
+@string{JACM = "Journal of the ACM"}
+@string{JFP = "Journal of Functional Programming"}
+@string{JSS = "Journal of Systems and Software"}
+@string{LNCS = "Lecture Notes in Computer Science"}
+@string{LSC = "Lisp and Symbolic Computation"}
+@string{MK = "Morgan Kaufman"}
+@string{SPE = "Software Practice and Experience"}
+@string{SIGPLAN = "ACM SIGPLAN Notices"}
+@string{TECS = "ACM Transactions on Embedded Computer Systems"}
+@string{TOPLAS = "ACM Transactions on Programming Languages and Systems"}
+@string{TransCompSys = "ACM Transactions on Computer Systems"}
+@string{TransSWE = "ACM Transactions on Software Engineering"}
+
+% PUBLISHER + ADDRESS ABBREVIATIONS
+@string{ACM = "ACM Press"}
+@string{AP = "Academic Press"}
+@string{AW = "Addison-Wesley"}
+@string{BCS = "British Computer Society"}
+@string{CUP = "Cambridge University Press"}
+@string{ENH = "Elsevier-North Holland"}
+@string{ES = "Elsevier Science Publishers"}
+@string{IBM = "IBM Corp."}
+@string{IEEE = "IEEE Press"}
+@string{PH = "Prentice-Hall"}
+@string{MGH = "McGraw-Hill"}
+@string{NH = "North Holland"}
+@string{MIT = "MIT Press"}
+@string{SV = "Springer-Verlag"}
+@string{UA = "USENIX Association"}
+@string{Wiley = "Wiley"}
+
+% INSTITUTION ABBREVIATIONS
+@string{CMU = "Carnegie Mellon University"}
+@string{CORNELL = "Cornell University"}
+@string{DECSRC = "DEC Systems Research Center, Palo Alto, CA"}
+@string{DECWRL = "DEC Western Research Laboratory, Palo Alto, CA"}
+@string{DIKU = "Department of Computer Science (DIKU), University of Copenhagen"}
+@string{INRIA = "Institut National de la Recherche en Informatique et Automatique"}
+@string{Lund = "Lund University, Sweden"}
+@string{MITAI = "MIT AI Laboratory"}
+@string{MITLCS = "MIT Laboratory for Computer Science"}
+@string{PARC = "Xerox PARC, Palo Alto, CA"}
+@string{PRINCETON = "Department of Computer Science, Princeton University"}
+@string{RICE = "Rice University"}
+@string{UCB = "University of California, Berkeley"}
+@string{UKC = "Computing Laboratory, The University of Kent at Canterbury"}
+@string{UoK = "Computing Laboratory, University of Kent"}
+@string{UCSC = "University of California, Santa Cruz"}
+
+
+@ARTICLE{saleh98,
+  AUTHOR = "Saleh E. Abdullahi and A. Ringwood",
+  TITLE = "Garbage Collecting the Internet: A Survey of Distributed Garbage Collection",
+  JOURNAL = {ACM Computing Surveys},
+  VOLUME = {30},
+  NUMBER = {3},
+  PAGES = {330--373},
+  YEAR = {1998}	
+}
+@Book{agha-actors-86,
+  author =	 "Gul Agha",
+  title =	 "Actors: A Model of Concurrent Computation in Distributed Systems",
+  publisher =	 "MIT Press",
+  year =	 "1986"
+}
+@inproceedings{beva87,
+author = "David I. Bevan",
+title = "Distributed Garbage Collection using Reference Counting",
+booktitle = "{PARLE'87}",
+address = "Eindhoven, The Netherlands",
+month = jun,
+year = 1987,
+publisher = SV,
+series = LNCS,
+volume = "258/259",
+pages = "176--187",
+}
+@techreport{birrell93distributed,
+author = "Andrew Birrell and David Evers and Greg Nelson and Susan Owicki and Edward Wobber",
+title = "Distributed Garbage Collection for Network Objects",
+institution = "DEC Systems Research Center",
+address = "130 Lytton Avenue, Palo Alto, CA 94301",
+number = 116,
+month = dec,
+year = 1993,
+}
+@article{blackburn01,
+ author = {Stephen M. Blackburn and Richard L. Hudson and Ron Morrison and J. Eliot B. Moss and David S. Munro and John Zigman},
+ title = {Starting with termination: a methodology for building distributed garbage collection algorithms},
+ journal = {Aust. Comput. Sci. Commun.},
+ volume = {23},
+ number = {1},
+ year = {2001},
+ pages = {20--28},
+ publisher = {IEEE Computer Society Press},
+ address = {Los Alamitos, CA, USA},
+}
+@ARTICLE{chandy-85,
+  AUTHOR = "K. Mani Chandy and Leslie Lamport",
+  TITLE = "Distributed Snapshots: Determining Global States of Distributed Systems",
+  JOURNAL = {ACM Transactions on Computer Systems},
+  VOLUME = {3},
+  NUMBER = {1},
+  PAGES = {63--75},
+  YEAR = {1985}	
+}
+@inproceedings{dick96,
+title = "Incremental, Distributed Orphan Detection and Actor Garbage Collection
+Using Graph Partitioning and {Euler} Cycles",
+author = "Peter Dickman",
+booktitle = "{WDAG'96}",
+address = "Bologna",
+series = LNCS, 
+volume = 1151,
+pages={141--158},
+publisher = SV,
+month = oct,
+year = 1996
+}
+@Article{hewitt-actors-77,
+  Title =	 "Viewing Control Structures as Patterns of Passing Messages",
+  Author =	 {{Hewitt, C.}},
+  Journal =	 "Journal of Artificial Intelligence",
+  Volume =	 {8},
+  Number =   {3},
+  Year =	 "1977",
+  Month =	 "June",
+  Pages =	 {323--364}
+}
+@article{hudson97oopsla,
+ author = {Richard L. Hudson and Ron Morrison and J. Eliot B. Moss and David S. Munro},
+ title = {Garbage Collecting the World: One Car at a Time},
+ journal = {SIGPLAN Not.},
+ volume = {32},
+ number = {10},
+ year = {1997},
+ pages = {162--175},
+ publisher = {ACM Press},
+ address = {New York, NY, USA},
+}
+@inproceedings{hugh85,
+author = "John Hughes",
+title = "A Distributed Garbage Collection Algorithm",
+booktitle = "Record of the 1985 Conference on Functional Programming and Computer Architecture",
+series = "LNCS",
+publisher = SV,
+volume = 201,
+month = sep,
+year = 1985,
+address = "Nancy, France",
+pages = "256--272",
+}
+@INPROCEEDINGS{kafura-actorGCdef-91,
+  AUTHOR = "Dennis Kafura and Doug Washabaugh and Jeff Nelson",
+  TITLE = "Garbage Collection of Actors",
+  BOOKTITLE = "{OOPSLA'90} {ACM} Conference on Object-Oriented Systems, Languages and Applications",
+  PAGES = "126--134",
+  ORGANIZATION = "ACM Press",
+  MONTH = "October", 
+  YEAR = {1990}	
+}
+@ARTICLE{kafura-95,
+	AUTHOR = "Dennis Kafura and Manibrata Mukherji and Douglas Washabaugh",
+	TITLE = "Concurrent and Distributed Garbage Collection of Active Objects",
+	JOURNAL = "{IEEE TPDS}",
+	VOLUME = {6},
+	NUMBER = {4},
+	pages={337--350},
+	MONTH = "April",
+	YEAR = {1995}	
+}
+@inproceedings{ladi92,
+title = "Garbage Collection of a Distributed Heap",
+author = "Rivka Ladin and Barbara Liskov",  
+booktitle = "International Conference on Distributed Computing Systems",
+address = "Yokohama",  
+pages={708--715},
+month = jun, 
+year = 1992,
+}
+@inproceedings{Lang-staticPartition-92,
+  author = {Bernard Lang and Christian Queinnec and Jos\'{e} Piquer},
+  title = {Garbage Collecting the World},
+  booktitle = "{POPL'92} {ACM SIGPLAN-SIGACT} Symposium on Principles of Programming Languages",
+  year = {1992},
+  isbn = {0-89791-453-8},
+  pages = {39--50},
+  location = {Albuquerque, New Mexico, United States},
+  publisher = {ACM Press},
+}
+@inproceedings{fess01,
+title = {Detecting Distributed Cycles of Garbage in  Large-Scale Systems},
+author = {Le Fessant, Fabrice},
+booktitle = {Principles of Distributed Computing (PODC)},
+address = {Rhodes Island},
+pages={200--209},
+month = aug,
+year = 2001,
+}
+@inproceedings{lerm86,
+author = "C. Lermen and Dieter Maurer",
+title = "A Protocol for Distributed Reference Counting",
+booktitle = "{ACM} Symposium on Lisp and Functional Programming",
+publisher = ACM,
+series = SIGPLAN,
+address = "Cambridge, MA",
+month = aug,
+year = 1986,
+pages = "343--350",
+}
+@inproceedings{mahe95,
+title = "Collecting Cyclic Distributed Garbage by Controlled Migration",
+author = "Umesh Maheshwari and Barbara Liskov",
+booktitle = "{PODC'95} Principles of Distributed Computing",
+year = 1995,
+pages={57--63}
+}
+@inproceedings{mahe97,
+title = "Collecting Cyclic Distributed Garbage by Back Tracing",
+author = "Umesh Maheshwari and Barbara Liskov",  
+booktitle = "{PODC'97} Principles of Distributed Computing", 
+address = {Santa Barbara, CA},
+publisher = ACM,
+pages = {239--248},
+year = 1997
+}
+@article{Matocha98,
+ author = {Jeff Matocha and Tracy Camp},
+ title = {A taxonomy of distributed termination detection algorithms},
+ journal = {J. Syst. Softw.},
+ volume = {43},
+ number = {3},
+ year = {1998},
+ issn = {0164-1212},
+ pages = {207--221},
+ publisher = {Elsevier Science Inc.},
+ address = {New York, NY, USA},
+}
+@Article{moreau-01,
+  author = 	 {Luc Moreau},
+  title = 	 {Tree Rerooting in Distributed Garbage Collection: Implementation
+and Performance Evaluation},
+  journal = 	 {Higher-Order and Symbolic Computation},
+  year = 	 2001,
+  volume =	 14,
+  number =	 4,
+  pages =	 {357--386}
+}
+@inproceedings{piqu91,
+title = "Indirect Reference Counting: A Distributed Garbage
+Collection Algorithm",
+author = {Jos\'{e} M. Piquer},
+booktitle = "{PARLE'91}",
+address = {Eindhoven, The Netherlands},
+month = jun,  
+year = 1991, 
+publisher = SV,
+series = LNCS,
+volume = 505,
+pages={150--165}
+}
+@INPROCEEDINGS{puaut-94,
+  AUTHOR = "Isabelle Puaut",
+ TITLE = "A Distributed Garbage Collector for Active Objects",
+  BOOKTITLE = "{OOPSLA'94} {ACM} Conference on Object-Oriented Systems, Languages and Applications",
+  PAGES = "113--128",
+  ORGANIZATION = "ACM Press",
+  YEAR = {1994}	
+}
+@inproceedings{rodrigues-dynamicPartition-96,
+title = "A Cyclic Distributed Garbage Collector for {N}etwork {O}bjects",  
+author = "Helena Rodrigues and Richard Jones",
+booktitle = "WDAG'96",  
+address = "Bologna",
+series = LNCS,   
+volume = 1151,
+publisher = SV, 
+month = oct,
+year = 1996,
+pages = {123--140},
+}
+@article{sche89,
+title = "Incremental Distribution of Timestamp Packets --- a New Approach to 
+Distributed Garbage Collection",
+author = "M. Schelvis",
+address = "Parcplace Systems, Mt View, Ca, 94043",
+journal = Sigplan,
+publisher = ACM,
+year = 1989,
+volume = 24,
+number = 10,
+pages = "37--48"
+}
+@techreport{shap92a,
+author = {Marc Shapiro and Peter Dickman and David Plainfoss\'{e}},
+title = "{SSP} Chains: Robust, Distributed References Supporting Acyclic Garbage Collection",
+institution = "INRIA",
+type = "Rapports de Recherche",
+number = 1799,
+month = nov,
+year = 1992,
+}
+@mastersthesis{vardhan-98,
+	AUTHOR = "A. Vardhan",
+	TITLE = "Distributed Garbage Collection of Active Objects: A Transformation and Its Applications to Java Programming",
+	SCHOOL = "UIUC",
+	ADDRESS = "Urbana Champaign, Illinois",
+	YEAR = "1998"	
+}
+@inproceedings{vard02,
+title = {Using Passive Object Garbage Collection Algorithms},
+author = {Abhay Vardhan and Gul Agha},
+booktitle = {{ISMM'02}},
+address = {Berlin},
+series = SIGPLAN,
+publisher = ACM,
+month = jun,
+year = 2002,
+pages = {106--113}
+}
+@inproceedings{Veiga-05,
+title = "Asynchronous Complete Distributed Garbage Collection",
+author = "Luis Veiga and Paulo Ferreira",
+booktitle = "{IPDPS 2005}",
+editor = "Ozalp Babaoglu and Keith Marzullo",
+address = "{Denver, Colorado, USA}",
+month = apr,
+year = 2005,
+}
+@INPROCEEDINGS{Venk-92,
+  AUTHOR = "N. Venkatasubramanian and G. Agha and C. Talcott",
+  TITLE = "Scalable Distributed Garbage Collection for Systems of Active Objects",
+  BOOKTITLE = "{IWMM'92}", 
+  series = LNCS,   
+  volume = 637,
+  pages ={134--147},
+  publisher = SV,
+  YEAR = {1992}	
+}
+@phdthesis{vest87,
+title = "Garbage collection: An exercise in distributed, fault-tolerant 
+programming",
+author = "Stephen C. Vestal",
+school = "University of Washington, Seattle, WA",
+year = "1987",
+}
+@inproceedings{wats87,
+author = "Paul Watson and Ian Watson",
+title = "An Efficient Garbage Collection Scheme for Parallel Computer Architectures",
+booktitle = "{PARLE'87}",
+address = "Eindhoven, The Netherlands",
+month = jun,
+year = 1987,
+publisher = SV,
+series = LNCS,
+volume = "258/259",
+pages = "432--443"
+}
+@Misc{salsa-lang-02,
+  author =	 "{Worldwide Computing Laboratory}",
+  title =	 "{The SALSA Programming Language}",
+  year =	 2006,
+  note =	 "http://wcl.cs.rpi.edu/salsa/"
+}
+@techreport{wang05tec,
+author = {{Wei-Jen} Wang and Carlos A. Varela},
+title = "Distributed Garbage Collection for Mobile Actor Systems: The Pseudo Root Approach",
+institution = "Dept. of Computer Science, R.P.I.",
+number = "{06-04}",
+month = feb,
+year = 2006,
+note = {Extended Version of the GPC'06 Paper}
+}
+
+@Article{varela-agha-salsa-oopsla-2001,
+author = "Carlos A. Varela and Gul Agha",
+title = "Programming Dynamically Reconfigurable Open Systems with {SALSA}",
+journal = "ACM SIG{\-}PLAN Notices. {OOPSLA'2001} {ACM} Conference on Object-Oriented Systems, Languages and Applications",
+volume = "36",
+number = "12",
+pages = "20--34",
+month = dec,
+year = "2001"
+}
+
+@Article{elmaghraoui-ios-ijhpca-2006,
+author = {Kaoutar El Maghraoui and Travis J. Desell and Boleslaw K. Szymanski and Carlos A. Varela},
+editor = {Larry Carter and Henri Casanova and Fr\`{e}d\`{e}ric Desprez and Jeanne Ferrante and Yves Robert},
+title = {The {Internet Operating System}: Middleware for Adaptive Distributed Computing},
+journal = {International Journal of High Performance Computing Applications (IJHPCA), Special Issue on Scheduling Techniques for Large-Scale Distributed Platforms},
+year = {2006},
+publisher = {SAGE Publications},
+volume = {20},
+number = {4},
+pages = {467-480},
+}
+
+@Misc{MPI,
+  title =	 {Message Passing Interface Forum},
+  note = {http://www.mpi-forum.org/}
+}
+
+@inproceedings{wang06pr,
+  author    = {{Wei-Jen} Wang and
+               Carlos A. Varela},
+  title     = {Distributed Garbage Collection for Mobile Actor Systems:
+               The Pseudo Root Approach.},
+  booktitle = {Advances in Grid and Pervasive Computing, First International
+               Conference, GPC 2006},
+  month      = {May},
+  year      = {2006},
+  volume    = {3947},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer},
+  pages     = {360--372},
+}
+
+@InProceedings{Misra83,
+     author =       "J. Misra",
+     title =        "Detecting Termination of Distributed Computations Using Markers",
+     booktitle =    "2nd ACM SIGACT-SIGOPS Symposium on Principles of
+                    Distributed Computing",
+     year =         "1983",
+     pages = 	    "290--294",
+}
+
+@InProceedings{Bronevetsky03PPoPP,
+ author   = {Bronevetsky, Greg and Marques, Daniel and Pingali, Keshav and Stodghill, Paul},
+ title    = {Automated application-level checkpointing of {MPI} programs},
+ pages    = {84--94},
+ booktitle      = {Proceedings of the 2003 ACM SIGPLAN Symposium on Principles of Parallel Programming (PPoPP-03)},
+ PUBLISHER  = {ACM Press},
+ year      = {2003},
+}
+
+@inproceedings{sato96,
+  author    = {Y. Sato and
+               Michiko Inoue and
+               Toshimitsu Masuzawa and
+               Hideo Fujiwara},
+  title     = {A Snapshot Algorithm for Distributed Mobile Systems.},
+  booktitle = {ICDCS '96: Proceedings of the 16th International Conference on Distributed Computing Systems (ICDCS '96)},
+  year      = {1996},
+  pages     = {734--743},
+  publisher = {IEEE Computer Society},
+}
+
+@Book{yonezawa-abcl-90,
+  title =	 "ABCL An Object-Oriented Concurrent System",
+  publisher =	 "MIT Press",
+  year =	 "1990",
+  editor =	 "A. Yonezawa",
+  address =	 "Cambridge, Mass."
+}
+
+@PhDThesis{kim-thal-97,
+  author =	 "W. Kim",
+  title =	 {{THAL: An Actor System for Efficient and Scalable Concurrent Computing}},
+  school =	 "University of Illinois at Urbana-Champaign",
+  year =	 "1997",
+  month =	 May,
+  note =	 ""
+}
+@Book{erlang,
+  author =	 {J. Armstrong and R. Virding and C. Wikstr\"{o}m and
+                  M. Williams},
+  title = 	 {Concurrent Programming in Erlang},
+  publisher = 	 {Prentice Hall},
+  year = 	 1996,
+  edition =	 {2nd}
+}
+
+@Misc{eright,
+  title =	 {E},
+  note = {http://www.erights.org/}
+}
+
+@Misc{actor-foundry-98,
+  author =	 "{Open Systems Lab}",
+  title =	 "{The Actor Foundry: A Java-based Actor Programming Environment}",
+  year =	 1998,
+  note =	 "http://osl.cs.uiuc.edu/foundry/"
+}
+
+@InProceedings{briot-actalk-89,
+  author = 	 {J.-P. Briot},
+  title = 	 {{Actalk: a testbed for classifying and designing 
+		   actor languages in the Smalltalk-80 environment}},
+  booktitle = 	 {Proceedings of the European Conference on Object 
+		  Oriented Programming (ECOOP'89)},
+  pages =	 {109--129},
+  year =	 1989,
+  publisher =	 {Cambridge University Press}
+}
+
+
+@inproceedings{Bacon03Controlling,
+  author = "David F. Bacon and Perry Cheng and V. T. Rajan",
+  title = "Controlling Fragmentation and Space Consumption in the {Metronome}, a Real-time Garbage Collector for {Java}",
+  booktitle = "Proceedings of the Conference on Languages, Compilers, and Tools for Embedded Systems",
+  pages = {81--92},
+  year = 2003,
+  month = Jun,
+  address = "San Diego, California",
+  xjournal = "SIGPLAN Notices",
+  xvolume = {38},
+  xnumber = {7},
+  issn = {0362-1340},
+}
+
+@phdthesis{broadway96,
+ author = {Daniel Charles Sturman},
+  title =	 {{Modular Specification of Interaction Policies in
+                  Distributed Computing}},
+  school =	 "University of Illinois at Urbana-Champaign",
+  year =	 "1996",
+  month =	 May,
+  note =	 "TR UIUCDCS-R-96-1950",
+ }
+
+@InProceedings{elmaghraoui-iosmpi-ppam-2005,
+author = {Kaoutar {El Maghraoui} and Boleslaw Szymanski and Carlos Varela},
+title = {An Architecture for Reconfigurable Iterative {MPI} Applications in Dynamic Environments},
+booktitle = {Proc. of the Sixth International Conference on Parallel Processing and Applied Mathematics (PPAM'2005)},
+editor = {R. Wyrzykowski and J. Dongarra and N. Meyer and J. Wasniewski},
+year = 2005,
+number = 3911,
+series = {LNCS},
+address = {Poznan, Poland},
+month = {September},
+pages = "258--271", 
+}
+
+@InBook{ pdcg06,
+author = {Laurent Baduel and Fran\c{c}oise Baude and Denis Caromel and Arnaud Contes and Fabrice Huet and Matthieu Morel and Romain Quilici},
+editors = {Jos\'e C. Cunha and Omer F. Rana},
+title = {{Grid Computing: Software Environments and Tools}},
+chapter = {Programming, Deploying, Composing, for the Grid},
+publisher = {Springer-Verlag},
+YEAR = {2006},
+MONTH = {January},
+} 
+
+
+@TechReport{omg-corba-97,
+  author =	 "{Object Management Group}",
+  title =	 "{CORBA} services: Common Object Services
+                  Specification version 2.",
+  institution =	 "Object Management Group",
+  year =	 1997,
+  month =	 "June",
+  note =	 "http://www.omg.org/corba/"
+}
+
+
+@BOOK{dcom,
+    AUTHOR="G. Eddon and H. Eddon",
+    TITLE="Inside Distributed {COM}",
+    PUBLISHER="Microsoft Press, Redmond, WA",
+    YEAR="1998"
+}
+
+@Misc{javasoft-rmi-96,
+  author =	 "{Sun Microsystems Inc. -- JavaSoft}",
+  title =	 "{Remote Method Invocation Specification}",
+  note =	 "Work in
+                  progress. http://www.javasoft.com/products/jdk/rmi/",
+  year =	 1996
+}
+
+@BOOK{Milner80,
+  AUTHOR = {Robin Milner},
+  PUBLISHER = {Springer-Verlag},
+  TITLE = {A Calculus of Communicating Systems},
+  YEAR = {1980},
+  SERIES = {Lecture Notes in Computer Science},
+  VOLUME = 92,
+}
+
+@Article{Sangiorgi:2000:CMS,
+  author =       "Davide Sangiorgi",
+  title =        "{{\em Communicating and Mobile Systems: the
+                 $\pi$-calculus}, Robin Milner, Cambridge University
+                 Press, Cambridge, 1999, 174 pages, ISBN
+                 0-521-64320-1}",
+  journal =      "Science of Computer Programming",
+  volume =       "38",
+  number =       "1--3",
+  pages =        "151--153",
+  month =        aug,
+  year =         "2000",
+  coden =        "SCPGD4",
+  ISSN =         "0167-6423",
+}
+
+@inproceedings{fournet96popl,
+  title = "{The Reflexive CHAM and the Join-Calculus}",
+  author = "Cedric Fournet and Georges Gonthier",
+  booktitle = {{ACM SIGPLAN-SIGACT} Symposium on Principles of Programming Languages},
+  pages={372--385},
+  year = 1996,
+}
+
+@ARTICLE{cardelli00popl,
+  AUTHOR = {Luca Cardelli and Andrew Gordon},
+  TITLE = {Mobile Ambients},
+  JOURNAL = {Theoretical Computer Science},
+  YEAR = 2000,
+  VOLUME = 240,
+  NUMBER = 1,
+  PAGES = {177-213},
+  MONTH = {June}
+}
+
+
+@InProceedings{berkeley-seti-97,
+  author = 	 {W.T. Sullivan and D. Werthimer and S. Bowyer and J. Cobb 
+                  and D. Gedye and D. Anderson},
+  title = 	 {{A New Major SETI Project based on project SERENDIP data 
+                   and 100,000 Personal Computers}},
+  booktitle = 	 {Proceedings of the Fifth International Conference on 
+                  Bioastronomy},
+  editors =      {C.B. Cosmovici and S. Bowyer and D. Werthimer},
+  year =	 1997,
+  publisher =	 {Editrice Compositori, Bologna, Italy}
+}
+
+@article{stanford-folding-02,
+  author = 	 {Bojan Zagrovic and Christopher D. Snow and 
+		  Michael R. Shirts and Vijay S. Pande},
+  title = 	 {{Simulation of Folding of a Small Alpha-helical Protein in 
+		   Atomistic Detail using Worldwide Distributed Computing}},
+  journal =	 {Journal of Molecular Biology},
+  volume =	 323,
+  year =	 2002,
+  pages =	 "927--937"
+}
+
+@BOOK{GridBook,
+  TITLE = {The Grid: Blueprint for a Future Computing Infrastructure Second Edition},
+   Editor = {Foster, I and Kesselman, C},
+   Publisher = {Morgan Kaufman},
+   Year = {2004} 
+}
+
+@ARTICLE{foster-anatomy,
+   author =	 {Ian Foster and Carl Kesselman and Steve Tuecke},
+   title =	 {{The Anatomy of the Grid: Enabling Scalable Virtual
+                  Organizations}},
+   journal =	 {International Journal of Supercomputing
+                  Applications},
+   year =	 {2002},
+   volume =	 {15},
+   number =	 {3},
+   pages = {200--222}
+}
+
+@article{legion,
+ author = {Andrew S. Grimshaw and Wm. A. Wulf and CORPORATE The Legion Team},
+ title = {The Legion Vision of a Worldwide Virtual Computer},
+ journal = {Commun. ACM},
+ volume = {40},
+ number = {1},
+ year = {1997},
+ issn = {0001-0782},
+ pages = {39--45},
+ doi = {http://doi.acm.org/10.1145/242857.242867},
+ publisher = {ACM Press},
+ address = {New York, NY, USA},
+}
+
+@INBOOK{ogsa,
+  chapter =	 {{The Physiology of the Grid}},
+  pages =	 {217--249},
+  title =	 {{Grid Computing: Making the Global Infrastructure a
+                  Reality}},
+  publisher =	 {Wiley},
+  year =	 {2003},
+  author =	 {Ian Foster and Carl Kesselman and Jeffrey M. Nick
+                  and Steven Tuecke},
+  optseries =	 {Wiley Series in Communications Networking and
+                  Distributed Systems},
+}
+
+@article{grimshaw04legionglobus,
+  author =	 {A. S. Grimshaw and M. A. Humphrey and A. Natrajan},
+  title =	 "A philosophical and technical comparison of {Legion}
+                  and {Globus}",
+  journal =	 {IBM J. Res. Dev.},
+  volume =	 {48},
+  number =	 {2},
+  year =	 {2004},
+  issn =	 {0018-8646},
+  pages =	 {233--254},
+  publisher =	 {IBM Corp.},
+}
+
+@PhdThesis{varela-phd-2001,
+author = {Carlos A. Varela},
+title = {{Worldwide Computing with Universal Actors: Linguistic
+	  Abstractions for Naming, Migration, and Coordination}},
+school = {U. of Illinois at Urbana-Champaign},
+year = 2001,
+month = "May"
+}
+
+@book{jone96,
+author = "Richard E. Jones",
+  title = "Garbage Collection: Algorithms for Automatic Dynamic Memory Management",
+  publisher = Wiley,
+  address = {Chichester},
+  month = jul,
+  year = 1996,
+  ISBN = "0--471--94148--4",
+  note = "With a chapter on Distributed Garbage Collection by R. Lins.",
+}
+
+@techreport{wils94,
+title = "Uniprocessor Garbage Collection Techniques",
+author = "Paul R. Wilson",
+  institution = "University of Texas",
+  pages={67 pp},
+month = jan,
+year = 1994,
+}
+
+@techreport{bart89,
+author = "Joel F. Bartlett",
+title = "Mostly-{C}opying Garbage Collection picks up Generations and {C++}",
+institution = DECWRL,
+  type = "Technical Note",
+number = "TN--12",
+month = oct,
+  year = "1989",
+}
+
+@Book{gosling-java-96,
+  author =	 "J. Gosling and B. Joy and G. Steele",
+  title =	 {{The Java Language Specification}},
+  publisher =	 "Addison Wesley",
+  year =	 "1996"
+}
+
+@article{frie79,
+  author = "Daniel P. Friedman and David S. Wise",
+  title = "Reference Counting Can Manage the Circular Environments of Mutual Recursion",
+journal = IPL,
+publisher = NH,
+  volume = 8,
+number = 1, 
+month = jan,
+year = 1979,
+pages = "41--45",
+}
+
+
+@inproceedings{brow85,
+  author = "David R. Brownbridge",
+title = "Cyclic Reference Counting for Combinator Machines",
+  booktitle = "Record of the 1985 Conference on Functional Programming and Computer Architecture",
+editor = "Jean-Pierre Jouannaud",
+  series = LNCS,
+  publisher = SV,
+volume = 201,
+  pages = "273--288",
+month = sep, 
+year = 1985,
+address = "Nancy, France",
+}
+
+@mastersthesis{salk87,
+  author = "Jon D. Salkild", 
+title = "Implementation and Analysis of Two Reference Counting Algorithms",
+school = "University College", 
+address = "London",
+year = "1987",
+}
+
+@article{chri84,
+  author = "T. W. Christopher",
+title = "Reference Count Garbage Collection",
+journal = SPE,
+publisher = Wiley,
+volume = 14,
+  number = 6,
+  pages = "503--507",
+month = jun,
+year = "1984",
+}
+
+
+@article{lins90a,
+  author = "Rafael D. Lins", 
+title = "Cyclic Reference Counting with Lazy Mark-Scan",
+journal = IPL,
+  publisher = NH,
+volume = 44,
+number = 4,
+pages = "215--220",
+year = 1992,
+}
+
+@inproceedings{ bacon01ecoop,
+  title = "{Concurrent Cycle Collection in Reference Counted Systems}",
+  author = "David F. Bacon and V. T. Rajan", 
+booktitle = "Proceedings of 15th European Conference on Object-Oriented Programming, ECOOP 2001",
+    editor = {J{\o}rgen Lindskov Knudsen}, 
+pages = "207--235",
+address = {Budapest},
+month = jun,
+  year = 2001,
+}
+
+@article{chen70,
+author = " C. J. Cheney",
+title = "A Non-Recursive List Compacting Algorithm",
+journal = CACM,
+  publisher = ACM,
+volume = 13,
+number = 11,
+pages = "677--678",
+month = nov,
+  year = 1970,
+}
+
+@article{bake78,
+author = "Henry G. Baker",
+title = "List Processing in Real-Time on a Serial Computer",
+  journal = CACM,
+publisher = ACM,
+  volume = 21,
+  number = 4,
+pages = "280--294",
+year = "1978",
+}
+
+@article{unga84,
+  title = "Generation Scavenging: A Non-Disruptive High Performance Storage 
+Reclamation Algorithm",
+author = "David  M. Ungar",
+  journal = SIGPLAN,
+  volume = 19,
+number = 5,
+pages = "157--167",
+publisher = ACM,
+  month = Apr,
+year = 1984,
+}
+
+@inproceedings{stef00,
+  author = {Darko Stefanovic and Kathryn S. McKinley and J. Eliot B. Moss},
+  title = {On Models for Object Lifetime Distributions},
+  booktitle = {{ISMM 2000} Proceedings of the Second International Symposium on Memory Management},
+editor = {Tony Hosking},
+address = {Minneapolis, MN},
+series = SIGPLAN,
+  volume = "36(1)",
+  pages = {137-142},
+publisher = ACM,
+  month = oct, 
+year = 2000
+}
+
+@inproceedings{stef02,
+  title = {Older-First Garbage Collection in Practice: Evaluation in a {J}ava
+Virtual Machine},
+  author = {Darko Stefanovic and Matthew Hertz and Stephen Blackburn and Kathryn
+McKinley and J. Eliot Moss},
+booktitle = {ACM SIGPLAN Workshop on Memory System Performance (MSP 2002)},
+address = {Berlin},
+pages = {25--36},
+month = jun,
+year = 2002
+}
+
+@inproceedings{huds92,
+  title = "Incremental Garbage Collection for Mature Objects",
+author = "Richard L. Hudson and J. Eliot B. Moss",
+  booktitle = "Proceedings of International Workshop on Memory Management",
+  editor = "Yves Bekkers and Jacques Cohen",
+address = "St Malo, France",
+publisher = SV,
+  series = LNCS, 
+pages = {388--403},
+month = sep, 
+year = 1992
+}
+
+@article{appe89, 
+title = "Simple Generational Garbage Collection and Fast Allocation",
+  author = "Andrew W. Appel", 
+institution = princeton,
+journal = SPE,
+  publisher = Wiley,
+year = 1989,
+volume = 19,
+number = 2,
+pages = "171--183",
+}
+
+@InProceedings{moon-1984,
+  author =       "David A. Moon",
+  title =        "Garbage Collection in a Large {Lisp} System",
+  booktitle =    "Conference Record of the 1984 {ACM} Symposium on Lisp
+                 and Functional Programming",
+  publisher =    "ACM",
+  month =        aug,
+  year =         "1984",
+  pages =        "235--246",
+}
+
+@article{stee76,
+  author    = {Guy L. Steele Jr.},
+  title     = {Multiprocessing Compactifying Garbage Collection.},
+  journal   = {Commun. ACM},
+  volume    = {18},
+  number    = {9},
+  year      = {1975},
+  pages     = {495-508},
+}
+
+@article{dijk76b,
+  author    = {Edsger W. Dijkstra and
+               Leslie Lamport and
+               Alain J. Martin and
+               Carel S. Scholten and
+               Elisabeth F. M. Steffens},
+  title     = {On-the-Fly Garbage Collection: An Exercise in Cooperation.},
+  journal   = {Commun. ACM},
+  volume    = {21},
+  number    = {11},
+  year      = {1978},
+  pages     = {966-975},
+  publisher = ACM,
+}
+
+@article{yuas90,
+author = "Taichi Yuasa",
+title = "Real-Time Garbage Collection on General-Purpose Machines",
+  journal = "Journal of Software and Systems",
+  volume = 11, 
+number = 3, 
+pages = "181--198",
+year = 1990,
+}
+
+@article{boeh91, 
+title = "Mostly Parallel Garbage Collection",
+author = "Hans-Juergen Boehm and Alan J. Demers and Scott  Shenker",
+address = PARC, 
+journal = SIGPLAN,
+publisher = ACM,
+  year = 1991,
+  volume = 26,
+number = 6,
+pages = "157--164",
+}
+
+@inproceedings{bara03,
+title = {Mostly Concurrent Garbage Collection Revisited},
+author = {Katherine Barabash and Yoav Ossia and Erez Petrank},
+  booktitle = "{OOPSLA'03} {ACM} Conference on Object-Oriented Systems, Languages and Applications",
+  address = {Anaheim, CA},
+  publisher = ACM,
+series = SIGPLAN, 
+pages = {255--268},
+month = nov,
+year = 2003,
+}
+
+
+@inproceedings{ossi02,
+title = {A Parallel, Incremental and Concurrent {GC} for Servers},
+author = {Yoav Ossia and Ori Ben-Yitzhak and Irit Goft and Elliot K. Kolodner and Victor Leikehman and Avi Owshanko},
+  booktitle = "Proceedings of {SIGPLAN 2002} Conference on Programming Languages Design and Implementation",
+address = {Berlin},
+month = jun,
+year = 2002,
+publisher = ACM,
+series = SIGPLAN,  
+pages = {129--140},
+}
+
+
+@inproceedings{prin00a,
+  author = {Tony Printezis and David Detlefs},
+  title = {A Generational Mostly-Concurrent Garbage Collector},
+  booktitle = {{ISMM 2000} Proceedings of the Second International Symposium on Memory Management},  
+editor = {Tony Hosking}, 
+address = {Minneapolis, MN}, 
+series = SIGPLAN,
+volume = "36(1)",
+pages = {143--154},
+publisher = ACM,
+month = oct,
+  year = 2000,
+}
+
+@article{appe88,
+  title = "Real-Time Concurrent Collection on Stock Multiprocessors", 
+author = "Andrew W. Appel and John R. Ellis and Kai Li",
+  journal = Sigplan, 
+publisher = ACM, 
+year = 1988,
+volume = 23,
+number = 7,
+pages = "11--20",
+}
+
+@Article{jul-emerald-88,
+  author = 	 {Eric Jul and Henry M. Levy and Norman C. Hutchinson and Andrew P. Black},
+  title = 	 {Fine-Grained Mobility in the {Emerald} System},
+  journal = 	 {TOCS},
+  year = 	 1988,
+  volume =	 6,
+  number =	 1,
+  pages =	 {109--133}
+}
+
+@inproceedings{lisk86,
+title = "Highly Available Distributed Services and Fault-Tolerant Distributed 
+Garbage Collection",
+  author = "Barbara Liskov and Rivka Ladin",
+  pages = "29--39",
+  booktitle = "Proceedings of the Fifth Annual ACM Symposium on the 
+Principles on Distributed Computing",
+address = "Calgary", 
+  month = aug,
+  editor = "J. Halpern",
+  publisher = ACM,
+  year = 1986
+}
+
+@phdthesis{bish77,
+author = "Peter B. Bishop",
+title = "Computer Systems with a Very Large Address Space and Garbage Collection",
+note = "Technical report MIT/LCS/TR--178",
+school = "MIT Laboratory for Computer Science",
+month = May,
+year = 1977,
+}
+
+@inproceedings{fuch95,
+title = "Garbage Collection on an Open Network",
+author = "Matthew Fuchs",
+  booktitle = "Proceedings of International Workshop on Memory Management",
+address = "Kinross, Scotland",
+  editor = "Henry Baker",
+publisher = SV,
+  series = LNCS,
+  volume = 986,
+  pages = {251-265},
+  month = sep,
+  year = 1995
+}
+
+@inproceedings{fess98,
+  author = "Le Fessant, Fabrice and Ian Piumarta and Marc Shapiro",
+  title = "An Implementation for Complete   Asynchronous Distributed Garbage Collection",
+  booktitle = "Proceedings of {SIGPLAN'98} Conference on Programming Languages Design and Implementation",
+  address = {Montreal},
+month = jun,
+year = 1998,
+publisher = ACM,
+  series = SIGPLAN,
+  pages = {152--161},
+}
+
+@inproceedings{mahe97b,
+  title = "Partitioned Garbage Collection of a Large Object Store",
+author = "Umesh Maheshwari and Barbara Liskov",
+booktitle = "Proceedings of SIGMOD'97",
+  pages = {313--323},
+  year = 1997
+}
+
+@article{tel93derivation,
+    author = "Gerard Tel and Friedemann Mattern",
+    title = "The Derivation of Distributed Termination Detection Algorithms From Garbage Collection Schemes",
+    journal = "ACM Transactions on Programming Languages and Systems",
+    volume = "15",
+    number = "1",
+    month = "January",
+    publisher = "ACM Press",
+    pages = "1--35",
+    year = "1993",
+}
+
+@mastersthesis{nelson-89,
+  AUTHOR = "Jeffrey E. Nelson",
+  TITLE = "Automatic, incremental, on-the-fly garbage collection of actors",
+  SCHOOL = "Virginia Polytechnic Institute and State University",
+  YEAR = "1989"	
+}
+
+@inproceedings{juul92,
+title = "Comprehensive and Robust Garbage Collection in a Distributed System",
+  author = "Neils-Christian Juul and Eric Jul",
+  booktitle = "Proceedings of International Workshop on Memory Management",
+editor = "Yves Bekkers and Jacques Cohen",
+address = "St Malo, France",
+publisher = SV,
+  series = LNCS,
+volume = 637,
+  PAGES = {103--115},
+month = sep,  
+year = 1992
+}
+
+@INPROCEEDINGS{conchon-le-fessant-99,
+  TITLE = {Jocaml: Mobile Agents for {Objective-Caml}},
+  AUTHOR = {Sylvain Conchon and Fabrice Le Fessant},
+  BOOKTITLE = {First International Symposium on Agent Systems and
+                 Applications and Third International Symposium on
+                 Mobile Agents (ASA/MA'99)},
+  ADDRESS = {Palm Springs, California},
+  YEAR = {1999},
+  MONTH = OCT,
+  PAGES = {22--29},
+}
+
+@inproceedings{corporaal90wrc,
+title = "An Efficient Reference Weight-Based Garbage Collection Method for Distributed Systems",
+  author = "H. Corporaal and T. Veldman and A.J. {van de Goor}",
+  pages = "463--465",
+  booktitle = "Proceedings of the PARBASE-90 Conference",
+address = "Miami Beach", 
+  month = {March},
+  publisher = "IEEE Press",
+  year = 1990
+}
+
+@inproceedings{shap91,
+  author = "Marc Shapiro",
+  title = "A Fault-Tolerant, Scalable, Low-Overhead Distributed Garbage 
+Collection Protocol",
+  booktitle = "Proceedings of the Tenth Symposium on Reliable Distributed Systems",
+ pages = {208--217},
+address = "Pisa",
+month = sep,
+year = 1991,
+}
+
+@article{Francez80,
+ author = {Nissim Francez},
+ title = {Distributed Termination},
+ journal = {ACM Trans. Program. Lang. Syst.},
+ volume = {2},
+ number = {1},
+ year = {1980},
+ issn = {0164-0925},
+ pages = {42--55},
+ doi = {http://doi.acm.org/10.1145/357084.357087},
+ publisher = {ACM Press},
+ address = {New York, NY, USA},
+}
+
+@article{dijkstra-ipl-80,
+	author = {E. W. Dijkstra and C.S. Scholten},
+	title = {Termination Detection for Diffusing Computations},
+	journal = {Information Processing Letters},
+	volume = 11,
+	number = 1,
+	month = aug,
+	year = 1980,
+	pages = {1-4}
+}
+
+@article{moreau05birrell,
+ author = {Luc Moreau and Peter Dickman and Richard Jones},
+ title = {Birrell's Distributed Reference Listing Revisited},
+ journal = {ACM Transactions on Programming Languages and Systems {(TOPLAS)}},
+ volume = {27},
+ number = {6},
+ year = {2005},
+ issn = {0164-0925},
+ pages = {1344--1395},
+ publisher = {ACM Press},
+ address = {New York, NY, USA},
+ }
+
+@inbook{alg01disjset,
+  author = {Cormen, Thomas H. and Charles E. Leiserson and Ronald L. Rivest and Clifford Stein},
+  title = {Introduction to Algorithms},
+  edition = "Second", 
+  publisher = {MIT Press/McGraw-Hill},
+  year = 2001,
+  chapter = {21},
+  pages = {498--522},
+}
+
+@inbook{alg01logstar,
+  author = {Cormen, Thomas H. and Charles E. Leiserson and Ronald L. Rivest and Clifford Stein},
+  title = {Introduction to Algorithms},
+  edition = "Second", 
+  publisher = {MIT Press/McGraw-Hill},
+  year = 2001,
+  chapter = {3.2},
+  pages = {51--56},
+}
+
+@INPROCEEDINGS{wang-mle-06,
+ADDRESS = {Amsterdam, Netherlands},
+AUTHOR = {{Wei-Jen} Wang and Kaoutar El Maghraoui and John Cummings and Jim Napolitano and {Boleslaw K.} Szymanski and {Carlos A.} Varela},
+BOOKTITLE = {Proceedings of the Second IEEE International Conference on {e-Science} and Grid Computing},
+MONTH = {December},
+PAGES = {8 pp},
+TITLE = {A Middleware Framework for Maximum Likelihood Evaluation over Dynamic Grids},
+YEAR = {2006},
+}
+
+@techreport{wang-varela-snapshot-tr-2006,
+author = {{Wei-Jen} Wang and Carlos A. Varela},
+title = "A Non-blocking Snapshot Algorithm for Distributed Garbage Collection of Mobile Active Objects",
+institution = "Dept. of Computer Science, R.P.I.",
+number = "{06-15}",
+month = oct,
+year = 2006,
+note = {Submitted to IEEE TPDS},
+}
+
+@article{DIJKSTRA83termination,
+ author = {Edsger W. Dijkstra and W. H. J. Feijen and A. J. M. {van Gastern}},
+ title = {Derivation of a Termination Detection Algorithm for Distributed Computations},
+ journal = {Information Processing Letters},
+ volume = {16},
+ number = {5},
+ year = {1983},
+ issn = {0020-0190},
+ pages = {217--219},
+ publisher = {Elsevier Science},
+ }
+ 
+@INPROCEEDINGS{Szymanski-termination-85a,
+ADDRESS = {Amsterdam, Netherlands},
+AUTHOR = {{Boleslaw K.} Szymanski and Yuan Shi and {Noah S.} Prywes},
+BOOKTITLE = {Proceedings of the Fourth Annual ACM Symposium on the Principles of Distributed Computing},
+TITLE = {Terminating Iterative Solution of Simultaneous Equations in Distributed Message Passing Systems.},
+YEAR = {1985},
+pages = {287--292},
+}
+
+@article{Szymanski-termination-85b,
+ author = {{Boleslaw K.} Szymanski and Yuan Shi and {Noah S.} Prywes},
+ title = {Synchronized Distributed Termination},
+ journal = {IEEE Trans. Software Eng.},
+ volume = {11},
+ number = {10},
+ issn = {0098-5589}, 
+ year = {1985},
+ pages = {1136--1140},
+ publisher = {IEEE Press},
+ address = {Piscataway, NJ, USA},
+ }
+
+@inproceedings{mattern89virtual,
+ author =        {Friedemann Mattern},
+ title =         {Virtual Time and Global States of Distributed Systems},
+ booktitle =     {International Workshop on Parallel and Distributed 
+                    Algorithms},
+ year =          {1989},
+ month =         {October},
+ pages={215--226},
+ address =       {Chateau de Bonas}
+}
+
+@article{strom85optrecovery,
+ author = {Strom R. E., Yemini S.},
+ year= 1985,
+ title={Optimistic Recovery in Distributed Systems}, 
+ journal={ACM Trans. Comput. Syst.},
+ volume=3,
+ number=3,
+ pages={204--226},
+ publisher=ACM
+}
+
+@ARTICLE{cummings2003physics,
+   author = {John P. Cummings  and Dennis P. Weygand},
+    title = "{An Object-Oriented Approach to Partial Wave Analysis}",
+  journal = {ArXiv Physics e-prints},
+   eprint = {physics/0309052},
+     year = 2003,
+    month = sep,
+	pages={24 pp},
+}

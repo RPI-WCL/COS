@@ -1,0 +1,6 @@
+// combineStrings() is defined as follows:
+// String combineStrings(String str1, String str2) 
+//   {return str1+str2;}
+returnHello() @  
+combineStrings(token, " World") @ 
+standardOutput <- println(token);

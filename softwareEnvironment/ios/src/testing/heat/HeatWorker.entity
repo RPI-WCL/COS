@@ -1,0 +1,5 @@
+entity HeatWorker is HeatWorker {
+        when start putMessageInMailbox(salsa.language.Message arg0)
+                -> communication(arg0.getSource().name, arg0.getTarget().name);
+}
+

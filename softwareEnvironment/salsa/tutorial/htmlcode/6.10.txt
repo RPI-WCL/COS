@@ -1,0 +1,2 @@
+book<-email(new String("kaoutar")) @
+book<-addUser(email, new String("kaoutar")); 

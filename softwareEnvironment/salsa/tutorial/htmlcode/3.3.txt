@@ -1,0 +1,9 @@
+behavior test\{
+  Integer a;
+  int b;
+
+  void act(String[] args) \{
+    a=new Integer(3);
+    b=a.intValue()+2;
+  \}
+\}

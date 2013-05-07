@@ -1,0 +1,94 @@
+module src.language;
+
+import salsa.language.Actor;
+import salsa.language.Message;
+import salsa.language.RunTime;
+import salsa.language.ServiceFactory;
+import salsa.language.UniversalActor;
+import salsa.naming.UAL;
+import salsa.naming.UAN;
+import src.IOSTheater;
+import src.profiling_agent.ProfilingAgent;
+
+public behavior AutonomousActor {
+	public transient ProfilingAgent profilingAgent;
+
+	public void putMessageInMailbox(Message message) {
+		if (profilingAgent != null && getUAN() != null && message.getSource() != null) {
+			profilingAgent.received(getUAN(), message.getSource().getUAN());
+		}
+		super.putMessageInMailbox(message);
+	}
+
+	public void sendGeneratedMessages() {
+		for (int i = 0; i < __messages.size(); i++) {
+			Message message = (Message)__messages.get(i);
+
+			if (profilingAgent != null && message.getSource() != null && message.getTarget() != null) {
+				profilingAgent.sent(message.getSource().getUAN(), message.getTarget().getUAN());
+			}
+		}
+		super.sendGeneratedMessages();
+	}
+
+	public void start_run() {
+		standardOutput = ServiceFactory.getOutput();
+		standardError = ServiceFactory.getError();
+
+		if (profilingAgent == null) profilingAgent = IOSTheater.getProfilingAgent();
+		if (getUAN() != null) profilingAgent.addProfile(getUAN());
+	}
+
+	public void pre_process() {
+		if (getUAN() != null) profilingAgent.beginProcessed(getUAN());
+	}
+	public void post_process() {
+		if (getUAN() != null) profilingAgent.endProcessed(getUAN());
+	}
+
+        public void run() {
+		standardOutput = ServiceFactory.getOutput();
+		standardError = ServiceFactory.getError();
+
+		if (profilingAgent == null) profilingAgent = IOSTheater.getProfilingAgent();
+		if (getUAN() != null) profilingAgent.addProfile(getUAN());
+
+		while ((!isDestroyed()) && (!isMigrating()) && (!isDead() || !mailbox.isEmpty()) ) {  
+			currentMessage = this.getMessage();
+
+			if (getUAN() != null) profilingAgent.beginProcessed(getUAN());
+			this.process(currentMessage);
+			if (getUAN() != null) profilingAgent.endProcessed(getUAN());
+
+			RunTime.finishedProcessingMessage();
+		}
+        }
+
+	public void destroy() {
+		if (getUAN() != null) profilingAgent.removeProfile( getUAN() );
+		super.destroy();
+	}
+
+/*	private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+		if (getUAN() != null) profilingAgent.removeProfile( getUAN() );
+
+		out.defaultWriteObject();
+	}
+*/
+	public void migrate(String targetUAL) {
+		if (getUAN() != null) profilingAgent.removeProfile( getUAN() );
+		super.migrate(targetUAL);
+	}
+
+	public void migrate(UAL targetUAL) {
+		if (getUAN() != null) profilingAgent.removeProfile( getUAN() );
+		super.migrate(targetUAL);
+	}
+
+	private void readObject(java.io.ObjectInputStream in) throws Exception {
+		in.defaultReadObject();
+
+		profilingAgent = IOSTheater.getProfilingAgent();
+		if (getUAN() != null) profilingAgent.addProfile( getUAN() );
+	}
+}

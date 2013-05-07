@@ -1,0 +1,11 @@
+// The second example - without a First-Class Continuation
+// Statement 2 may produce a different result from 
+// that of Statement 1.
+...
+void saySomething2() {
+  standardOutput <- print("Hello ") @ 
+  standardOutput <- print("World ");
+}
+....
+//statement 2 inside some method:
+saySomething2() @  standardOutput <- print("SALSA") ;

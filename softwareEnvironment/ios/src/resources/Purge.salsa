@@ -1,0 +1,29 @@
+module src.resources;
+
+behavior Purge {
+	void act(String[] arguments) {
+		if (arguments.length == 0) {
+			System.err.println("Usage: java io.resources.Purge <ProtocolActor UAL or PeerServer UAL>*");
+		}
+
+		join {
+			for (int i = 0; i < arguments.length; i++) {
+				UAL ual = new UAL(arguments[i]);
+
+				if (ual.getIdentifier().equals("/io/peerServer")) {
+					new UniversalActor(ual)<-purgeAll() @
+					standardOutput<-println("Purged peer server: " + ual.toString());
+				} else if (ual.getIdentifier().equals("/io/protocolActor")) {
+					new UniversalActor(ual)<-purge() @
+					standardOutput<-println("Purged IO theater: " + ual.toString());
+				} else {
+					standardOutput<-println("Invalid ual: " + ual.toString());
+				}
+			}
+		} @ standardOutput<-println("Finished purging the theaters.") @ completed();
+	}
+
+	void completed() {
+		System.exit(0);
+	}
+}

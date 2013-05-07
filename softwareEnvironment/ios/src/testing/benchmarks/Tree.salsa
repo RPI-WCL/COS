@@ -1,0 +1,123 @@
+module src.testing.benchmarks;
+
+import java.io.FileInputStream;
+import java.util.Vector;
+import java.util.StringTokenizer;
+
+behavior Tree {
+	public void act(String[] arguments) {
+		int size = 0;
+		int width = 0;
+		int depth = 0;
+		int messageSendingDelay = 0;
+		int messageSize = 0;
+		int processingTime = 0;
+		String id = "";
+		String nameServer = "";
+		Vector theaters = new Vector();
+
+		try {
+			if (arguments.length != 7) {
+				System.err.println("Usage: ");
+				System.err.println("\tjava io.testing.benchmarks.Tree <naming/theater information file> " +
+						   "<width> <depth> <messageSendingDelay(ms)> <messageSize(bytes)> <processingTime(ms)> <id>");
+				System.exit(0);
+			}
+	                //reads from file:
+	                //Name Server Address
+	                //Peer Theater Address1 ... PeerTheaterAddressN
+
+	                FileInputStream file;
+	                byte input[];
+
+	                try {
+	                        file = new FileInputStream(arguments[0]);
+	                        input = new byte[file.available()];
+	                        file.read(input);
+
+		                StringTokenizer st = new StringTokenizer(new String(input), "\n");
+                                
+		                nameServer = st.nextToken();
+		                while (st.hasMoreTokens()) {
+		                        theaters.add(st.nextToken());
+		                }
+	                } catch (Exception e) {
+	                        System.err.println("Error reading naming/theater information file: " + e);
+	                        System.exit(0);
+	                }
+	        
+			width = new Integer(arguments[1]).intValue();
+			depth = new Integer(arguments[2]).intValue();
+
+			messageSendingDelay = new Integer(arguments[3]).intValue();
+			messageSize = new Integer(arguments[4]).intValue();
+			processingTime = new Integer(arguments[5]).intValue();
+			id = arguments[6];			
+
+		} catch (Exception e) {
+			System.err.println("Usage: ");
+			System.err.println("\tjava io.testing.benchmarks.Tree <naming/theater information file> " +
+					   "<width> <depth> <messageSendingDelay(ms)> <messageSize(bytes)> <processingTime(ms)>");
+			System.exit(0);
+		}
+
+                if (depth == 0) {
+                        size = 1;
+                } else if (depth == 1) {
+                        size = 1 + width;
+                } else {
+                        size = (int)java.lang.Math.round(java.lang.Math.pow(width, depth-1)) +
+                                (int)java.lang.Math.round((java.lang.Math.pow(width, depth-1)-1))/(width-1);
+                }
+
+
+		standardOutput<-println("Creating a tree actor graph with: ") @
+		standardOutput<-println("\tnodes in tree actor graph: " + size) @
+		standardOutput<-println("\twidth in tree actor graph: " + width) @
+		standardOutput<-println("\tdepth in tree actor graph: " + depth) @
+		standardOutput<-println("\tdelay between message sends: " + messageSendingDelay + "(ms)") @
+		standardOutput<-println("\tsize of messages: " + messageSize + "(bytes)") @
+		standardOutput<-println("\tprocessing intensity of a message: " + processingTime + "(ms)") @
+
+		standardOutput<-println() @
+		standardOutput<-println("Using name server:") @ 
+		standardOutput<-println("\t" + nameServer) @
+		token synchToken = standardOutput<-println("Loading actor graph randomly on theater(s): ");
+
+		for (int i = 0; i < theaters.size(); i++) {
+			synchToken = standardOutput<-println("\t" + (String)theaters.get(i)) : waitfor(synchToken);
+		}
+
+		synchToken = standardOutput<-println() : waitfor(synchToken);
+
+		Node[] nodes = new Node[size];
+		for (int i = 0; i < size; i++) {
+			UAN uan = new UAN(nameServer + "benchmark/node_"+id+ i);
+			UAL ual = new UAL(theaters.get(i%theaters.size()) + "benchmark/tree_node_"+id+ i);
+
+			nodes[i] = new Node(messageSendingDelay, messageSize, processingTime) at (uan, ual);
+		}
+
+		standardOutput<-println("Generating links...") : waitfor(synchToken) @
+
+		join {
+			for (int i = 0; i < size; i++) {
+				for (int j = 0; j < width; j++) {
+					if (((i*width) + j + 1) < size) {
+						nodes[i]<-addReference(nodes[(i*width) + j + 1]) @
+						standardOutput<-println("\tGenerated link from node_" + i + " to node_ " + ((i*width)+j+1));
+					}
+				}
+			}
+		} @
+
+		standardOutput<-println("Starting computation...") @
+		join {
+			for (int i = 0; i < size; i++) {
+				nodes[i]<-startSending() @
+				standardOutput<-println("\tnode_" + i + " is now processing.");
+			}
+		} @
+		standardOutput<-println("finished.");
+	} 
+}

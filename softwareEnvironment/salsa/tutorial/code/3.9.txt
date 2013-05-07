@@ -1,0 +1,3 @@
+// returnHello() is defined as the follows:
+//    String returnHello() {return "Hello";}
+returnHello() @  standardOutput <- println(token);

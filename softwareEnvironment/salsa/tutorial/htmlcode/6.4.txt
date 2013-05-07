@@ -1,0 +1,11 @@
+a<-m1() @ 
+b<-m2(token, 0) @ 
+b<-m2(token, 1) @ 
+b<-m2(token, 2) @ 
+b<-m2(token, 3) @ 
+b<-m2(token, 4) @ 
+b<-m2(token, 5) @ 
+b<-m2(token, 6) @ 
+b<-m2(token, 7) @ 
+b<-m2(token, 8) @ 
+x = b<-m2(token, 9);

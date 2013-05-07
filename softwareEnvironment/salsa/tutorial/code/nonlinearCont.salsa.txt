@@ -1,0 +1,7 @@
+token x = a<-m();
+token y = b<-o();
+token z = c<-p();
+
+d<-p(x,y);
+e<-q(y,z);
+f<-r(x,z);

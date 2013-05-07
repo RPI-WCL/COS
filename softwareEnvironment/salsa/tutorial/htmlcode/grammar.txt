@@ -1,0 +1,328 @@
+CompilationUnit ::=
+  [ModuleDeclaration]
+  (ImportDeclaration)* 
+  BehaviorDeclarationAttributes
+  (BehaviorDeclaration | InterfaceDeclaration )
+  <EOF>
+
+ModuleDeclaration ::= 
+  "module" Name ";"
+
+ImportDeclaration ::= 
+  "import" <IDENTIFIER> ("." (<IDENTIFIER> | "*") )* ";"
+ 
+BehaviorDeclarationAttributes ::= 
+  ("abstract" | "public" | "final")*
+
+InterfaceDeclaration ::= 
+  "interface" <IDENTIFIER> ["extends" Name] InterfaceBody
+
+Name ::= 
+  <IDENTIFIER> ("." <IDENTIFIER>)*
+
+InterfaceBody ::= 
+  ( "\{"
+    (StateVariableDeclaration | MethodLookahead ";" )*
+    "\}"
+  )*
+
+BehaviorDeclaration ::= 
+  "behavior" <IDENTIFIER> 
+  ["extends" Name] 
+  ["implements" Name ("," Name)*] 
+  BehaviorBody
+
+MethodLookahead ::= 
+  MethodAttributes ( Type | "void" ) 
+  <IDENTIFIER> FormalParameters 
+  ["throws" Exceptions]
+
+BehaviorBody ::= 
+  "\{" 
+    ( Initializer | NestedBehaviorDeclaration | 
+      StateVariableDeclaration | MethodDeclaration | 
+      ConstructorDeclaration 
+    )* 
+  "\}"
+ 
+NestedBehaviorAttributes ::= 
+  ("abstract" | "public" | "final" | "protected" | 
+   "private" | "static"
+  )*
+
+NestedBehaviorDeclaration ::= 
+  NestedBehaviorAttributes BehaviorDeclaration
+
+Initializer ::= 
+  ["static"] Block
+ 
+StateVariableAttributes ::= 
+  ("public" | "protected" | "private" | "volatile" | 
+   "static" | "final"     | "transient"
+  )*
+
+StateVariableDeclaration ::= 
+  StateVariableAttributes 
+  Type 
+  VariableDeclaration 
+  ("," VariableDeclaration)* ";"
+
+PrimitiveType ::= 
+  "boolean" | "char"  | "byte"   | "short" | "int" | 
+  "long"    | "float" | "double"
+
+Type ::= 
+  (PrimitiveType | Name) ( "[" "]" )*
+
+VariableDeclaration ::= 
+  <IDENTIFIER> ("[" "]")* 
+  ["=" (Expression | ArrayInitializer)]
+
+ArrayInitializer ::= 
+  "\{" 
+  [ (Expression | ArrayInitializer) 
+    ("," (Expression | ArrayInitializer) )*
+  ] 
+  "\}"
+
+AssignmentOperator ::= 
+  "="   | "*="   | "/="   | "%=" | "+=" | "-=" | 
+  "<<=" | ">>="  | ">>>=" | "&=" | "^=" | "|="
+
+Expression ::= 
+  Value 
+  (
+   ((Operator | AssignmentOperator) Value) | 
+   ("?" Expression ":" Value) 
+  )*
+
+Operator ::= 
+  "||" | "&&" | "|"  | "^"  | "&"  | "=="  | "!="  | 
+  ">"  | "<"  | "<=" | ">=" | "<<" | ">>"  | ">>>" | 
+  "+"  | "-"  | "*"  | "/"  | "%"  | "instanceof"
+
+Value ::= 
+  [Prefix] Variable [Suffix] (PrimarySuffix)*
+
+Prefix ::= 
+  "++" | "--" | "~" | "!" | "-"
+
+Suffix ::= 
+  "++" | "--"
+
+Variable ::= 
+  ["(" Type ")"] 
+  (
+    Literal | Name | "this"  | "super" | 
+    AllocationExpression | "(" Expression ")"
+  )
+
+PrimarySuffix ::= 
+  "." "this" | "." AllocationExpression |
+  "[" Expression "]" | "." <IDENTIFIER> | 
+  Arguments
+
+ResultType ::= 
+  Type | "void"	
+
+Literal ::= 
+  IntegerLiteral | FloatingPointLiteral |
+  CharacterLiteral | StringLiteral |
+  BooleanLiteral | NullLiteral |
+  TokenLiteral
+
+Arguments ::= 
+  "(" [Expression ("," Expression)*] ")"
+
+AllocationExpression ::= 
+  "new" PrimitiveType ArrayDimsAndInits | 
+  "new" Name 
+    (ArrayDimsAndInits | (Arguments [BehaviorBody])) 
+    [BindDeclaration]
+
+BindDeclaration ::= 
+  "at" "(" Expression ["," Expression] ")"
+
+ArrayDimsAndInits ::= 
+  ( "[" Expression "]")+ ("[" "]")* |
+  ("[" "]")+ ArrayInitializer
+
+FormalParameters ::= 
+  "(" 
+    [ ["final"] Type <IDENTIFIER> ( "[" "]" )* 
+      ( "," ["final"] Type <IDENTIFIER> ( "[" "]" )* )* 
+    ] 
+  ")"
+
+ExplicitConstructorInvocation ::= 
+  "super" Arguments ";"
+
+ConstructorDeclaration ::= 
+  MethodAttributes <IDENTIFIER> FormalParameters 
+  ["throws" Exceptions] 
+  "\{" 
+    [ExplicitConstructorInvocation] (Statement)* 
+  "\}"
+
+ConstructorAttributes ::= 
+  ("public" | "protected" | "private")*
+
+MethodDeclaration ::= 
+  MethodAttributes 
+  (Type | "void") <IDENTIFIER> FormalParameters 
+  ["throws" Exceptions] Block
+
+MethodAttributes ::= 
+  ("public"   | "protected" | "private" | "static" | 
+   "abstract" | "final"     | "native" 
+  )*
+
+Exceptions ::= 
+  Name ("," Name)*
+
+Statement ::= 
+  ContinuationStatement	| 
+  TokenDeclarationStatement | 
+  LocalVariableDeclaration ";" | 
+  Block |
+  EmptyStatement |
+  StatementExpression ";" |
+  LabeledStatement |
+  SynchronizedStatement |
+  SwitchStatement |
+  IfStatement |
+  WhileStatement |
+  DoStatement |
+  ForStatement |
+  BreakStatement |
+  ContinueStatement |
+  ReturnStatement |
+  ThrowStatement |
+  TryStatement |
+  MethodDeclaration |
+  NestedBehaviorDeclaration
+
+Block ::= 
+  "\{" ( Statement )* "\}"
+
+LocalVariableDeclaration ::= 
+  ["final"] Type 
+  VariableDeclaration ("," VariableDeclaration)*
+
+EmptyStatement ::= 
+  ";"
+
+StatementExpression ::= 
+  Value [AssignmentOperator Expression]
+
+LabeledStatement ::= 
+  <IDENTIFIER> ":" Statement
+
+SwitchStatement ::= 
+  "switch" "(" Expression ")" 
+  "\{" (SwitchLabel (Statement)* )* "\}"
+
+SwitchLabel ::= 
+  "case" Expression ":" | "default" ":"
+
+IfStatement ::= 
+  "if" "(" Expression ")" Statement ["else" Statement]
+
+WhileStatement ::= 
+  "while" "(" Expression ")" Statement
+
+DoStatement ::= 
+  "do" Statement "while" "(" Expression ")" ";"
+
+ForInit ::= 
+  [ LocalVariableDeclaration | 
+    ( StatementExpression 
+      ("," StatementExpression)*
+    )
+  ]
+
+ForCondition ::= 
+  [Expression]
+
+ForIncrement ::= 
+  [ StatementExpression 
+    ("," StatementExpression)*
+  ]
+
+ForStatement ::= 
+  "for" 
+  "(" ForInit ";" ForCondition ";" ForIncrement ")" 
+  Statement
+
+BreakStatement ::= 
+  "break" [<IDENTIFIER>] ";"
+
+ContinueStatement ::= 
+  "continue" [<IDENTIFIER>] ";"
+
+ReturnStatement ::= 
+  "return" [Expression] ";"
+
+ThrowStatement ::= 
+  "throw" Expression ";"
+
+SynchronizedStatement ::= 
+  "synchronized" "(" Expression ")" Block
+
+TryStatement ::= 
+  "try" Block 
+  (
+    "catch" "(" ["final"] Type <IDENTIFIER> ")" Block
+  )*  
+  ["finally" Block]
+
+ContinuationStatement ::= 
+  (MessageStatement "@")*
+  (MessageStatement | "currentContinuation") ";"
+
+MessageStatement ::= 
+[NamedTokenStatement] (MessageSend | JoinBlock)
+
+JoinBlock ::= 
+  "join" Block
+
+NamedTokenStatement ::= 
+  (<IDENTIFIER> | "token" <IDENTIFIER>) "="
+
+MessageSend ::= 
+  [Value "<-"] <IDENTIFIER> MessageArguments 
+  [":" MessageProperty]
+
+MessageProperty ::= 
+  <IDENTIFIER> [Arguments]
+
+MessageArguments ::= 
+  "(" [Expression ("," Expression)*] ")"
+
+TokenDeclarationStatement ::= 
+  "token" <IDENTIFIER> "=" Expression ";"
+
+IntegerLiteral ::= 
+  <INTEGER_LITERAL>
+
+FloatingPointLiteral ::= 
+  <FLOATING_POINT_LITERAL>
+
+CharacterLiteral ::= 
+  <CHARACTER_LITERAL>
+
+StringLiteral ::= 
+  <STRING_LITERAL>
+
+BooleanLiteral ::= 
+  "true" | "false"
+
+NullLiteral ::= 
+  "null"
+
+TokenLiteral ::=
+  "token"
+
+<IDENTIFIER> ::= 
+  <LETTER> (<LETTER>|<DIGIT>)* 
+

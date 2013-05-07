@@ -1,0 +1,581 @@
+\chapter{Writing Concurrent Programs}
+\label{Writing Concurrent Programs}
+This chapter introduces the basic concepts of SALSA
+programming, mainly about concurrency coordination. 
+Basic knowledge of Java programming is required.
+
+\section{SALSA Language Support for Actor State Modification}
+\label{SALSA Language Support for Actor State Modification}
+SALSA is a dialect of Java, and it is intended to reuse as many 
+features of Java as possible. SALSA actors can contain internal state 
+in the form of Java objects or primitive types. However, it is important 
+that this internal state must be completely encapsulated, that is, not
+shared with other actors. It is also important that the internal state
+be serializable. 
+\footnote{SALSA, as of version \salsaversion, does not enforce 
+state encapsulation and serializability. This discipline needs to be 
+followed by programmers, especially for distributed applications.}
+   
+The following piece of code illustrates how
+the internal state is modified, as follows:
+
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.3.txt}
+}
+%end{latexonly} 
+
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.3.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+
+\section{Actor Creation}
+\label{Actor Creation}
+The actor reference is one of the main new primitive 
+values of SALSA. There are three approaches to get an 
+actor reference: either by actor creation statement, 
+the {\tt getReferenceByName()} function, or passed arguments
+from messages. This section only concentrates on actor 
+creation and reference passing. 
+
+Writing a constructor in SALSA 
+programming is similar 
+to object construction in Java programming. 
+For instance, one can declare the {\tt HelloWorld}
+actor as follows:
+
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.1.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.1.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+
+
+To create an actor instance and return a reference to 
+{\tt myRef}, one can write code as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.2.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.2.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+In SALSA, actor 
+references are passed by reference, while object 
+variables by value. Objects are passed by value to 
+prevent shared memory and preserve encapsulation.
+
+\section{Message Passing}
+SALSA uses asynchronous message passing as its primitive form of communication. 
+A SALSA\textit{message handler} is similar to a Java method.
+Message passing in SALSA is implemented by  
+asynchronous message delivery with 
+dynamic method invocation. The following example 
+shows how an actor sends a message to itself. 
+Note that it is not a Java method invocation:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.4.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.4.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+
+Another type of message passing statement 
+requires a target (an actor reference), 
+a reserved token {\tt {\textless}-}, 
+and a message handler with arguments to be sent. 
+For instance, an actor can send a message to 
+the standardOutput actor as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.5.txt}
+}
+%end{latexonly}
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.5.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+ 
+Note that the following expression is illegal 
+because it is neither  
+a Java method invocation nor a 
+message passing expression:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.6.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.6.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+Message Passing in SALSA is by-value 
+for objects, and 
+by-reference for actors. Any object
+passed as an argument is cloned at the moment it 
+is sent, and the cloned object is then sent to the target actor.
+
+\section{Coordinating Concurrency}
+\label{Coordinating Concurrency}
+SALSA provides three approaches to coordinate behaviors of actors: 
+\textit{token-passing continuations}, \textit{join blocks}, 
+and \textit{first-class continuations}. 
+
+\subsection{Token-Passing Continuations}
+\label{Token passing continuations}
+Token-passing continuations 
+are designed to specify a partial order of message processing.
+The token '{\tt @}' is used to group messages 
+and assigns the execution order to each of them. 
+For instance, the following example 
+forces the {\tt standardOutput} actor, a predefined system actor for 
+output, to print out "Hello World":
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.7.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.7.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+If a programmer uses '{\tt ;}' instead of 
+'{\tt @}', SALSA does not guarantee  
+that the standardOutput actor will print out "Hello World". It is 
+possible to have the result 
+"WorldHello ". The following example shows the 
+non-deterministic case:
+
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.8.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.8.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+A SALSA message handler can return a value, and 
+the value can be accessed through a reserved keyword '{\tt token}', 
+specified in one of the arguments of the next grouped message. 
+For instance, assuming there exists a user-defined 
+message handler, {\tt returnHello()}, which 
+returns a string "Hello". The following example 
+prints out "Hello" to the standard output:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.9.txt}
+}
+%end{latexonly}
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.9.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+ 
+Again, assuming another user-defined message handler 
+{\tt combineStrings()}
+accepts two input Strings and returns a combined string of the 
+inputs, the following example prints out "Hello World" 
+to the standard ouput:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.10.txt}
+}
+%end{latexonly}
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.10.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+ 
+Note that the first token refers to the return value of 
+{\tt returnHello()}, and the second token refers to that of 
+{\tt combineStrings(token, " World")}.
+
+\subsection{Join Blocks}
+\label{Join Blocks}
+The previous sub-section has illustrated how token-passing 
+continuations work in message passing.  
+This sub-section introduces join blocks 
+which can specify a barrier for parallel processing activities and 
+join their results in a subsequent message. A join continuation has a scope (or block) 
+starting with "{\tt join\{ }" and ending with "{\tt \}}". 
+Every message inside the block must be executed, 
+and then the continuation message, following {\tt @}, can be sent. 
+For instance, the following example prints 
+either "Hello World SALSA" or "WorldHello  SALSA":
+
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.11.txt}
+}
+%end{latexonly}
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.11.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+ 
+Using the return token of the join block will be explained in 
+Chapter~\ref{Advanced Concurrency Coordination}.
+
+\subsection{First-Class Continuations}
+\label{First-Class Continuations}
+The purpose of first-class continuations is to delegate 
+computation to a third party, enabling dynamic replacement or 
+expansion of messages grouped by token-passing continuations. 
+First-class continuations are very useful for writing recursive 
+code. In SALSA, the keyword {\tt currentContinuation} 
+is reserved for first-class continuations. To explain the effect 
+of first-class continuations, we use two examples to show the difference. In the first example, 
+statement 1 prints out "Hello World SALSA":
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.12.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.12.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+In the following (the second) example, statement 2 may generate 
+a different result from statement 1. It prints out either 
+"Hello World SALSA", or "SALSAHello World ". 
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.13.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.13.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+The keyword {\tt currentContinuation} has another impact on 
+message passing --- the control of execution returns immediately 
+after processing it. Any code after it is meaningless. For 
+instance, the following piece of code always prints out "Hello World", 
+but "SALSA" never gets printed:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.14.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.14.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+\section{Input/Output (I/O) Actor Access}
+SALSA provides three kinds of I/O actors to support asynchronous I/O accesses.
+One of them is an input service ({\tt standardInput}), and two are 
+output services ({\tt standardOutput} and {\tt standardError}).
+Since they are actors, only asynchronous accesses are possible.
+
+{\tt standardOutput} provides the following message handlers:
+{\singlespace
+\begin{itemize}
+\item {\tt print(boolean p)}
+\item {\tt print(byte p)}
+\item {\tt print(char p)}
+\item {\tt print(double p)}
+\item {\tt print(float p)}
+\item {\tt print(int p)}
+\item {\tt print(long p)}
+\item {\tt print(Object p)}
+\item {\tt print(short p)}
+\item {\tt println(boolean p)}
+\item {\tt println(byte p)}
+\item {\tt println(char p)}
+\item {\tt println(double p)}
+\item {\tt println(float p)}
+\item {\tt println(int p)}
+\item {\tt println(long p)}
+\item {\tt println(Object p)}
+\item {\tt println(short p)}
+\item {\tt println()}
+\end{itemize}
+ }
+{\tt standardError} provides the following message handlers:
+{\singlespace
+\begin{itemize}
+\item {\tt print(boolean p)}
+\item {\tt print(byte p)}
+\item {\tt print(char p)}
+\item {\tt print(double p)}
+\item {\tt print(float p)}
+\item {\tt print(int p)}
+\item {\tt print(long p)}
+\item {\tt print(Object p)}
+\item {\tt print(short p)}
+\item {\tt println(boolean p)}
+\item {\tt println(byte p)}
+\item {\tt println(char p)}
+\item {\tt println(double p)}
+\item {\tt println(float p)}
+\item {\tt println(int p)}
+\item {\tt println(long p)}
+\item {\tt println(Object p)}
+\item {\tt println(short p)}
+\item {\tt println()}
+\end{itemize}
+}
+{\tt standardInput} provides only one message handler in current SALSA release:
+{\singlespace
+\begin{itemize}
+\item {\tt String readLine()}
+\end{itemize}
+}
+
+\section{Writing Your First SALSA Program}
+\label{Writing Your First SALSA Program}
+This section demonstrates how to write, compile, and 
+execute your SALSA programs.
+
+\subsection{Steps to Compile and Execute Your SALSA Programs}
+\label{Steps to compile and execute your SALSA program}
+SALSA hides many of the details involved in developing distributed 
+open systems. SALSA programs are preprocessed into Java source code. 
+The generated Java code uses a library that supports all the actor's 
+primitives --- mainly creation, migration, and communication. Any Java 
+compiler can then be used to convert the generated code into Java 
+bytecode ready to be executed on any virtual machine 
+implementation (see Table~\ref{tbl1}).
+ 
+\begin{table}[top]
+\caption{Steps to Compile and Execute Your SALSA Program.}
+\label{tbl1}        % \label command must always comes AFTER the caption
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Step       & What to DO     & Actual Action Taken  \\
+\hline\hline
+1           & Create a SALSA program:     & Write your SALSA code\\
+            & Program.salsa             & \\
+\hline
+2           & Use the SALSA compiler to   & java salsac.SalsaCompiler \\
+            & generate a Java source file:&    Program.salsa\\
+            & Program.java              & \\
+\hline
+3           & Use a Java compiler to      & javac Program.java \\
+            & generate the Java bytecode: & \\
+            & Program.class             & \\
+\hline
+4           & Run your program using the  & java Program \\
+            & Java Virtual Machine        & \\ 
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsection{{\tt HelloWorld} example}
+The following piece of code is the SALSA version of {\tt HelloWorld}
+program:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/HelloWorld.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/HelloWorld.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly} 
+
+Let us go step by step through the code of the {\tt HelloWorld.salsa} 
+program:
+
+The first line is a comment. SALSA syntax is very similar to Java and you will 
+notice it uses the style of Java programming. 
+The module keyword is similar to the package keyword in Java. A {\tt module} 
+is a collection of related actor behaviors. A {\tt module} can group several 
+actor interfaces and behaviors.
+Line 4 starts the definition of the {\tt act} message handler. 
+In fact, every 
+SALSA application must contain the  
+following signature if it does have an {\tt act} message handler:
+
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/3.15.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/3.15.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+When a SALSA application is executed, an actor with the specified behavior 
+is created and an {\tt act} message is sent to it by the run-time environment. 
+The {\tt act} message is used as a bootstrapping mechanism for SALSA programs. 
+It is analogous to the Java {\tt main} method invocation.
+
+In lines 5 and 6, two messages are sent to the {\tt standardOutput} actor.
+The arrow ({\tt \textless-}) indicates message sending to an actor 
+(in this case, the {\tt standardOutput} actor). To guarantee that the 
+messages are received 
+in the same order they were sent, the {\tt @} sign is used to enforce  
+the second message to be sent only after the first message 
+has been processed. This is referred to as \textit {a token-passing continuation}
+(see Section \ref{Token passing continuations}). 
+
+\subsection{Compiling and Running {\tt HelloWorld}}
+\begin{itemize}
+
+\item  Download the latest version of SALSA. You will find the 
+latest release in this URL: http://wcl.cs.rpi.edu/salsa/
+
+\item Create a directory called {\tt examples} and save the {\tt HelloWorld.salsa} 
+program inside it. You can use any simple text editor or Java editor 
+to write your SALSA programs. Note that SALSA modules are similar to 
+Java packages. So you have to follow the directory structure conventions when 
+working with modules as you do when working with packages in Java.
+
+\item Compile the SALSA source file into a Java source file using the 
+SALSA compiler. It is recommended to include the SALSA JAR file in your 
+class path. Alternatively you can use {\tt -cp} to specify its path in the 
+command line. If you are using MS Windows use semi-colon ({\tt ;}) as a 
+class path delimiter, if you are using just about anything else, 
+use colon ({\tt :}). For example:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. 
+salsac.SalsaCompiler examples/*.salsa}
+
+\item Use any Java compiler to compile the generated Java file. 
+Make sure to specify the SALSA class path using {\tt -classpath} if 
+you have not included it already in your path.
+
+\textbf{javac -classpath salsa{\textless}version{\textgreater}.jar:. examples/*.java}
+
+\item Execute your program
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. examples.HelloWorld}
+
+\end{itemize}

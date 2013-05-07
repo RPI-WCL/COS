@@ -1,0 +1,4 @@
+join \{
+  standardOutput <- print("Hello ");  
+  standardOutput <- print("World");
+\} @  standardOutput <- println(" SALSA");

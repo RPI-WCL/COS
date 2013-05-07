@@ -1,0 +1,57 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%                                                                 %
+%                            CHAPTER ONE                          %
+%                                                                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ 
+\chapter{Introduction}\label{Introduction}
+
+\section{The SALSA Distributed Programming Language}
+\label{The SALSA Distributed Programming Language}
+With the emergence of Internet and mobile computing, a wide range 
+of Internet applications have placed new demands and challenges 
+such as openness, portability, ability to adapt quickly to changing 
+execution environments, and highly dynamic reconfiguration. Current 
+programming languages and systems lack support for dynamic 
+reconfiguration of applications, where application entities get
+moved to different processing nodes at run-time.
+
+Java has provided a lot of support to dynamic web content through 
+applets, network class loading, bytecode verification, security, 
+and multi-platform compatibility. Moreover, Java is a good framework 
+for distributed Internet programming because of its standardized 
+representation of objects and serialization support. 
+Some of the important libraries that provide support for Internet 
+computing are: {\tt java.rmi} for remote method invocation, 
+{\tt java.reflection} for run-time introspection, {\tt java.io} for 
+serialization, and {\tt java.net} for sockets, datagrams, and URLs.
+
+SALSA (Simple Actor Language, System and Architecture) 
+\cite{varela-agha-salsa-oopsla-2001} is an 
+actor-oriented programming language designed and implemented to 
+introduce the benefits of the actor model while keeping the advantages 
+of object-oriented programming. Abstractions include active objects, 
+asynchronous message passing, universal naming, migration, and advanced 
+coordination constructs for concurrency. SALSA is pre-processed into 
+Java and hence preserves many of Java's useful object oriented concepts- 
+mainly, encapsulation, inheritance, and polymorphism. SALSA abstractions 
+enable the development of dynamically reconfigurable applications. A SALSA
+program consists of universal actors that can ne migrated to distributed 
+nodes at run-time.
+
+\section{Structure of the Tutorial}\label{Structure of the Tutorial}
+This tutorial covers basic concepts of SALSA and illustrates its concurrency 
+and distribution models through several examples. Chapter \ref{Actor-Oriented Programming} introduces the 
+actor model and how SALSA supports it. Chapter \ref{Writing Concurrent Programs} introduces concurrent 
+programming in SALSA, including token-passing continuations, join 
+blocks, and first-class continuations.Chapter \ref{Writing Distributed Programs} discusses SALSA's 
+support for distributed computing including asynchronous message sending, 
+universal naming, and migration. Chapter \ref{Advanced Concurrency Coordination} introduces several advanced 
+coordination constructs and how they can be coded in SALSA. 
+Chapter \ref{actorGarbageCollection} defines actor garbage and
+explains how automatic actor garbage collection works in SALSA.
+Appendix \ref{nameserverop} introduces how to specify name server options and how to run applications
+with different system properties. Appendix \ref{DebuggingTips} provides debugging tips for 
+SALSA programs. Appendix \ref{LearningSALSAEx} provides brief descriptions of 
+SALSA example programs. Appendix \ref{GRAMMAR} lists the SALSA grammar.
+

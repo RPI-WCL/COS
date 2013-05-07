@@ -1,0 +1,93 @@
+module src.testing.reachability;
+
+import java.io.FileInputStream;
+import java.util.Vector;
+import java.util.StringTokenizer;
+
+import src.protocol_agent.ATSProtocolActor;
+
+behavior Mesh {
+	Vector theaters = new Vector();
+
+	public void act(String[] arguments) {
+		try {
+			if (arguments.length != 1) {
+				this.errorMessage();
+			}
+	                FileInputStream file;
+	                byte input[];
+
+	                try {
+	                        file = new FileInputStream(arguments[0]);
+	                        input = new byte[file.available()];
+	                        file.read(input);
+
+		                StringTokenizer st = new StringTokenizer(new String(input), "\n");
+                                
+		                while (st.hasMoreTokens()) {
+		                        theaters.add(st.nextToken());
+		                }
+	                } catch (Exception e) {
+	                        System.err.println("Error reading naming/theater information file: " + e);
+	                        System.exit(0);
+	                }
+		} catch (Exception e) {
+			this.errorMessage();
+		}
+
+		token synchToken = standardOutput<-println("Connecting the following theaters in a mesh.");
+
+		for (int i = 0; i < theaters.size(); i++) {
+			synchToken = standardOutput<-println("\t" + (String)theaters.get(i)) : waitfor(synchToken);
+		}
+
+
+		int width = (int)java.lang.Math.sqrt(theaters.size()) + 1;
+
+		synchToken = standardOutput<-println() : waitfor(synchToken) @
+		standardOutput<-println("Generating links...") @
+		join {
+			for (int i = 0; i < theaters.size(); i++) {
+				String theaterName1 = (String)theaters.get( i );
+				ATSProtocolActor protocolActor1 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName1 + "io/protocolActor" );
+
+				String theaterName2;
+				if (i+1 < theaters.size() && (i%width) != (width-1)) {
+					theaterName2 = (String)theaters.get( i+1 );
+					ATSProtocolActor protocolActor2 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName2 + "io/protocolActor" );
+
+					protocolActor1<-addPeer(protocolActor2) @
+					standardOutput<-println("\tGenerated link from " + theaterName1 + " to " + theaterName2);
+				}
+				if (i-1 >= 0 && (i%width) != 0) {
+					theaterName2 = (String)theaters.get( i-1 );
+					ATSProtocolActor protocolActor2 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName2 + "io/protocolActor" );
+
+					protocolActor1<-addPeer(protocolActor2) @
+					standardOutput<-println("\tGenerated link from " + theaterName1 + " to " + theaterName2);
+				}
+				if (i+width < theaters.size() && i >= width) {
+					theaterName2 = (String)theaters.get( i+width );
+					ATSProtocolActor protocolActor2 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName2 + "io/protocolActor" );
+
+					protocolActor1<-addPeer(protocolActor2) @
+					standardOutput<-println("\tGenerated link from " + theaterName1 + " to " + theaterName2);
+				}
+				if (i-width >= 0 && i <= (width * width-1)) {
+					theaterName2 = (String)theaters.get( i-width );
+					ATSProtocolActor protocolActor2 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName2 + "io/protocolActor" );
+
+					protocolActor1<-addPeer(protocolActor2) @
+					standardOutput<-println("\tGenerated link from " + theaterName1 + " to " + theaterName2);
+				}
+			}
+		} @
+		standardOutput<-println("finished.");
+	} 
+
+	public void errorMessage() {
+		System.err.println("Usage: ");
+		System.err.println("\tjava io.testing.reachability.Mesh <theater information file>");
+		System.exit(0);
+	}
+}

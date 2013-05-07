@@ -1,0 +1,3 @@
+// Wrong! It does not compile!!!
+// Assume 'a' is an actor reference.
+a <- someObject.someHandler();

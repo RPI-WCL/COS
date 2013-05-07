@@ -1,0 +1,387 @@
+\chapter{Writing Distributed Programs}
+\label{Writing Distributed Programs}
+Distributed SALSA programming involves universal naming, theaters,
+service actors, migration, and concurrency control. This chapter
+introduces how to write and run a distributed SALSA program.
+
+\section{Worldwide Computing Model}
+\label{Worldwide Computing Model}
+Worldwide computing is an emerging discipline with the goal of 
+turning the web into a unified distributed computing infrastructure. 
+Worldwide computing tries 
+to harness underutilized resources in the web by providing to various 
+internet users, a unified interface that allows them to distribute their 
+computation in a global fashion without having to worry about where resources 
+are located and what platforms are being used. Worldwide computing is based on 
+the actor model of concurrent computation and implements several strategies for 
+distributed computation such as universal naming, message passing, and migration. 
+This section introduces the worldwide computing model 
+and how it is supported by SALSA.
+
+\subsection{World-Wide Computer (WWC) Architecture}
+The World-Wide Computer (WWC) is a set of virtual machines, or \textit{theaters} that host 
+one to many concurrently running universal actors. Theaters provide a layer 
+beneath actors for message passing, remote communication, and migration. Every theater 
+consists of a RMSP (Remote Message Sending Protocol) server, a local cache 
+that maps between actors' names and their current locations, a registry that 
+maps local actor names to their references, and a run-time environment. 
+The RMSP server runs forever listening for incoming requests from remote 
+actors and starting multiples threads to handle incoming requests simultaneously.
+
+The WWC consists of the following key components:
+\begin{itemize}
+\item Universal naming service
+\item Run-time environment
+\item Remote communication protocol
+\item Migration support
+\item Actor garbage collection
+\end{itemize}
+
+
+\subsection{Universal Naming - UAN and UAL}
+Universal naming allows actors to become \textit{universal actors}. 
+Universal actors have the ability to migrate, while
+anonymous actors do not. \textit{Service actors} are a special kind of 
+universal actors,
+which grant universal access privileges to every actor
+and never get collected by the actor garbage collection mechanism. 
+
+Every universal actor has a \textit{Universal Actor Name (UAN)}, 
+and a \textit{Universal Actor Locator (UAL)}. The UAN is a unique name 
+that identifies the actor throughout its lifetime. The UAL 
+represents the location where the actor 
+is currently running. While the UAN never changes throughout 
+the lifetime of a universal actor, its UAL changes as it migrates 
+from one location to another. The format 
+of UAN and UAL follow the URI syntax. They are similar in format to a 
+URL (see Table~\ref{tbl2}).
+
+\begin{table}[top]
+\caption{UAL and UAN.}
+\label{tbl2}        
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Type       & Example\\
+\hline\hline
+URL & http://wcl.cs.rpi.edu/salsa/ \\
+\hline
+UAN & uan://io.wcl.cs.rpi.edu:3000/myName \\
+\hline
+UAL & rmsp://io.wcl.cs.rpi.edu:4000/myLocator \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\paragraph{UAN:} The first item of the UAN specifies the name of the protocol used; the second 
+item specifies the name and port number of the machine where the Naming Server 
+resides. This name is usually a name that can be decoded by a domain name server. 
+You can also use the IP of the machine. But this is a practice that should be avoided. 
+The last item specifies the relative name of the actor. If a port number is not specified, the 
+default port number (3030) for the name server is used. 
+
+\paragraph{UAL:} The first item specifies the protocol used for remote message sending. The second 
+item indicates the theater's machine name and port number. If a port number is not specified, the 
+default port number (4040) for the theater is used.  The last part specifies the relative locator name 
+of the actor in the given 
+theater.
+
+SALSA's universal naming scheme has been designed in such a way to satisfy the following requirements:
+\begin{itemize}
+\item Platform independence: names appear coherent on all nodes independent of the 
+underlying architecture.
+\item Scalability of name space management
+\item Transparent actor migration
+\item Openness by allowing unanticipated actor reference creation and protocols that 
+provide access through names
+\item Both human and computer readability.
+\end{itemize}
+
+\section{How SALSA Supports the Worldwide Computing Model}
+\label{How SALSA Supports the Worldwide Computing Model}
+This section demonstrates how to write a distributed
+SALSA program and run it in the World-Wide Computer run-time environment.
+
+\subsection{Universal Actor Creation}
+A universal actor can be created at any desired theater by specifying its 
+UAN and UAL~\footnote{Remember to start the naming server if
+using UANs in the computation.}.
+For instance, one can create a universal actor at current 
+host as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/5.1.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/5.1.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+A universal actor can be created at a remote theater, hosted at host1:4040, 
+by the following statement:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/5.2.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/5.2.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+An anonymous actor can be created as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/5.3.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/5.3.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+Notice that an anonymous actor cannot migrate.
+
+\subsection{Referencing actors}
+
+Actor references can be used as the target of message sending expressions 
+or as arguments of messages. 
+There are three ways to get actor references. Two of them, the return 
+value of actor creation and references from messages, are available 
+in both distributed and concurrent SALSA programming. The last one, 
+{\tt getReferenceByName()}, is an explicit approach that translates a 
+string representing a UAN into a reference. In SALSA, only references 
+to service actors (see Section \ref{ServiceActor}) should be obtained 
+using this function. Otherwise, SALSA does not guarantee the safety property 
+of actor garbage collection, which means one can get a phantom reference 
+(a reference pointing to nothing). The way to get a reference by 
+{\tt getReferenceByName()} is shown as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/5.4.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/5.4.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+Sometimes an actor wants to know its name or location. An actor can get its 
+UAL (location) by the function {\tt getUAL()} and UAN (universal name) by 
+{\tt getUAN()}. For example:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/5.5.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/5.5.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+
+\subsection{Migration}
+As mentioned before, only universal actors can migrate. 
+Sending the message {\tt migrate({\textless}ual{\textgreater})} to an universal actor causes it to migrate 
+seamlessly to the designated location. Its UAL will be changed and the 
+naming service will be notified to update its entry. 
+
+The following example defines the behavior {\tt MigrateSelf}, 
+that migrates the {\tt MigrateSelf} actor to location UAL1 and 
+then to UAL2. The {\tt migrate} message takes as argument a 
+string specifying the target UAL or it can take the object 
+{\tt new UAL("UAL string")}.
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/MigrateSelf.salsa.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/MigrateSelf.salsa.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+\subsection{Actors as Network Service} \label{ServiceActor}
+There are many kinds of practical distributed applications: some are 
+designed for scientific computation, which
+may produce a lot of temporary actors for parallel processing; 
+some are developed for network services, such as a web server, a web search 
+engine, etc. Useless actors should be reclaimed for memory reuse, 
+while service-oriented actors must remain available under any circumstance.
+
+The most important reason for reclamation of useless actors is to avoid 
+memory leakage. For example, after running the {\tt HelloWorld} actor 
+(shown in Section~\ref{Writing Your First SALSA Program}) in 
+the World-Wide Computer, the World-Wide 
+Computer must be able to reclaim this actor after it prints out "Hello World". 
+Reclamation of actors is formally named \textit{actor garbage collection}.
+
+Reclamation of useless actors introduces a new problem: how to support 
+non-collectable service-oriented actors at the language level. This is important 
+because a service-oriented actor cannot be reclaimed even if it is idle. For 
+instance, a web service should always wait for requests. Reclamation of an idle 
+service is wrong.
+
+A service written by C or Java programming languages uses infinite loops to listen for
+requests. 
+A SALSA service should not use this approach because loops inside a message handler preclude an actor
+from executing messages in its message box. The way SALSA keeps a service actor alive is by 
+specifying it at the language level - a SALSA \textit{service actor} must implement the 
+interface {\tt ActorService} to 
+tell the actor garbage collector not to collect it.
+
+The following example illustrates how a service actor is implemented 
+ in SALSA. The example implements a 
+simple address book service. The {\tt AddressBook} actor provides the functionality 
+of creating new {\textless}name, email{\textgreater} entities, and 
+responding to end users' requests. The example defines the {\tt AddUser} 
+message handler which adds new entries 
+in the database.  The example also defines the {\tt GetEmail} message handler
+which returns an email string providing the user name.
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/AddressBook.salsa.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/AddressBook.salsa.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+The {\tt AddressBook} actor is bound to the UAN and UAL pair specified in the command line. 
+This will result in placing the {\tt AddressBook} actor in the designated 
+location and notifying the naming service.
+
+To be able to contact the {\tt AddressBook} actor, a client actor 
+first needs to get the remote reference of the service. The only 
+way to get the reference is by the message handler 
+{\tt getReferenceByName()}. The example we are going to demonstrate is 
+the {\tt AddUser} actor, which communicates with the {\tt AddressBook} actor 
+to add new entries. Note that the {\tt AddUser} actor can be started anywhere on the Internet.
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/AddUser.salsa.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/AddUser.salsa.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+\section{Run-time Support for WWC Application}
+\label{Run-time Support for WWC Application}
+The section demonstrates how to start the naming service and theaters.
+
+\subsection{Universal Naming Service}
+The UANP is a protocol that defines how to interact with the WWC naming service. 
+Similar to HTTP, UANP is text-based and defines methods that allow actors' names 
+lookup, updates, and deletions. UANP operates over TCP connections, usually the port 3030. 
+This port can be overwritten by another port number.
+
+Every theater maintains a local registry where actors' locations are cached for faster 
+future access. One can start a naming service as follows:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. wwc.naming.WWCNamingServer}
+
+The above command starts a naming service on the default port 3030. You can specify another 
+port as follows:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. wwc.naming.WWCNamingServer -p 1256}
+
+\subsection{Theaters}
+
+One can start a theater as follows:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. wwc.messaging.Theater}
+
+The above command starts a theater on the default RMSP port 4040. You can specify 
+another port as follows:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. wwc.messaging.Theater 4060}
+
+
+\subsection{Running an Application}
+Whenever a WWC application is executed, a theater is dynamically created
+to host the bootstrapping actor of the application and a random port is assigned
+to the dynamically created theater. A dynamically created theater will be destroyed
+if no application actor is hosted at it and no incoming message will be delivered
+to the theater.
+
+{\sloppy
+Now let us consider a WWC application example.
+Assuming a theater is running at {\tt host1:4040}, and a naming 
+service at {\tt host2:5555}. One can run the {\tt HelloWorld} 
+example {shown in Section~\ref{Writing Your First SALSA Program}) 
+at {\tt host1:4040} as follows:
+
+\textbf{java  -cp salsa{\textless}version{\textgreater}.jar:. 
+ -Duan=uan://host2:5555/myhelloworld 
+ -Dual=rmsp://host1:4040/myaddr examples.HelloWorld}
+}
+
+As one can see, the standard output of host1 displays "Hello World". One may also find that
+the application does not terminate. In fact, the reason for non-termination at the original 
+host is that the application creates a theater and the theater joins the World-Wide Computer 
+environment. Formally speaking, the application does terminate but the host to begin with 
+becomes a part of the World-Wide Computer.
+
+
+

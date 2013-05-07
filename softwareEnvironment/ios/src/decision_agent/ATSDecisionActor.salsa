@@ -1,0 +1,125 @@
+module src.decision_agent;
+
+import src.IOSTheater;
+import src.profiling_agent.ActorProfile;
+import src.profiling_agent.ProfilingAgent;
+import src.profiling_agent.ATSProfilingAgent;
+
+import java.util.Vector;
+
+import salsa.language.ServiceFactory;
+import salsa.messaging.TheaterService;
+import salsa.naming.NamingService;
+import salsa.naming.UAL;
+import salsa.naming.UAN;
+
+
+behavior ATSDecisionActor {
+
+	ATSProfilingAgent profilingAgent = null;
+	ActorReference protocolActor = null;
+	int sleepTime = 10000;
+	long throughput = 0;
+	
+	double cw = 0.3, pw = 0.7;
+
+	ATSDecisionActor() {
+		protocolActor = IOSTheater.getProtocolActor();
+		profilingAgent = (ATSProfilingAgent)IOSTheater.getProfilingAgent();
+		begin();
+	}
+	
+	public void begin() {
+		if ( System.getProperty("silent") == null ) {
+			standardOutput<-println(System.currentTimeMillis() + "\t" + profilingAgent.processed() + "\t\t" + profilingAgent.getActorProfiles().size() + "\t"
+									 + profilingAgent.getAvailableProcessing());
+		}
+
+		throughput = profilingAgent.processed();
+
+		if (!profilingAgent.isComputing()) protocolActor<-leaveComputation();
+
+		if (profilingAgent.isLight() && profilingAgent.isComputing()) {
+//		if (profilingAgent.isComputing()) {
+			protocolActor<-initiateSteal();
+		}
+
+//		begin() : delay( new Integer(sleepTime) );
+	}               
+
+	private double decisionFunction(ActorProfile candidate, UAL source, double remoteProcessing, Vector actorsAtSource) {
+		String localId = protocolActor.getUAL().getLocation();
+		String foreignId = source.getLocation();
+
+                //Updated decision function
+                double gain;
+                double communicationGain, processingGain;
+
+		double localProcessing = profilingAgent.getAvailableProcessing();
+		if (localProcessing < 0) localProcessing = 0;                
+
+                //Calculating the gain due to processing
+                processingGain = (remoteProcessing - localProcessing) / (remoteProcessing+localProcessing);
+                                
+		double remoteCommunication = 0;
+		for (int i = 0; i < actorsAtSource.size(); i++) remoteCommunication += candidate.getCommWith((UAN)actorsAtSource.get(i));
+		double localCommunication = 0;
+		for (int i = 0; i < profilingAgent.getActors().size(); i++) {
+//			System.err.println("profilingAgent.getActors().get(i) is: " + profilingAgent.getActors().get(i));
+
+			UAN current_uan = (UAN)profilingAgent.getActors().get(i);
+
+			if ( !candidate.getUAN().equals(current_uan) ) {
+				localCommunication += candidate.getCommWith(current_uan);
+			}
+		}
+
+//		System.err.println("checking gain to: " + source.getLocation());
+//		candidate.print();
+
+//		System.err.print("gain = (" + remoteProcessing + "-" + localProcessing + ")/(" + remoteProcessing + "+" + localProcessing +")");
+//		System.err.println(" + (" + remoteCommunication + "-" + localCommunication + ")/(" + remoteCommunication + "+" + localCommunication + ")");
+
+                //Calculating the gain due to communication 
+                communicationGain = (remoteCommunication - localCommunication) / (remoteCommunication + localCommunication);
+		if ((remoteCommunication + localCommunication) == 0) communicationGain = 0;
+		if ((remoteProcessing + localProcessing) == 0) processingGain = 0;
+
+                //Overall gain
+                gain = cw*communicationGain + pw*processingGain;
+		return gain;
+	}
+
+	ActorReference getBestCandidate(UAL source, double remoteProcessing, Vector actorsAtSource) {
+		ActorProfile candidate = null;
+		double candidateGain = 0;
+
+		if (!profilingAgent.isComputing()) return null;
+
+//		System.out.println("Trying to get the best candidate");
+		Vector actorProfiles = profilingAgent.getActorProfiles();
+//		System.out.println("Actors size :"+actorProfiles.size());
+		for (int i = 0; i < actorProfiles.size(); i++) {
+//			System.out.println("Inside the for loop");
+			ActorProfile current = (ActorProfile)actorProfiles.get(i);
+
+			double gain = decisionFunction(current, source, remoteProcessing, actorsAtSource);
+
+			System.out.println("\tATS GAIN: " + gain);
+			if (gain > candidateGain) {
+				candidate = current;
+				candidateGain = gain;
+			}
+		}
+
+		if (candidate != null) {
+			return new UniversalActor( candidate.getUAN() );
+		}
+		return null;
+	}
+
+	Long getThroughput() {
+		return new Long(throughput);
+	}
+}
+

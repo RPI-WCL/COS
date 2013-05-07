@@ -1,0 +1,3 @@
+// Assume the constructor of HelloWorld is: 
+//   public HelloWorld() \{\}
+myRef = new HelloWorld();

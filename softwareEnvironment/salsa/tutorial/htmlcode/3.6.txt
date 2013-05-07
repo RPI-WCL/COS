@@ -1,0 +1,2 @@
+// Wrong! It does not compile!!!
+self <- someObject.someHandler();

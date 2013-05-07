@@ -1,0 +1,27 @@
+module src.resources;
+
+behavior Status {
+	void act(String[] arguments) {
+		if (arguments.length == 0) {
+			System.err.println("Usage: java io.resources.Status <ProtocolActor UAL or PeerServer UAL>*");
+		}
+
+		join {
+			for (int i = 0; i < arguments.length; i++) {
+				UAL ual = new UAL(arguments[i]);
+
+				if (ual.getIdentifier().equals("/io/peerServer")) {
+					new UniversalActor(ual)<-statusAll() @ standardOutput<-println(token);
+				} else if (ual.getIdentifier().equals("/io/protocolActor")) {
+					new UniversalActor(ual)<-status() @ standardOutput<-println(token);
+				} else {
+					standardOutput<-println("Invalid ual: " + ual.toString());
+				}
+			}
+		} @ completed();
+	}
+
+	void completed() {
+		System.exit(0);
+	}
+}

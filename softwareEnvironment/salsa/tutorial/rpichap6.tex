@@ -1,0 +1,200 @@
+\chapter{Actor Garbage Collection}\label{actorGarbageCollection}
+Actor garbage collection is the mechanism to reclaim useless
+actors. A system eventually fails because of memory leakage, 
+resulting from uncollected garbage actors. Manual actor garbage collection 
+is error-prone and always reduces 
+programmers' efficiency.
+Manual garbage collection can solve this problem if an application does not require a
+lot of dynamic memory allocation operations. As the size of the application becomes
+larger and more complex, automatic garbage collection becomes preferable. There
+are two reasons. Firstly, manual garbage collection is error-prone and thus causes
+memory security issues. Secondly, manual garbage collection cuts against high-level
+programming. From the perspective of software engineering, people should focus on
+the development of functionalities, not on irrelevant concerns. Currently, garbage
+collection usually refers to automatic garbage collection.
+
+Many object-oriented programming languages support automatic 
+garbage collection, such as Smalltalk, Scheme, Java, etc.
+Unfortunately, these garbage collection algorithms cannot be 
+used for actor garbage collection directly, because each actor 
+has a thread of control 
+encapsulated in it. An actor can create or delete 
+references to other actors, while an object cannot. The thread of 
+control results in the essential difference of
+actor garbage collection and object garbage collection. 
+
+
+\section{Actor Garbage Definition}
+The definition of actor garbage relates to meaningful computation. 
+Meaningful computation is 
+defined as having the ability to communicate with any of the \emph{root actors},
+that is, to access any resource or public service. The widely used 
+definition of live actors is described in \cite{kafura-actorGCdef-91}.
+Conceptually, an actor is live if it is a root or it can either potentially: 
+1) receive messages from the root actors or 2) send messages to the root 
+actors. The set of actor garbage is then defined as the complement of the set of live 
+actors. To formally describe our new actor GC model, we introduce the
+following definitions:
+\begin{itemize}
+\item {\bf Blocked actor}:
+An actor is blocked if it has no pending messages in 
+its message box, nor any message being processed. Otherwise
+it is unblocked.
+\item {\bf Reference}:
+A reference indicates an address 
+of an actor. Actor $A$ can only send messages to Actor $B$ if $A$ 
+has a reference pointing to $B$.
+\item {\bf Inverse reference}:
+An inverse reference is a conceptual reference
+in the counter-direction of an existing reference. 
+\item {\bf Acquaintance}:
+Let Actor $A$ have a reference pointing to Actor $B$.
+$B$ is an acquaintance of $A$, and $A$ is
+an inverse acquaintance of $B$.
+\item {\bf Root actor}:
+An actor is a root actor if it encapsulates a resource, or 
+if it is a public service --- such as I/O devices, web services, and 
+databases.
+\end{itemize}
+
+The original definition of live actors
+is denotational because it uses the concept of {\textquotedblleft}potential{\textquotedblright} message 
+delivery and reception. To make it more operational, we use 
+the term {\textquotedblleft}\emph{potentially live}{\textquotedblright} \cite{dick96} to define live actors.
+\begin{itemize}
+\item {{\bf Potentially live actors}: 
+\begin{itemize}
+\item Every unblocked actor and root actor is potentially live. 
+\item Every acquaintance of a potentially live actor 
+  is potentially live. 
+\end{itemize}}
+\item {{\bf Live actors}:
+\begin{itemize}
+\item A root actor is live. 
+\item Every acquaintance of a live actor is live.
+\item Every potentially live, inverse acquaintance of a live 
+  actor is live.
+\end{itemize}}
+\end{itemize}
+
+\section{Actor Garbage Collection in SALSA}
+This section introduces the assumptions and the actor garbage collection mechanism used in SALSA.
+
+\subsection{The Live Unblocked Actor Principle} \label{The Live Unblocked Actor Principle}
+In actor-oriented programming languages, an actor must be able to access 
+resources which are encapsulated in service actors. To access a resource, an actor
+requires a reference to it. This implies that actors keep persistent references to
+some special service actors --- such as the file system service and the standard
+output service. Furthermore, an actor can explicitly create references to public
+services. For instance, an actor can dynamically convert a string into a reference to
+communicate with a service actor, analogous to accessing a web service by a web
+browser using a URL.
+
+Without program analysis techniques,
+the ability of an actor to access resources provided by 
+an actor-oriented programming language implies 
+explicit reference creation to access service actors. The
+ability to access local service actors (e.g. the standard output) and explicit 
+reference creation to public service actors make the statement true: \emph{every
+actor has persistent references to root actors}. This statement is important
+ because it changes the meaning of actor GC, making actor GC similar to passive
+object GC. It leads to the \emph{live unblocked actor principle}, 
+which says every unblocked actor is live. Since
+each unblocked actor is: 1) an inverse acquaintance of the root actors and 2)
+defined as potentially live, it is live according to the definition of actor GC.
+With the live unblocked actor principle, every unblocked actor can be viewed
+as a root. Liveness of blocked actors depends on the transitive reachability from
+unblocked actors and root actors. If a blocked actor is transitively reachable
+from an unblocked actor or a root actor, it is defined as potentially live. With
+persistent root references, such potentially live, blocked actors are live because
+they are inverse acquaintances of some root actors.
+
+Notice that the live unblocked actor principle may not be true 
+if considering resource access restrictions. This implies that
+different security models may result in different sets of actor garbage,
+given the same actor system.
+At the programming language level, SALSA assumes the live unblocked actor principle.  
+
+\subsection{Local Actor Garbage Collection}
+The difficulty of local actor garbage collection is to get a consistent 
+global state and minimize the penalty 
+of actor garbage collection. The easiest approach for actor garbage 
+collection is to stop the world: no computation is allowed during actor 
+garbage collection. There are two major drawbacks of this approach,
+the waiting time for message clearance and 
+parallelism degrading 
+(only the garbage collector is running and all actors are waiting).
+
+A better solution for local actor garbage collection is 
+to use a snapshot-based algorithm \cite{wang-varela-snapshot-tr-2006}, which can improve parallelism 
+and does not require waiting time for message clearance.
+SALSA uses a snapshot based algorithm, together with the SALSA 
+garbage detection protocol (the pseudo-root approach) \cite{wang06pr}, 
+in order to get a meaningful global
+state. A SALSA local garbage collector
+uses the meaningful global snapshot to identify garbage actors.
+
+One can observe the behavior of the local actor garbage collector by specifying
+the run-time environment options \textit{-Dgcverbose -Dnodie} as follows:  
+
+{\sloppy
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. -Dgcverbose -Dnodie examples.HelloWorld}
+}
+
+To start a theater without running the local actor garbage collection, one can
+use the option \textit{-Dnogc} as follows:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. -Dnogc examples.HelloWorld}
+
+
+\subsection{Optional Distributed Garbage Collection Service}
+Distributed actor garbage collection is much more complicated because of
+the mobility of actors, the difficulty of recording a meaningful global 
+state of the distributed system, and the independent execution of the 
+distributed and local garbage collection. The SALSA garbage detection 
+protocol and the local actor garbage collectors help simplify the problem
+--- they can handle acyclic distributed garbage and all local garbage. 
+
+The current SALSA distributed actor garbage collector is implemented as 
+a logically centralized service. It is an optional service. When it is 
+triggered to manage several hosts, it coordinates the local
+collectors to get a meaningful global snapshot. Actors referenced by those 
+outside the selected
+hosts are never collected. The task of identifying garbage is 
+done in the logically centralized service. Once garbage is identified, a garbage
+list is then sent to every participating host.
+
+A distributed garbage collection service collects garbage for selected hosts (theaters).
+It collects distributed garbage providing a partial view of the system.
+SALSA also supports hierarchical actor garbage collection.
+To build the garbage collection hierarchy, each distributed garbage collection service
+requires its parent (at most one) and its children.  
+The usage of the distributed garbage collection service is shown as follows:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. gc.serverGC.SServerPRID 
+{\textless}n{\textgreater} {\textless}parent{\textgreater}
+{\textless}child1 or host1{\textgreater} {\textless}child2 or host2{\textgreater} ......}
+
+$n$ specifies that the service should be activated every $n$ seconds.
+$n=-1$ means that the service only executes once and then terminates.
+{\tt parent} specifies the address of the parent service, with the format 
+{\tt {\textless}ip{\textgreater}:{\textless}port{\textgreater}}.
+Invalid format indicates that the service is the root service.
+{\tt {\textless}child1 or host1{\textgreater}} indicates
+the address of the child service or the target theater, 
+with the format {\tt {\textless}ip{\textgreater}:{\textless}port{\textgreater}}.
+Notice that a theater is always a leaf.  
+
+To run the distributed garbage collection once, 
+one can use the command as follows:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. gc.serverGC.SServerPRID -1 x
+{\textless}host1{\textgreater} {\textless}host2{\textgreater} ......}
+
+To run it every $40$ seconds, use:
+
+\textbf{java -cp salsa{\textless}version{\textgreater}.jar:. java gc.serverGC.SServerPRID  
+{\textless}40{\textgreater} x {\textless}host1{\textgreater} {\textless}host2{\textgreater} .....}
+
+Note that n should be large enough. The default is $n=20$.
+

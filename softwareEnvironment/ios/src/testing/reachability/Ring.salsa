@@ -1,0 +1,79 @@
+module src.testing.reachability;
+
+import java.io.FileInputStream;
+import java.util.Vector;
+import java.util.StringTokenizer;
+
+import src.protocol_agent.ATSProtocolActor;
+
+behavior Ring {
+	int bi_connected = 0;
+	Vector theaters = new Vector();
+
+	public void act(String[] arguments) {
+		try {
+			if (arguments.length != 2) {
+				this.errorMessage();
+			}
+	                FileInputStream file;
+	                byte input[];
+
+	                try {
+	                        file = new FileInputStream(arguments[0]);
+	                        input = new byte[file.available()];
+	                        file.read(input);
+
+		                StringTokenizer st = new StringTokenizer(new String(input), "\n");
+                                
+		                while (st.hasMoreTokens()) {
+		                        theaters.add(st.nextToken());
+		                }
+	                } catch (Exception e) {
+	                        System.err.println("Error reading naming/theater information file: " + e);
+	                        System.exit(0);
+	                }
+	        
+			bi_connected = new Integer(arguments[2]).intValue();
+		} catch (Exception e) {
+			this.errorMessage();
+		}
+
+		token synchToken = standardOutput<-println("Connecting the following theaters in a " + (bi_connected+1) + "-way tree.");
+
+		for (int i = 0; i < theaters.size(); i++) {
+			synchToken = standardOutput<-println("\t" + (String)theaters.get(i)) : waitfor(synchToken);
+		}
+
+		synchToken = standardOutput<-println() : waitfor(synchToken) @
+		standardOutput<-println("Generating links...") @
+
+		join {
+			for (int i = 0; i < theaters.size(); i++) {
+				String theaterName1 = (String)theaters.get( i );
+				String theaterName2 = (String)theaters.get( i+1 );
+				ATSProtocolActor protocolActor1 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName1 + "io/protocolActor" );
+				ATSProtocolActor protocolActor2 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName2 + "io/protocolActor" );
+
+				protocolActor1<-addPeer(protocolActor2) @
+				standardOutput<-println("\tGenerated link from " + theaterName1 + " to " + theaterName2);
+
+				if (bi_connected == 1) {
+					String theaterName3;
+					if (i == 0) theaterName3 = (String)theaters.get(theaters.size()-1);
+					else theaterName3 = (String)theaters.get( i-1 );
+					ATSProtocolActor protocolActor3 = (ATSProtocolActor)ATSProtocolActor.getReferenceByLocation( theaterName3 + "io/protocolActor" );
+
+					protocolActor1<-addPeer(protocolActor3) @
+					standardOutput<-println("\tGenerated link from " + theaterName1 + " to " + theaterName3);
+				}
+			}
+		} @
+		standardOutput<-println("finished.");
+	} 
+
+	public void errorMessage() {
+		System.err.println("Usage: ");
+		System.err.println("\tjava io.testing.reachability.Ring <theater information file> <0 for one way, 1 for two way>");
+		System.exit(0);
+	}
+}

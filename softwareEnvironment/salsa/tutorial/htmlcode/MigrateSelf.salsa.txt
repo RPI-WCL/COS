@@ -1,0 +1,14 @@
+module examples;
+
+behavior MigrateSelf \{
+  void act(String args[])\{
+    if (args.length != 2) \{
+      standardOutput<-println(
+      "Usage:" + 
+      "java -Duan=<UAN> examples.MigrateSelf <UAL1> <UAL2>");
+      return;
+    \} 
+    self<-migrate(args[0]) @
+    self<-migrate(args[1]);
+  \}
+\}

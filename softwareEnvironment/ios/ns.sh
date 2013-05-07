@@ -1,0 +1,1 @@
+java wwc.naming.WWCNamingServer

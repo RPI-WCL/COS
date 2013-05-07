@@ -1,0 +1,2 @@
+HelloWorld helloWorld = new HelloWorld() 
+  at (new UAN("uan://nameserver/id"), null); 

@@ -1,0 +1,11 @@
+<br> java wwc.naming.NamingServer -h
+usage:
+  java ...WWCNamingServer
+  java ...WWCNamingServer -h
+  java ...WWCNamingServer -v
+  java ...WWCNamingServer -p portNumber
+options:
+  -h : print this message
+  -v : print version number
+  -p portNumber : set the listening port to portNumber
+                  default port number is 3030

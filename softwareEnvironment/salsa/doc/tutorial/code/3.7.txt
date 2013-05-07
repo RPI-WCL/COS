@@ -1,0 +1,2 @@
+standardOutput <- print("Hello ") @ 
+standardOutput <- print("World");

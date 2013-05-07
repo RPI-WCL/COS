@@ -1,0 +1,1 @@
+handler();  // equivalent to "self <- handler();"

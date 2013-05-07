@@ -1,0 +1,3 @@
+// send a method println() with an argument "Hello World", 
+// to the actor standardOutput.
+standardOutput <- println("Hello World"); 

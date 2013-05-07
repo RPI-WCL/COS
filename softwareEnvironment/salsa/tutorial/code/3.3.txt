@@ -1,0 +1,17 @@
+behavior Cell {
+  Object contents;
+
+  Cell(Object initialContents){
+      contents = initialContents;
+  }
+
+  Object get(){
+      return contents;
+  }
+
+  void set(Object newContents){
+      // update the variable 'contents' with 
+      // the new value, newContents
+      contents = newContents;
+  }
+}

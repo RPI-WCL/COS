@@ -1,0 +1,38 @@
+module src.testing.benchmarks;
+
+import java.util.Vector;
+
+import src.language.AutonomousActor;
+
+behavior Node extends AutonomousActor {
+	Vector references;
+
+	int messageSize, messageSendingDelay, processingValue;
+
+	Node(int _messageSendingDelay, int _messageSize, int _processingValue) {
+		messageSize = _messageSize;
+		messageSendingDelay = _messageSendingDelay;
+		processingValue = _processingValue;
+
+		references = new Vector();
+	}
+
+	public void addReference(Node reference) {
+		references.add(reference);
+	}
+
+	public void do_stuff(Node source, byte[] data) {
+		for (int i = 0; i < processingValue; i++) {
+			double dummy = java.lang.Math.pow(12345.56789,12345.456789);
+		}
+		source<-do_stuff(self, new byte[messageSize]);
+	}
+
+	public void startSending() {
+		if (references.size() == 0) self<-do_stuff(self, new byte[messageSize]);
+
+		for (int i = 0; i < references.size(); i++) {
+			references.get(i)<-do_stuff(self, new byte[messageSize]);
+		}
+	}
+}

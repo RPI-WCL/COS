@@ -1,0 +1,42 @@
+module src.profiling_agent.monitors;
+
+import src.profiling_agent.ProfilingAgent;
+
+import java.lang.Thread;
+
+public behavior CPUMonitor {
+	double flops = 0;
+
+	int delay_ms = 5000;
+	long calculations = 300000;
+
+	public CPUMonitor(int delay_ms, long calculations) {
+		this.delay_ms = delay_ms;
+		this.calculations = calculations;
+
+		this.setPriority(Thread.MIN_PRIORITY);
+
+		long startTime = System.currentTimeMillis();
+		double l = 1.0;
+		for (int i = 0; i < calculations; i++) l *= 2.0;
+
+		double executionTime = System.currentTimeMillis() - startTime;
+		flops = (double)calculations/((double)executionTime/1000.0);
+
+		recalculateFLOPS() : delay( new Integer(delay_ms) );
+	}
+
+	public double getFLOPS() { return flops; }
+
+	public void recalculateFLOPS() {
+		long startTime = System.currentTimeMillis();
+		double l = 1.0;
+		for (int i = 0; i < calculations; i++) l *= 2.0;
+
+		double executionTime = System.currentTimeMillis() - startTime;
+		double newflops = (double)calculations/((double)executionTime/1000.0);
+		flops = (1.0/4.0)*flops + (3.0/4.0)*newflops;
+
+		recalculateFLOPS() : delay( new Integer(delay_ms) );
+	}
+}

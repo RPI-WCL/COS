@@ -1,0 +1,226 @@
+module src.protocol_agent;
+
+import java.util.Vector;
+
+import src.IOSTheater;
+import src.profiling_agent.ProfilingAgent;
+import src.profiling_agent.ATSProfilingAgent;
+import src.resources.PeerServer;
+
+behavior FuzzyProtocolActor {
+	ATSProfilingAgent profilingAgent = null;
+	ActorReference decisionActor = null;
+
+	boolean connected = true;
+	Vector neighbors = new Vector();
+	Vector peerServers = new Vector();
+	int maxTTL = 2;
+	int maxPeers = 10;
+
+	FuzzyProtocolActor() {
+		profilingAgent =(ATSProfilingAgent)IOSTheater.getProfilingAgent();
+		decisionActor = IOSTheater.getDecisionActor();
+
+		String connection = System.getProperty("connection");
+		if (connection != null) {
+			try {
+				UAL ual = new UAL(connection);
+
+				if (ual.getIdentifier().equals("/io/peerServer")) {
+					joinComputation( (PeerServer)PeerServer.getReferenceByLocation(ual) );
+				} else {
+					joinComputation( (FuzzyProtocolActor)FuzzyProtocolActor.getReferenceByLocation(ual) );
+				}
+			} catch (MalformedUALException e) {
+				System.err.println("Improperly specified system property: " + connection);
+				System.err.println("Malformed UAL Exception: " + e);
+			}
+		}
+	}
+
+
+	/** The following methods propagate the random steal packets through the IO network.
+	  */
+	boolean waiting = false;
+
+	void initiateSteal() {
+		if (waiting == true) return;
+		waiting = true;
+
+		propagateSteal(this, new Double(profilingAgent.getCpuSpeed()), profilingAgent.getActors(), new Integer(maxTTL));
+	}
+
+	void propagateSteal(FuzzyProtocolActor source, double processing, Vector actorsAtSource, int timeToLive) {
+//		System.out.println("Propagate steal: received a steal from <"+ source+">");
+		if (neighbors.contains(source) && neighbors.size() == 1) {
+			//In this case, the only neighbor is the source of the steal
+			//packet, so it makes no sense to continue propagating it.
+			source<-stealFinished():priority;
+			return;
+		}
+		timeToLive--;
+		if (timeToLive > maxTTL) timeToLive = maxTTL - 1;
+
+		//update the time to live, if it has elapsed,
+		//quit propagating this steal
+		if (neighbors.size() == 0) {
+			source<-stealFinished():priority;
+			return;
+		}
+		if (timeToLive < 0) {
+			source<-stealFinished():priority;
+			return;
+		}
+
+		ActorReference target = (ActorReference)neighbors.get((int)((double)java.lang.Math.random() * (double)neighbors.size()));
+		while ( target.equals(source) ) {
+			target = (ActorReference)neighbors.get((int)((double)java.lang.Math.random() * (double)neighbors.size()));
+		}
+
+		target<-steal(source, new Double(processing), actorsAtSource, new Integer(timeToLive)):priority; //added priority
+	}
+
+	void steal(FuzzyProtocolActor source, double processing, Vector actorsAtSource, int timeToLive) {
+//		System.out.println("In steal from <"+source+">");
+		//add the source of the steal to our list of neighbors, if
+		//it isn't already there.
+		if (!neighbors.contains(source)) neighbors.add(source);
+
+		//see if we get a candidate actor to migrate 
+		token candidate = decisionActor<-getBestCandidate(source.getUAL(), new Double(processing), actorsAtSource);
+		resolveSteal(candidate, source, new Double(processing), actorsAtSource, new Integer(timeToLive));
+	}
+
+	void resolveSteal(ActorReference candidate, FuzzyProtocolActor source, double processing, Vector actorsAtSource, int timeToLive) {
+		if (candidate == null) {
+			//we had no candidate actor for this steal
+			//so propagate the steal along to another neighbor.
+//			System.out.println("No candidate to send.. propagate");
+			propagateSteal(source, new Double(processing), actorsAtSource, new Integer(timeToLive));
+		} else {
+			//We got a candidate, migrate it to the source of the steal.
+//			System.out.println("Candidate found...Migrate");
+
+			//Specify there is an actor scheduled, so send no steals until it has finished migrating
+			candidate<-migrate(new UAL(source.getUAL().getLocation() + candidate.getUAN().getIdentifier())) : priority @
+			source<-stealFinished():priority; //added a priority for stealfinished
+		}
+	}
+
+	void stealFinished() {
+//		System.out.println("In steal finished");
+		waiting = false;
+		profilingAgent.reset();
+	}
+
+
+
+	/** The following methods are used by the protocol actors
+	  * to join a computation and become aware of other
+	  * protocol actors in the network.
+	  */
+	void joinComputation(PeerServer peerServer) {
+		profilingAgent.setComputing(true);
+
+		peerServers.add(peerServer);
+		peerServer<-register(this);
+
+		peerServer<-getPeers( new Integer(maxPeers) ) @
+		addNeighbors(token);
+	}
+
+	void addPeer(ActorReference peer) {
+		neighbors.add( peer );
+	}
+
+	void addNeighbors(Vector neighbors) {
+		if (neighbors == null) return;
+		for (int i = 0; i < neighbors.size(); i++) {
+			if ( !this.equals((ActorReference)neighbors.get(i)) && !this.neighbors.contains((ActorReference)neighbors.get(i)) ) {
+				this.neighbors.add( neighbors.get(i) );
+			}
+		}
+	}
+
+	void joinComputation(FuzzyProtocolActor neighbor) {
+		profilingAgent.setComputing(true);
+
+		neighbors.add(neighbor);
+	}
+
+
+	/** The following methods are used by the protocol actors to
+	  * migrate all actors away when this theater needs to leave
+	  * the computation.
+	  */
+	Vector unmigratedActors = null;
+
+	void leaveComputation() {
+		profilingAgent.setComputing(false);
+
+//		if (System.getProperty("silent") == null) System.err.println("leaving!");
+		for (int i = 0; i < peerServers.size(); i++) {
+			PeerServer target = (PeerServer)peerServers.get(i);
+			peerServers.remove(target);
+			target<-remove(this);
+		}
+
+		unmigratedActors = profilingAgent.getActorReferences();
+		if (neighbors == null || neighbors.size() == 0) {
+			purge();
+		} else {
+			for (int i = 0; i < neighbors.size(); i++) {
+				ActorReference target = (ActorReference)neighbors.get(i);
+				target<-leaveRequest(this);
+			}
+		}
+	}
+
+	void leaveRequest(FuzzyProtocolActor requester) {
+		neighbors.remove(requester);
+
+		if (profilingAgent.isComputing()) requester<-getActor(this);
+		else requester<-notConnected(this);
+	}
+
+	void notConnected(FuzzyProtocolActor neighbor) {
+		neighbors.remove(neighbor);
+
+		if (neighbors.size() == 0) purge();
+	}
+
+	void getActor(FuzzyProtocolActor requester) {
+		if (unmigratedActors.size() > 0) {
+			ActorReference target = (ActorReference)unmigratedActors.get(0);
+			unmigratedActors.remove(0);
+			target<-migrate( requester.getUAL().getLocation() + target.getUAN().getIdentifier() ) : priority;
+
+			if (unmigratedActors.size() > 0) requester<-leaveRequest(this);
+		}
+	}
+
+	void purge() {
+//		if (System.getProperty("silent") == null) System.err.println("purging!");
+
+		Vector actors = profilingAgent.getActorReferences();
+
+		for (int i = 0; i < actors.size(); i++) {
+			ActorReference target = (ActorReference)actors.get(i);
+			target<-destroy() : priority;
+		}
+	}
+
+
+	/** This returns a string describing the status of this theater,
+	  * in the following format:
+	  */
+	String status() {
+		String status = "";
+		status += "\tTheater: " + getUAL().getLocation() + "\n";
+		status += "\tTheater connected: " + profilingAgent.isComputing() + "\n";
+		status += "\tTotal messages processed: " + profilingAgent.totalProcessed() + "\n";
+		status += "\tProcessed since last reset: " + profilingAgent.processed() + "\n";
+		status += "\tNumber of autonomous actors: " + profilingAgent.getActorProfiles().size();
+		return status;
+	}
+}

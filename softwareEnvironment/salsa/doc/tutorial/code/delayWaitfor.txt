@@ -1,0 +1,4 @@
+token email =  book<-email(new String("kaoutar"));
+token ready2go = standardInput<-readLine();
+book<-addUser(email, new String("kaoutar"))
+      :delayWaitfor(new Integer(1000),ready2go); 

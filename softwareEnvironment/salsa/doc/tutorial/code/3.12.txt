@@ -1,0 +1,10 @@
+//The first example of using First-Class Continuations
+...
+void saySomething1() {
+  standardOutput <- print("Hello ") @ 
+  standardOutput <- print("World ") @ 
+  currentContinuation;
+}
+....
+//statement 1 in some method.
+saySomething1() @  standardOutput <- print("SALSA"); 

@@ -1,0 +1,9 @@
+ulimit -v unlimited
+
+from europa: java -Xmx1000M -Xms1000M src.IOSTheater
+from jupiter: ./join.sh europa.wcl.cs.rpi.edu:4040
+start the WWCNaming server in io.wcl.cs.rpi.edu
+
+run heat:
+
+ava Heat test_theaters0 uan://io.wcl.cs.rpi.edu:3030/ 100 5000 200 16 outfile

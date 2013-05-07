@@ -1,0 +1,15 @@
+usage:
+	java src.IOSTheater
+
+	to run with default components, otherwise:
+	java -Dprotocol="myProtocolComponent" -Dprofiling="myProfilingComponent" -Ddecision="myDecisionComponent" src.IOSTheater
+
+	to connect to another IOS theater:
+	java -Dconnection="rmsp://host:port/io/protocolActor" src.IOSTheater
+
+	to connect to a peer server:
+	java -Dconnection="rmsp://host:port/io/peerServer" src.IOSTheater
+
+to start a peer server:
+	java -Didentifier="io/peerServer" src.resources.PeerServer
+

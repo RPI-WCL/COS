@@ -1,0 +1,2 @@
+UAL selfUAL= this.getUAL();
+UAN selfUAN = this.getUAN();

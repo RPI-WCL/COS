@@ -1,0 +1,349 @@
+\chapter{Advanced Concurrency Coordination}
+\label{Advanced Concurrency Coordination}
+
+This chapter introduces advanced constructs for coordination by using named tokens, 
+join block continuations, and message properties. 
+
+\section{Named Tokens}
+\label{Named Tokens}
+Chapter~\ref{Writing Concurrent Programs} has introduced token-passing 
+continuations with the reserved keyword
+{\tt token}. In this section, 
+we will focus on the other type of continuations, 
+the \textit{named tokens}.
+
+In SALSA, the return value of the asynchronous message can be declared 
+as a variable with type {\tt token}. The variable is 
+called a \textit{named token}. Named tokens are designed to more flexibly tell 
+the SALSA run-time environment how to continue certain computations.
+For example, a token-passing continuation statement can be re-written by name token continuations:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/tokencont2nametoken.salsa.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/tokencont2nametoken.salsa.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+Name tokens can be used to construct a non-linear partial order for computation,
+which cannot be expressed by token-passing continuations.
+The following example cannot be re-written by token-passing continuations:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/nonlinearCont.salsa.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/nonlinearCont.salsa.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+The following example uses name tokens to implement the Fibonacci number application:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/Fibonacci.salsa.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/Fibonacci.salsa.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+ 
+
+Named tokens may be assigned to non-primitive type values, 
+message sending expressions, or other named tokens. 
+Examples are shown as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.1.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.1.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+The following example shows how to use named tokens.
+Lines 1-2 are equivalent to lines 3-5, and
+lines 1-2 uses a few token declarations, as follows: 
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.2.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.2.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+The following example demonstrates how named tokens are used in loops, as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.3.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.3.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+The above example is equivalent to the following example:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.4.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.4.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+To learn more about named tokens, we use the following example to illustrate 
+how the named token declaration works and to prevent confusion:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.5.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.5.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+As the token is updated as soon as the code is processed, this leads to some interesting 
+occurrences. In the {\tt for} loop on lines 3-7, for each iteration of the loop, the value of 
+{\tt token x} in {\tt b{\textless}-m2} and {\tt c{\textless}-m3} is the same. However, 
+the value of {\tt token x} in {\tt d{\textless}-m4} is the token returned by 
+{\tt c{\textless}-m3}, and thus equal to the value of {\tt token x} in the message 
+sends on lines 4 and 5 in the next iteration of the loop.
+
+\section{Join Block Continuations}
+
+Chapter~\ref{Writing Concurrent Programs} skips some important issues of join 
+blocks. In this section, 
+we are going to introduce how to use the return values of statements inside a join block and how to 
+implement the join block reception handler.
+
+A join block always returns \textit{an object array} if it joins 
+several messages to a reserved keyword {\tt token}, or a named token. 
+If those message handlers to be joined do not return
+({\tt void} type return), or the return values are ignored, the join block 
+functions like a barrier for parallel message processing.
+
+The named token can be applied to the join block as follows:
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.6.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.6.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+The return value of the join block is received by 
+the join block reception handler. Every join block reception handler
+must have only one argument with the type of the object array. 
+The following example illustrates how to access the join block return 
+values through tokens.  
+In lines 16-20, the message {\tt multiply} will not be processed 
+until the three messages {\tt add(2,3)}, {\tt add(3,4)}, and {\tt add(2,4)} 
+are processed. The token passed to {\tt multiply} is an 
+array of {\tt Integers} generated by the three {\tt adds} messages. 
+The message handler {\tt multiply(Object numbers[])} in lines 3-7 
+is the join block reception handler.
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/JoinContinuation.salsa.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/JoinContinuation.salsa.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+\section{Message Properties}
+
+SALSA provides three message properties that could 
+be used with message sending: {\tt priority}, {\tt delay}, 
+{\tt waitfor}, and {\tt delayWaitfor}. The syntax used to assign to a message a 
+given property is the following, where 
+{\tt {\textless}property name{\textgreater}} can be either {\tt priority}, 
+{\tt delay}, {\tt waitfor}, and {\tt delayWaitfor}:
+
+\textbf{actor{\textless}-myMessage:{\textless}property name{\textgreater}}
+
+
+\subsection{Property: {\tt priority}}
+The {\tt priority} property is used to send a message with high priority.
+This is achieved by placing the message at the beginning 
+of the actor's message box.
+For instance, the following statement will result in sending the 
+message {\tt migrate} to the actor, {\tt book}, with the 
+highest property. 
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.7.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.7.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+Let us assume that the local host is overloaded ,the message box of Actor {\tt book} is full, and
+the remote host to migrate has extra computing power. 
+Using the {\tt priority} property by attaching it to the {\tt migrate} message may improve the performance.
+
+\subsection{Property: {\tt delay}}
+The {\tt delay} property is used to send a message with a given delay. 
+It takes as arguments the delay duration in milliseconds. 
+The property is usually used as a loose timer.
+For instance,
+the following message {\tt awaken} will be sent to the 
+actor, {\tt book}, after a delay of 1s.
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.8.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.8.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+\subsection{Property: {\tt waitfor}}
+The {\tt waitfor} property is used to wait for the reception of a token 
+before sending a message. The property can add variable continuation restrictions dynamically, 
+enabling a flexible and-barrier for concurrent execution.
+The following example shows that the message {\tt compare(b)} can be delivered to Actor {\tt a} if
+Actors {\tt a} and {\tt b} have migrated to the same theater:  
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.9.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.9.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}
+
+\subsection{Property: {\tt delayWaitfor}}
+SALSA $\salsaversion$ does not support multiple properties.
+{\tt delayWaitfor} is a temporary solution to support
+{\tt delay} and {\tt waitfor} in the same message.
+The {\tt delayWaitfor} property takes the first argument as the delay duration in milliseconds,
+and the remainder as tokens. For instance,
+the message {\tt compare(b)} can be delivered to Actor {\tt a} if
+Actors {\tt a} and {\tt b} have migrated to the same theater and 
+after a delay of 1 second:  
+
+%begin{latexonly} 
+{\singlespace
+\lstinputlisting[]{code/6.10.txt}
+}
+%end{latexonly} 
+\begin{htmlonly}
+ \begin{rawhtml} 
+  <table border="1" cellpadding="2" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" id="AutoNumber1">
+   <tr><td><pre>
+  \end{rawhtml} 
+\input{htmlcode/6.10.txt}
+ \begin{rawhtml} 
+   </pre></td></tr>
+  </table>
+\end{rawhtml} 
+\end{htmlonly}

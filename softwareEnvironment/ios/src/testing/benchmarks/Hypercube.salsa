@@ -1,0 +1,124 @@
+module src.testing.benchmarks;
+
+import java.io.FileInputStream;
+import java.util.Vector;
+import java.util.StringTokenizer;
+
+behavior Hypercube {
+	public void act(String[] arguments) {
+		int size = 0;
+		int length = 0;
+		int width = 0;
+		int depth = 0;
+		int messageSendingDelay = 0;
+		int messageSize = 0;
+		int processingTime = 0;
+		String id = "";
+		String nameServer = "";
+		Vector theaters = new Vector();
+
+		try {
+			if (arguments.length != 8) {
+				System.err.println("Usage: ");
+				System.err.println("\tjava io.testing.benchmarks.Hypercube <naming/theater information file> " +
+						   "<length> <width> <depth> <messageSendingDelay(ms)> <messageSize(bytes)> <processingTime(ms)> <id>");
+				System.exit(0);
+			}
+	                //reads from file:
+	                //Name Server Address
+	                //Peer Theater Address1 ... PeerTheaterAddressN
+
+	                FileInputStream file;
+	                byte input[];
+
+	                try {
+	                        file = new FileInputStream(arguments[0]);
+	                        input = new byte[file.available()];
+	                        file.read(input);
+
+		                StringTokenizer st = new StringTokenizer(new String(input), "\n");
+                                
+		                nameServer = st.nextToken();
+		                while (st.hasMoreTokens()) {
+		                        theaters.add(st.nextToken());
+		                }
+	                } catch (Exception e) {
+	                        System.err.println("Error reading naming/theater information file: " + e);
+	                        System.exit(0);
+	                }
+	        
+			length = new Integer(arguments[1]).intValue();
+			width = new Integer(arguments[2]).intValue();
+			depth = new Integer(arguments[3]).intValue();
+
+			messageSendingDelay = new Integer(arguments[4]).intValue();
+			messageSize = new Integer(arguments[5]).intValue();
+			processingTime = new Integer(arguments[6]).intValue();
+			id = arguments[7];
+
+		} catch (Exception e) {
+			System.err.println("Usage: ");
+			System.err.println("\tjava io.testing.benchmarks.Hypercube <naming/theater information file> " +
+					   "<length> <width> <depth> <messageSendingDelay(ms)> <messageSize(bytes)> <processingTime(ms)>");
+			System.exit(0);
+		}
+
+		size = length*width*depth;
+
+		standardOutput<-println("Creating a hypercube actor graph with: ") @
+		standardOutput<-println("\tnodes in hypercube actor graph: " + size) @
+		standardOutput<-println("\tlength in hypercube actor graph: " + length) @
+		standardOutput<-println("\twidth in hypercube actor graph: " + width) @
+		standardOutput<-println("\tdepth in hypercube actor graph: " + depth) @
+		standardOutput<-println("\tdelay between message sends: " + messageSendingDelay + "(ms)") @
+		standardOutput<-println("\tsize of messages: " + messageSize + "(bytes)") @
+		standardOutput<-println("\tprocessing intensity of a message: " + processingTime + "(ms)") @
+
+		standardOutput<-println() @
+		standardOutput<-println("Using name server:") @ 
+		standardOutput<-println("\t" + nameServer) @
+		token synchToken = standardOutput<-println("Loading actor graph randomly on theater(s): ");
+
+		for (int i = 0; i < theaters.size(); i++) {
+			synchToken = standardOutput<-println("\t" + (String)theaters.get(i)) : waitfor(synchToken);
+		}
+
+		synchToken = standardOutput<-println() : waitfor(synchToken);
+
+		Node[] nodes = new Node[size];
+		for (int i = 0; i < size; i++) {
+			UAN uan = new UAN(nameServer + "benchmark/node_"+id + i);
+			UAL ual = new UAL(theaters.get(i%theaters.size()) + "benchmark/hypercube_node_"+id + i);
+
+			nodes[i] = new Node(messageSendingDelay, messageSize, processingTime) at (uan, ual);
+		}
+
+		standardOutput<-println("Generating links...") : waitfor(synchToken) @
+
+		join {
+			for (int i = 0; i < length; i++) {
+			for (int j = 0; j < width; j++) {
+			for (int k = 0; k < depth; k++) {
+				join {
+					if ((i+1) < length)	nodes[length*width*k + length*j + i]<-addReference(nodes[length*width*k + length*j + i + 1]);
+					if ((i-1) >= 0)		nodes[length*width*k + length*j + i]<-addReference(nodes[length*width*k + length*j + i - 1]);
+					if ((j+1) < width)	nodes[length*width*k + length*j + i]<-addReference(nodes[length*width*k + length*j + i + length]);
+					if ((j-1) >= 0)		nodes[length*width*k + length*j + i]<-addReference(nodes[length*width*k + length*j + i - length]);
+					if ((k+1) < depth)	nodes[length*width*k + length*j + i]<-addReference(nodes[length*width*k + length*j + i + length*width]);
+					if ((k-1) >= 0)		nodes[length*width*k + length*j + i]<-addReference(nodes[length*width*k + length*j + i - length*width]);
+				} @ standardOutput<-println("\tGenerated links for node_" + (length*width*k + length*j + i));
+			}
+			}
+			}
+		} @
+
+		standardOutput<-println("Starting computation...") @
+		join {
+			for (int i = 0; i < size; i++) {
+				nodes[i]<-startSending() @
+				standardOutput<-println("\tnode_" + i + " is now processing.");
+			}
+		} @
+		standardOutput<-println("finished.");
+	} 
+}

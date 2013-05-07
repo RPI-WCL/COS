@@ -1,0 +1,8 @@
+-Dport=<port #>: to specify the port number that the 
+                 automatically started theater will listen to.
+-Didentifier=<id>: to specify the ID portion of the actor's ual
+-Duan = <uan>: to specify the UAN of the actor
+-Dual= <ual>: to specify the UAL of the actor
+-Dnogc: the local garbage collecotr will not be triggered
+-Dgcverbose: to show the behavior of local GC
+-Dnodie: making a theater alive

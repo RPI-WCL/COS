@@ -1,0 +1,2 @@
+AddressBook remoteService= (AddressBook) 
+  AddressBook.getReferenceByName("uan://nameserver1/id");

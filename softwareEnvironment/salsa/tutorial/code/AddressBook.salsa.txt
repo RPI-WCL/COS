@@ -1,0 +1,50 @@
+module examples;
+
+import  java.util.Hashtable;
+import  java.util.Enumeration;
+
+behavior AddressBook implements ActorService{
+  private Hashtable name2email;
+
+  AddressBook() {
+   // Create a new hashtable to store name & email
+   name2email = new Hashtable();
+  }
+
+  // Get the email of this person
+  String getEmail(String name) {
+    if (name2email.containsKey(name)) { 
+      // If name exists
+      return (String) name2email.get(name);
+    } else {
+      return new String("Unknown user");
+    }
+  }
+
+  // Add a new user to the system, returns success
+  boolean addUser (String name, String email) {
+    // Is the user already listed?
+    if (name2email.containsKey(name) || 
+        name2email.contains(email)) {
+      return false;
+    }
+    // Add to our hash table
+    name2email.put(name, email);
+    return true;
+  }
+
+  void act(String args[]) {
+    if (args.length > 0) {
+      standardOutput<-println(
+      "Usage:" +
+      "java -Duan=<UAN> -Dual=<UAL> examples.AddressBook" );
+      return;
+    }
+    else {
+      standardOutput<-println("AddressBook at: ") @
+      standardOutput<-println("uan: " + this.getUAN()) @
+      standardOutput<-println("ual: " + this.getUAL());
+    }
+  }
+}
+

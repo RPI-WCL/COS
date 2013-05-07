@@ -1,0 +1,29 @@
+module src.resources;
+
+behavior Join {
+	void act(String[] arguments) {
+		if (arguments.length < 2) {
+			System.err.println("Usage: java io.resources.Join <PeerServer UAL> <ProtocolActor UAL>*");
+			System.err.println("connects all the protocol actors to the given peer server");
+		}
+
+		PeerServer peerServer = (PeerServer)PeerServer.getReferenceByLocation( new UAL(arguments[0]) );
+
+		join {
+			for (int i = 1; i < arguments.length; i++) {
+				UAL ual = new UAL(arguments[i]);
+
+				if (ual.getIdentifier().equals("/io/protocolActor")) {
+					new UniversalActor(ual)<-joinComputation(peerServer) @
+					standardOutput<-println("Join: " + ual.toString());
+				} else {
+					standardOutput<-println("Invalid ual: " + ual.toString());
+				}
+			}
+		} @ standardOutput<-println("Finished.") @ completed();
+	}
+
+	void completed() {
+		System.exit(0);
+	}
+}
