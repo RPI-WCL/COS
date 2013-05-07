@@ -14,7 +14,7 @@ import salsa.naming.UAL;
 import salsa.naming.UAN;
 
 
-behavior ATSDecisionActor {
+behavior ATSDecisionActor implements ActorService {
 
 	ATSProfilingAgent profilingAgent = null;
 	ActorReference protocolActor = null;

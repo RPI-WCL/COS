@@ -32,8 +32,9 @@ import salsa.resources.ActorService;
 // End SALSA compiler generated import delcarations.
 
 import java.io.*;
+import src.language.AutonomousActor;
 
-public class HeatWorker extends UniversalActor  {
+public class HeatWorker extends AutonomousActor {
 	public static void main(String args[]) {
 		UAN uan = null;
 		UAL ual = null;
@@ -185,7 +186,7 @@ public class HeatWorker extends UniversalActor  {
 		return this;
 	}
 
-	public class State extends UniversalActor .State {
+	public class State extends AutonomousActor.State {
 		public HeatWorker self;
 		public void updateSelf(ActorReference actorReference) {
 			((HeatWorker)actorReference).setUAL(getUAL());

@@ -1,5 +1,6 @@
 package src.profiling_agent;
 
+import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -10,7 +11,7 @@ import salsa.naming.UAN;
 import salsa.naming.UAL;
 
 
-public class ATSProfilingAgent implements ProfilingAgent {
+public class ATSProfilingAgent implements ProfilingAgent, Serializable {
 
 	private int			maxMemory = 0;
 	private int			processors = 0;

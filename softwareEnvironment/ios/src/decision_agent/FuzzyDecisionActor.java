@@ -42,7 +42,7 @@ import salsa.naming.NamingService;
 import salsa.naming.UAL;
 import salsa.naming.UAN;
 
-public class FuzzyDecisionActor extends UniversalActor  {
+public class FuzzyDecisionActor extends UniversalActor  implements ActorService {
 	public static void main(String args[]) {
 		UAN uan = null;
 		UAL ual = null;
@@ -76,18 +76,11 @@ public class FuzzyDecisionActor extends UniversalActor  {
 			}
 			ual = new UAL( ServiceFactory.getTheater().getLocation() + System.getProperty("identifier"));
 		}
-		RunTime.receivedMessage();
 		FuzzyDecisionActor instance = (FuzzyDecisionActor)new FuzzyDecisionActor(uan, ual,null).construct();
-		gc.WeakReference instanceRef=new gc.WeakReference(uan,ual);
 		{
 			Object[] _arguments = { args };
-
-			//preAct() for local actor creation
-			//act() for remote actor creation
-			if (ual != null && !ual.getLocation().equals(ServiceFactory.getTheater().getLocation())) {instance.send( new Message(instanceRef, instanceRef, "act", _arguments, false) );}
-			else {instance.send( new Message(instanceRef, instanceRef, "preAct", _arguments, false) );}
+			instance.send( new Message(instance, instance, "act", _arguments, null, null) );
 		}
-		RunTime.finishedProcessingMessage();
 	}
 
 	public static ActorReference getReferenceByName(UAN uan)	{ return new FuzzyDecisionActor(false, uan); }
@@ -97,88 +90,19 @@ public class FuzzyDecisionActor extends UniversalActor  {
 	public static ActorReference getReferenceByLocation(String ual)	{ return FuzzyDecisionActor.getReferenceByLocation(new UAL(ual)); }
 	public FuzzyDecisionActor(boolean o, UAN __uan)	{ super(false,__uan); }
 	public FuzzyDecisionActor(boolean o, UAL __ual)	{ super(false,__ual); }
-	public FuzzyDecisionActor(UAN __uan,UniversalActor.State sourceActor)	{ this(__uan, null, sourceActor); }
-	public FuzzyDecisionActor(UAL __ual,UniversalActor.State sourceActor)	{ this(null, __ual, sourceActor); }
-	public FuzzyDecisionActor(UniversalActor.State sourceActor)		{ this(null, null, sourceActor);  }
+
+	public FuzzyDecisionActor(UAN __uan,UniversalActor.State sourceActor)	{ this(__uan, null,null); }
+	public FuzzyDecisionActor(UAL __ual,UniversalActor.State sourceActor)	{ this(null, __ual,null); }
+	public FuzzyDecisionActor(UniversalActor.State sourceActor)		{ this(null, null,null);  }
 	public FuzzyDecisionActor()		{  }
-	public FuzzyDecisionActor(UAN __uan, UAL __ual, Object obj) {
-		//decide the type of sourceActor
-		//if obj is null, the actor must be the startup actor.
-		//if obj is an actorReference, this actor is created by a remote actor
-
-		if (obj instanceof UniversalActor.State || obj==null) {
-			  UniversalActor.State sourceActor;
-			  if (obj!=null) { sourceActor=(UniversalActor.State) obj;}
-			  else {sourceActor=null;}
-
-			  //remote creation message sent to a remote system service.
-			  if (__ual != null && !__ual.getLocation().equals(ServiceFactory.getTheater().getLocation())) {
-			    WeakReference sourceRef;
-			    if (sourceActor!=null && sourceActor.getUAL() != null) {sourceRef = new WeakReference(sourceActor.getUAN(),sourceActor.getUAL());}
-			    else {sourceRef = null;}
-			    if (sourceActor != null) {
-			      if (__uan != null) {sourceActor.getActorMemory().getForwardList().putReference(__uan);}
-			      else if (__ual!=null) {sourceActor.getActorMemory().getForwardList().putReference(__ual);}
-
-			      //update the source of this actor reference
-			      setSource(sourceActor.getUAN(), sourceActor.getUAL());
-			      activateGC();
-			    }
-			    createRemotely(__uan, __ual, "src.decision_agent.FuzzyDecisionActor", sourceRef);
-			  }
-
-			  // local creation
-			  else {
-			    State state = new State(__uan, __ual);
-
-			    //assume the reference is weak
-			    muteGC();
-
-			    //the source actor is  the startup actor
-			    if (sourceActor == null) {
-			      state.getActorMemory().getInverseList().putInverseReference("rmsp://me");
-			    }
-
-			    //the souce actor is a normal actor
-			    else if (sourceActor instanceof UniversalActor.State) {
-
-			      // this reference is part of garbage collection
-			      activateGC();
-
-			      //update the source of this actor reference
-			      setSource(sourceActor.getUAN(), sourceActor.getUAL());
-
-			      /* Garbage collection registration:
-			       * register 'this reference' in sourceActor's forward list @
-			       * register 'this reference' in the forward acquaintance's inverse list
-			       */
-			      String inverseRefString=null;
-			      if (sourceActor.getUAN()!=null) {inverseRefString=sourceActor.getUAN().toString();}
-			      else if (sourceActor.getUAL()!=null) {inverseRefString=sourceActor.getUAL().toString();}
-			      if (__uan != null) {sourceActor.getActorMemory().getForwardList().putReference(__uan);}
-			      else if (__ual != null) {sourceActor.getActorMemory().getForwardList().putReference(__ual);}
-			      else {sourceActor.getActorMemory().getForwardList().putReference(state.getUAL());}
-
-			      //put the inverse reference information in the actormemory
-			      if (inverseRefString!=null) state.getActorMemory().getInverseList().putInverseReference(inverseRefString);
-			    }
-			    state.updateSelf(this);
-			    ServiceFactory.getNaming().setEntry(state.getUAN(), state.getUAL(), state);
-			    if (getUAN() != null) ServiceFactory.getNaming().update(state.getUAN(), state.getUAL());
-			  }
-		}
-
-		//creation invoked by a remote message
-		else if (obj instanceof ActorReference) {
-			  ActorReference sourceRef= (ActorReference) obj;
-			  State state = new State(__uan, __ual);
-			  muteGC();
-			  state.getActorMemory().getInverseList().putInverseReference("rmsp://me");
-			  if (sourceRef.getUAN() != null) {state.getActorMemory().getInverseList().putInverseReference(sourceRef.getUAN());}
-			  else if (sourceRef.getUAL() != null) {state.getActorMemory().getInverseList().putInverseReference(sourceRef.getUAL());}
-			  state.updateSelf(this);
-			  ServiceFactory.getNaming().setEntry(state.getUAN(), state.getUAL(),state);
-			  if (getUAN() != null) ServiceFactory.getNaming().update(state.getUAN(), state.getUAL());
+	public FuzzyDecisionActor(UAN __uan, UAL __ual,Object sourceActor) {
+		if (__ual != null && !__ual.getLocation().equals(ServiceFactory.getTheater().getLocation())) {
+			createRemotely(__uan, __ual, "src.decision_agent.FuzzyDecisionActor");
+		} else {
+			State state = new State(__uan, __ual);
+			state.updateSelf(this);
+			ServiceFactory.getNaming().setEntry(state.getUAN(), state.getUAL(), state);
+			if (getUAN() != null) ServiceFactory.getNaming().update(state.getUAN(), state.getUAL());
 		}
 	}
 
@@ -188,7 +112,7 @@ public class FuzzyDecisionActor extends UniversalActor  {
 		return this;
 	}
 
-	public class State extends UniversalActor .State {
+	public class State extends UniversalActor .State implements salsa.resources.ActorServiceState {
 		public FuzzyDecisionActor self;
 		public void updateSelf(ActorReference actorReference) {
 			((FuzzyDecisionActor)actorReference).setUAL(getUAL());
@@ -196,7 +120,7 @@ public class FuzzyDecisionActor extends UniversalActor  {
 			self = new FuzzyDecisionActor(false,getUAL());
 			self.setUAN(getUAN());
 			self.setUAL(getUAL());
-			self.activateGC();
+			self.muteGC();
 		}
 
 		public State() {

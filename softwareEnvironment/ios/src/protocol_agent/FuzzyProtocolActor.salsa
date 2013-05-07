@@ -7,7 +7,7 @@ import src.profiling_agent.ProfilingAgent;
 import src.profiling_agent.ATSProfilingAgent;
 import src.resources.PeerServer;
 
-behavior FuzzyProtocolActor {
+behavior FuzzyProtocolActor implements ActorService {
 	ATSProfilingAgent profilingAgent = null;
 	ActorReference decisionActor = null;
 
@@ -47,7 +47,7 @@ behavior FuzzyProtocolActor {
 		if (waiting == true) return;
 		waiting = true;
 
-		propagateSteal(this, new Double(profilingAgent.getCpuSpeed()), profilingAgent.getActors(), new Integer(maxTTL));
+		propagateSteal(((FuzzyProtocolActor)self), new Double(profilingAgent.getCpuSpeed()), profilingAgent.getActors(), new Integer(maxTTL));
 	}
 
 	void propagateSteal(FuzzyProtocolActor source, double processing, Vector actorsAtSource, int timeToLive) {

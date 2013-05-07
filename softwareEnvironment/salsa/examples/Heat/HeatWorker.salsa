@@ -1,8 +1,9 @@
 module examples.Heat;
 
 import java.io.*;
+import src.language.AutonomousActor;
 
-behavior HeatWorker {
+behavior HeatWorker extends AutonomousActor {
 
     int x; int y;
     double[][] data; double[][] next;

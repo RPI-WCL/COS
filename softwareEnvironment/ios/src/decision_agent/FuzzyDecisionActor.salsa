@@ -14,7 +14,7 @@ import salsa.naming.UAL;
 import salsa.naming.UAN;
 
 
-behavior FuzzyDecisionActor {
+behavior FuzzyDecisionActor implements ActorService {
 
 	ATSProfilingAgent profilingAgent = null;
 	ActorReference protocolActor = null;

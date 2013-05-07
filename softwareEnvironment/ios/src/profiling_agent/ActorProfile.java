@@ -1,5 +1,6 @@
 package src.profiling_agent;
 
+import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -7,7 +8,7 @@ import salsa.naming.UAN;
 import salsa.language.ActorReference;
 import salsa.language.UniversalActor;
 
-public class ActorProfile {
+public class ActorProfile implements Serializable {
 	private UAN uan;
 	private Hashtable targetList = new Hashtable();
 	private Hashtable sourceList = new Hashtable();

@@ -1,4 +1,4 @@
-module testing.reachability;
+module src.testing.reachability;
 
 import java.io.FileInputStream;
 import java.util.Vector;
