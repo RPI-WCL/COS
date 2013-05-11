@@ -1,4 +1,4 @@
-package cosManager;
+package cloudManager;
 
 import java.io.*;
 import java.lang.*;
@@ -16,7 +16,7 @@ import util.CommChannel;
 import util.Utility;
 import vmManager.VmInfo;
 
-public class COSController extends Controller
+public class PrivateCloudController extends CloudController
 {
 
     HashMap<String, VmInfo> vmTable;
@@ -32,7 +32,7 @@ public class COSController extends Controller
     boolean destroyed;
     boolean vmModificationInProgress;
 
-    public COSController(){
+    public PrivateCloudController(){
         super(Constants.COS_PORT);
         vmTable = new HashMap<String, VmInfo>();
         nodeTable = new HashMap<String, NodeInfo>();
@@ -102,50 +102,13 @@ public class COSController extends Controller
 
     }
 
-    public void handleMessage( Message msg )
-    {
-        double cpu_usage;
-        String return_addr;
-        List<String> params;
-        Message payload;
-
-        Utility.debugPrint("COS recieved: " + msg.getMethod() + " From: " + msg.getSender());
-        switch(msg.getMethod())
-        {
-            case "cpu_usage_resp":
-                updateCpuStats(msg);
-                break;
-            case "new_connection":
-                newNode(msg);
-                break;
-            case "notify_extreme_cpu_usage":
-                cpu_usage = (double) msg.getParam("load");
-                return_addr = msg.getSender();
-
-                if(remainingResponses == 0 && !vmModificationInProgress){
-                    payload = msgFactory.getCpuUsage();
-                    broadcast(payload);
-                    remainingResponses = vmTable.size() + children.size();
-                }
-                break;
-            case "vm_creation":
-                newVM(msg);
-                break;
-            case "vm_destruction":
-                deleteVM(msg);
-                break;
-            default:
-                Utility.debugPrint(msg.getMethod());
-                break;
-        }
-    }
-
     public static void main(String[] args) throws Exception{
-        COSController runner = new COSController();
+        PrivateCloudController runner = new PrivateCloudController();
         runner.checkMessages();
     }
 
-    private void updateCpuStats(Message msg){
+    
+    protected void handleUsageResp(Message msg){
         double load = (double) msg.getParam("load");
         String addr = msg.getSender();
         String type = (String) msg.getParam("type");
@@ -165,7 +128,18 @@ public class COSController extends Controller
 
     }
 
-    private void newNode(Message msg){
+    protected void handleExtremeUsage(Message msg) {
+        double cpu_usage = (double) msg.getParam("load");
+        String return_addr = msg.getSender();
+
+        if(remainingResponses == 0 && !vmModificationInProgress){
+            Message payload = msgFactory.getCpuUsage();
+            broadcast(payload);
+            remainingResponses = vmTable.size() + children.size();
+        }
+    }
+
+    protected void handleNewConnection(Message msg){
         if( msgFactory == null ){
             msgFactory = new MessageFactory("COS", msg.getReply());
         }
@@ -175,14 +149,14 @@ public class COSController extends Controller
     }
 
 
-    private void newVM(Message msg){
+    protected void handleVmCreation(Message msg){
         String vm_address = (String) msg.getParam("vm_address");
         vmTable.put(vm_address, new VmInfo(vm_address, msg.getReply()));
         nodeTable.get(msg.getSender()).addVm();
         vmModificationInProgress = false;
     }
 
-    private void deleteVM(Message msg){
+    protected void handleVmDestruction(Message msg){
         String vm_address = (String) msg.getParam("vm_address");
         vmTable.remove(vm_address);
         nodeTable.get(msg.getSender()).removeVm();
