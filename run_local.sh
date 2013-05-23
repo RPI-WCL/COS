@@ -1,13 +1,15 @@
 #!/bin/bash
 
 Terminal -x java cosManager.COSController &
-sleep 1
+sleep 2
+Terminal -x java cloudManager.PrivateCloudController 127.0.0.1 &
+sleep 2
 Terminal -x java nodeManager.NodeController 127.0.0.1 &
-sleep 1
+sleep 2
 
 launchVM(){
 Terminal -x java vmManager.VMController 127.0.0.1 &
-sleep 1
+sleep 2
 }
 
 launchVM

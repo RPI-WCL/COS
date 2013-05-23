@@ -8,7 +8,7 @@ import util.Utility;
 
 public class MessageFactory
 {
-    String type; //VM, NODE, COS
+    String type; //VM, NODE, CLOUD, COS
     String localhost;
 
     public MessageFactory(String type, CommChannel any){

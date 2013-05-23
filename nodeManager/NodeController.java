@@ -16,19 +16,19 @@ import util.Messages;
 
 public class NodeController extends Controller
 {
-    CommChannel cos;
+    CommChannel cloud;
 
     LinkedList<String> theaters;
 
-    public NodeController(String cos_addr, int cos_port, int listen_port){
+    public NodeController(String cloud_addr, int cloud_port, int listen_port){
         super(listen_port);
 
 
-        cos = new CommChannel(cos_addr, cos_port); 
-        ConnectionHandler cosHandler = new ConnectionHandler(cos, mailbox);
-        new Thread(cosHandler, "COS connection").start();
+        cloud = new CommChannel(cloud_addr, cloud_port); 
+        ConnectionHandler cloudHandler = new ConnectionHandler(cloud, mailbox);
+        new Thread(cloudHandler, "Cloud connection").start();
 
-        msgFactory = new MessageFactory("NODE", cos);
+        msgFactory = new MessageFactory("NODE", cloud);
         theaters = null;
     }
 
@@ -46,7 +46,7 @@ public class NodeController extends Controller
 
         //We have a new connection. We should let COS know.
         Message payload = msgFactory.vmCreation(msg.getSender());
-        cos.write(payload);
+        cloud.write(payload);
 
         //TODO: Tell the VM to start running a theater.
         if( theaters != null)
@@ -56,7 +56,7 @@ public class NodeController extends Controller
     private void droppedConnection(Message msg){
         String addr = (String) msg.getParam("dropped_connection");
         Message result = msgFactory.vmDestruction(addr);
-        cos.write(result);
+        cloud.write(result);
         children.remove(msg.getReply());
     }
 
@@ -81,7 +81,7 @@ public class NodeController extends Controller
         {
             case "get_cpu_usage":
                 broadcast(msg);
-                cos.write(msgFactory.cpuUsageResp());
+                cloud.write(msgFactory.cpuUsageResp());
                 break;
             case "new_connection":
                 handleNewConnection(msg);
@@ -99,7 +99,7 @@ public class NodeController extends Controller
                 break;
             default:
                 //If we don't know how to deal with it, pass it up.
-                cos.write(msg);
+                cloud.write(msg);
                 break;
         }
     }
@@ -107,7 +107,7 @@ public class NodeController extends Controller
     public static void main( String [] args ) throws Exception{
         if( args.length != 1)
             return;
-        NodeController runner = new NodeController( args[0], Constants.COS_PORT, Constants.NODE_PORT );
+        NodeController runner = new NodeController( args[0], Constants.CLOUD_PORT, Constants.NODE_PORT );
         runner.checkMessages();
     }
 }

@@ -10,7 +10,7 @@ public class Utility
     private final static int cpuCount = os.getAvailableProcessors();
 
     public static void debugPrint(String msg){
-        if( Constants.DEBUG )
+        if(Constants.DEBUG)
             System.out.println(msg);
     }
 

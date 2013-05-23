@@ -29,6 +29,10 @@ public abstract class MachInfo
         return contact;
     }
 
+    public void updateUsage(Message msg) {
+        cpuUsage = (double) msg.getParam("load");
+    }
+
     public void updateCpu(double load){
        cpuUsage = load; 
     }

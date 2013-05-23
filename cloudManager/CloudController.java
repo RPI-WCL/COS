@@ -17,6 +17,7 @@ public abstract class CloudController extends Controller {
     abstract protected void handleVmDestruction(Message msg);
 
     public void handleMessage(Message msg) {
+        System.out.println("CLOUD RCVED " + msg.getMethod());
         switch(msg.getMethod()) {
             case "cpu_usage_resp":
                 handleUsageResp(msg);

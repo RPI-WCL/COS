@@ -7,8 +7,7 @@ public class NodeInfo extends MachInfo
 {
     private int vm_count;
 
-    public NodeInfo(String address, CommChannel contact)
-    {
+    public NodeInfo(String address, CommChannel contact) {
         super(address, contact);
         vm_count = 0;
     }

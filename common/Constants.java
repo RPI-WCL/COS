@@ -14,8 +14,11 @@ public class Constants
     //COS options
     public final static int COS_PORT = 9999;
 
+    //Cloud options
+    public final static int CLOUD_PORT = 9998;
+
     //Node Options
-    public final static int NODE_PORT = 9998;
+    public final static int NODE_PORT = 9997;
     public final static String PATH_TO_VM_IMAGE = "/etc/xen/cos/jcos01.cfg";
 
     //VM options
