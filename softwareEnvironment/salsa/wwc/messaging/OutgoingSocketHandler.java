@@ -12,6 +12,7 @@ import java.util.Vector;
 import salsa.language.Message;
 import salsa.language.RunTime;
 import salsa.language.ServiceFactory;
+import salsa.resources.DbgPrint;
 
 import salsa.naming.UAL;
 import gc.SystemMessage;
@@ -39,6 +40,7 @@ System.out.println("msg count:"+count);
           try{
             host=target.getHost();
             port=target.getPort();
+            DbgPrint.print( DbgPrint.DEBUG, "OutSock", "constructor, host=" + host + ", port=" + port );
             socket=new Socket(host,port);
             outputStream = new ObjectOutputStream( socket.getOutputStream());
             start();
@@ -116,6 +118,8 @@ System.out.println("msg count:"+count);
             //refresh the timestamp
 
             //incCount();
+            DbgPrint.print( DbgPrint.DEBUG, "OutSock", "writeObject, o=" + o );
+            System.out.flush();
             outputStream.writeObject(o);
             outputStream.flush();
             resetRetry();
@@ -130,6 +134,7 @@ System.out.println("msg count:"+count);
             System.err.println("\tThrew Exception: " + e);
             System.err.println();
           } catch (SocketException e) {
+            DbgPrint.print( DbgPrint.ERROR, "OutSock", "SocketException e=" + e );
 
             //It is possible that the <UAN,UAL> pair
             //  in the local naming service is not correct

@@ -18,9 +18,11 @@ import salsa.language.*;
 import salsa.language.exceptions.*;
 import salsa.naming.*;
 import salsa.messaging.*;
+import salsa.resources.DbgPrint;
+
 import gc.SystemMessage;
 import gc.message.TimeoutMsg;
-import salsa.language.ServiceFactory;
+
 
 /**
  * This class is the reference implementation of the Persistent MessagingService. The
@@ -82,6 +84,7 @@ public class WWCTransportService implements TransportService {
   public void migrate(Actor state, UAL target){}
 
   public void send(Message message, ActorReference target) {
+    DbgPrint.print( DbgPrint.DEBUG, "WWCTrsp", "send(msg), msg=" + message );
     UAL targetUAL=target.getUAL();
     String targetHost=targetUAL.getHost()+":"+targetUAL.getPort();
     OutgoingSocketHandler channel=null;
@@ -95,6 +98,9 @@ public class WWCTransportService implements TransportService {
         if (newUAL==null) {newUAL=targetUAL;}
         targetHost=newUAL.getHost()+":"+newUAL.getPort();
         channel = (OutgoingSocketHandler) socketTable.get(targetHost);
+
+        DbgPrint.print( DbgPrint.DEBUG, "WWCTrsp", "send(msg), ch=" + channel + ", targetHost=" + targetHost + ", newUAL=" + newUAL + ", msg=" + message );
+
         if (channel != null) {channel.put(message);return;}
         channel = new OutgoingSocketHandler(newUAL);
         socketTable.put(targetHost,channel);
@@ -104,6 +110,8 @@ public class WWCTransportService implements TransportService {
   }
 
   public void send(SystemMessage message, ActorReference target) {
+    DbgPrint.print( DbgPrint.DEBUG, "WWCTrsp", "send(sysMsg), msg=" + message );
+
     UAL targetUAL=target.getUAL();
     String targetHost=targetUAL.getHost()+":"+targetUAL.getPort();
     OutgoingSocketHandler channel=null;

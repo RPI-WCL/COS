@@ -71,7 +71,7 @@ behavior DistributedHeat{
 		System.arraycopy(data[i],0,workerData[j],0,y);
 		i++;
 	    }
-	    workers[a] = new HeatWorker(workerData) at (new UAN("uan://"+nameServer+":3030/a"+a),null);
+	    workers[a] = new HeatWorker(workerData, a, self) at (new UAN("uan://"+nameServer+":3030/a"+a),null);
 	}
 
 	// connect worker neighbours
@@ -96,12 +96,24 @@ behavior DistributedHeat{
 	}
 
 	// migrate actors to theaters
-	for (int a=0; a<noActors; a++){
-	    standardOutput<-println("Sending actor "+
-				    "uan://"+nameServer+":3030/a"+a+" to "+
-				    "rmsp://"+theaters.get(a%theaters.size())+"/a"+a);
-	    workers[a]<-migrate("rmsp://"+theaters.get(a%theaters.size())+"/a"+a);
-	}
+	// for (int a=0; a<noActors; a++){
+	//     standardOutput<-println("Sending actor "+
+	// 			    "uan://"+nameServer+":3030/a"+a+" to "+
+	// 			    "rmsp://"+theaters.get(a%theaters.size())+"/a"+a);
+	//     workers[a]<-migrate("rmsp://"+theaters.get(a%theaters.size())+"/a"+a);
+	// }
+    int actor = 0;
+    for (int i = 0; i < theaters.size(); i++) {
+        String[] dest = ((String)theaters.get( i )).split( "," );
+        for (int j = 0; j < Integer.parseInt( dest[1] ); j++) {
+            standardOutput<-println("Sending actor "+
+                                    "uan://"+nameServer+":3030/a"+actor+" to "+
+                                    "rmsp://"+dest[0]+"/a"+actor);
+            if (actor < noActors)
+                workers[actor]<-migrate("rmsp://"+dest[0]+"/a"+actor);
+            actor++;
+        }
+    }
 
 	//start computation
 	standardOutput<-println(">>>>>>Starting the computation");
@@ -119,6 +131,16 @@ behavior DistributedHeat{
 
 
 }
+
+    int nextReport = 0;
+    void reportProgress( int currIterations ) {
+        double progress = 100 * (double)(iterations - currIterations) / iterations;
+        if (nextReport <= progress) {
+            System.out.println( "progress=" + progress + "%, iterations=" + (iterations - currIterations) );
+            System.out.flush();
+            nextReport += 5;
+        }
+    }
 
     void endTimer(){
 	long finalTime = System.currentTimeMillis();

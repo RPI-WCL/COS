@@ -110,6 +110,7 @@ public behavior WWCSystem implements SystemService {
 		}
 
 		public void addActor(byte[] actorBytes) {
+                  DbgPrint.print( DbgPrint.DEBUG, "WWCSyst", "addActor, actorBytes.length=" + actorBytes.length );
                   Actor actor;
                   RunTime.createdUniversalActor();
                   try {
@@ -136,6 +137,7 @@ public behavior WWCSystem implements SystemService {
                       actor.setUAL(namingService.generateUAL());
                     }
 
+                    DbgPrint.print( DbgPrint.DEBUG, "WWCSyst", "addActor, actor.uan=" + actor.getUAN() + ", actor.ual=" + actor.getUAL() );
                     namingService.setEntry(actor.getUAN(), actor.getUAL(), actor);
                     namingService.update(actor.getUAN(), actor.getUAL());
                     

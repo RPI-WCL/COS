@@ -68,6 +68,7 @@ import salsa.resources.OutputService;
 import salsa.resources.ErrorService;
 import salsa.resources.SystemService;
 import salsa.resources.InputService;
+import salsa.resources.DbgPrint;
 
 import gc.*;
 import gc.message.*;
@@ -234,6 +235,7 @@ public class UniversalActor implements ActorReference, java.io.Serializable {
 		Object target = namingService.getTarget(this);
 
 		if (target instanceof Actor) {
+            DbgPrint.print( DbgPrint.DEBUG, "UniActr", "send, msg=" + message + ", target=" + target );
 			try {
 				((Actor)target).putMessageInMailbox(message);
 			} catch (Exception e) {
@@ -243,6 +245,7 @@ public class UniversalActor implements ActorReference, java.io.Serializable {
 				e.printStackTrace();
 			}
 		} else if (target instanceof UAL) {
+            DbgPrint.print( DbgPrint.DEBUG, "UniActr", "send, msg=" + message + ", UAL=" + target );
 			this.ual = (UAL)target;
 			transportService.send(message,this);
 		} else {
@@ -1213,6 +1216,8 @@ public abstract class State extends Thread implements Actor, java.io.Serializabl
         }
 
         protected void responseAck(Message msg) {
+          DbgPrint.print( DbgPrint.DEBUG, "UniActr", "responseAck, msg=" + msg );
+
           if (msg.getNeedAck()==false) {return;}
           if (msg.getMethodName().equals("construct")) {return;}
           WeakReference ackTarget=(WeakReference)msg.getSource();

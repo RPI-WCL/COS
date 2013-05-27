@@ -324,7 +324,7 @@ continue;					}
 					System.arraycopy(data[i], 0, workerData[j], 0, y);
 					i++;
 				}
-				workers[a] = ((HeatWorker)new HeatWorker(new UAN("uan://"+nameServer+":3030/a"+a), null,this).construct(workerData));
+				workers[a] = ((HeatWorker)new HeatWorker(new UAN("uan://"+nameServer+":3030/a"+a), null,this).construct(workerData, a, ((DistributedHeat)self)));
 			}
 			{
 				// standardOutput<-println(((DistributedHeat)self)+" connecting worker neighbors")
@@ -372,22 +372,27 @@ continue;					}
 				}
 			}
 
-			for (int a = 0; a<noActors; a++){
-				{
-					// standardOutput<-println("Sending actor "+"uan://"+nameServer+":3030/a"+a+" to "+"rmsp://"+theaters.get(a%theaters.size())+"/a"+a)
+			int actor = 0;
+			for (int i = 0; i<theaters.size(); i++){
+				String[] dest = ((String)theaters.get(i)).split(",");
+				for (int j = 0; j<Integer.parseInt(dest[1]); j++){
 					{
-						Object _arguments[] = { "Sending actor "+"uan://"+nameServer+":3030/a"+a+" to "+"rmsp://"+theaters.get(a%theaters.size())+"/a"+a };
-						Message message = new Message( self, standardOutput, "println", _arguments, null, null );
-						__messages.add( message );
+						// standardOutput<-println("Sending actor "+"uan://"+nameServer+":3030/a"+actor+" to "+"rmsp://"+dest[0]+"/a"+actor)
+						{
+							Object _arguments[] = { "Sending actor "+"uan://"+nameServer+":3030/a"+actor+" to "+"rmsp://"+dest[0]+"/a"+actor };
+							Message message = new Message( self, standardOutput, "println", _arguments, null, null );
+							__messages.add( message );
+						}
 					}
-				}
-				{
-					// workers[a]<-migrate("rmsp://"+theaters.get(a%theaters.size())+"/a"+a)
-					{
-						Object _arguments[] = { "rmsp://"+theaters.get(a%theaters.size())+"/a"+a };
-						Message message = new Message( self, workers[a], "migrate", _arguments, null, null );
-						__messages.add( message );
+					if (actor<noActors) {					{
+						// workers[actor]<-migrate("rmsp://"+dest[0]+"/a"+actor)
+						{
+							Object _arguments[] = { "rmsp://"+dest[0]+"/a"+actor };
+							Message message = new Message( self, workers[actor], "migrate", _arguments, null, null );
+							__messages.add( message );
+						}
 					}
+}					actor++;
 				}
 			}
 			{
@@ -421,6 +426,15 @@ continue;					}
 				throw new CurrentContinuationException();
 			}
 		}
+		int nextReport = 0;
+		public void reportProgress(int currIterations) {
+			double progress = 100*(double)(iterations-currIterations)/iterations;
+			if (nextReport<=progress) {{
+				System.out.println("progress="+progress+"%, iterations="+(iterations-currIterations));
+				System.out.flush();
+				nextReport += 5;
+			}
+}		}
 		public void endTimer() {
 			long finalTime = System.currentTimeMillis();
 			long runningTime = finalTime-initialTime;

@@ -32,9 +32,8 @@ import salsa.resources.ActorService;
 // End SALSA compiler generated import delcarations.
 
 import java.io.*;
-import src.language.AutonomousActor;
 
-public class HeatWorker extends AutonomousActor {
+public class HeatWorker extends UniversalActor  {
 	public static void main(String args[]) {
 		UAN uan = null;
 		UAL ual = null;
@@ -174,8 +173,8 @@ public class HeatWorker extends AutonomousActor {
 		}
 	}
 
-	public UniversalActor construct (double[][] inData) {
-		Object[] __arguments = { inData };
+	public UniversalActor construct (double[][] inData, int inId, ActorReference inFarmer) {
+		Object[] __arguments = { inData, new Integer(inId), inFarmer };
 		this.send( new Message(this, this, "construct", __arguments, null, null) );
 		return this;
 	}
@@ -186,7 +185,7 @@ public class HeatWorker extends AutonomousActor {
 		return this;
 	}
 
-	public class State extends AutonomousActor.State {
+	public class State extends UniversalActor .State {
 		public HeatWorker self;
 		public void updateSelf(ActorReference actorReference) {
 			((HeatWorker)actorReference).setUAL(getUAL());
@@ -266,15 +265,21 @@ public class HeatWorker extends AutonomousActor {
 
 		int x;
 		int y;
+		int id;
+		int totalIterations;
 		double[][] data;
 		double[][] next;
 		HeatWorker top;
 		HeatWorker bottom;
 		boolean topOk = false;
 		boolean bottomOk = false;
-		void construct(double[][] inData){
+		boolean working = false;
+		ActorReference farmer = null;
+		void construct(double[][] inData, int inId, ActorReference inFarmer){
 			x = inData.length+2;
 			y = inData[0].length;
+			id = inId;
+			farmer = inFarmer;
 			data = new double[x][];
 			data[0] = new double[y];
 			data[x-1] = new double[y];
@@ -290,6 +295,7 @@ public class HeatWorker extends AutonomousActor {
 				next[i] = new double[y];
 				System.arraycopy(data[i], 0, next[i], 0, y);
 			}
+			System.out.println("HeatWorker "+id+" created here");
 		}
 		public void connectTop(HeatWorker w) {
 			top = w;
@@ -322,10 +328,24 @@ public class HeatWorker extends AutonomousActor {
 			bottomOk = true;
 		}
 		public double[][] doWork(int iterations) {
-			if (((bottom==null)||(bottomOk))&&((top==null)||(topOk))) {{
+			if (!working) {{
+				System.out.println("HeatWorker "+id+" starts working here");
+				working = true;
+			}
+}			if (((bottom==null)||(bottomOk))&&((top==null)||(topOk))) {{
 				int from = (top==null?2:1);
 				int to = (bottom==null?x-2:x-1);
-				for (int i = from; i<to; i++)for (int j = 1; j<y-1; j++)next[i][j] = 0.25*(data[i-1][j]+data[i][j-1]+data[i+1][j]+data[i][j+1]);
+				if ((id==1)&&(iterations%5==0)) {{
+					{
+						// farmer<-reportProgress(iterations)
+						{
+							Object _arguments[] = { iterations };
+							Message message = new Message( self, farmer, "reportProgress", _arguments, null, null );
+							__messages.add( message );
+						}
+					}
+				}
+}				for (int i = from; i<to; i++)for (int j = 1; j<y-1; j++)next[i][j] = 0.25*(data[i-1][j]+data[i][j-1]+data[i+1][j]+data[i][j+1]);
 				double[][] temp = next;
 				next = data;
 				data = temp;

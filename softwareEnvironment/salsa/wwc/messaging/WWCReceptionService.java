@@ -10,18 +10,18 @@ package wwc.messaging;
 
 import java.net.*;
 import java.io.*;
+
 import salsa.language.Actor;
 import salsa.language.Message;
 import salsa.language.RunTime;
 import salsa.language.ServiceFactory;
 import salsa.language.ActorReference;
-import salsa.messaging.*;
-
-import salsa.naming.NamingService;
-
 import salsa.language.Placeholder;
 import salsa.language.UniversalActor;
+import salsa.messaging.*;
+import salsa.naming.NamingService;
 import salsa.naming.UAL;
+import salsa.resources.DbgPrint;
 import gc.*;
 
 
@@ -118,17 +118,18 @@ System.out.println("message loss:"+message);                  //message loss
 
             if (received instanceof Actor) {
               Actor incomingActor = (Actor) received;
+              DbgPrint.print( DbgPrint.DEBUG, "WWCRecp", "process, received actor" + incomingActor );
               processActor(incomingActor, incoming);
             }
             else if (received instanceof Message) { // just serializing data
               Message message = (Message) received;
+              DbgPrint.print( DbgPrint.DEBUG, "WWCRecp", "process, received msg=" + message );
               processMessage(message);
-//System.out.println("  rec:"+message.getMethodName());
             }
             else if (received instanceof SystemMessage) {
               SystemMessage sysMessage = (SystemMessage) received;
+              DbgPrint.print( DbgPrint.DEBUG, "WWCRecp", "process, received sysmsg=" + sysMessage );
               processSystemMessage(sysMessage);
-//System.out.println("  rec:"+sysMessage.getMethodName());
             }
 
           }
