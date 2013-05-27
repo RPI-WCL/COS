@@ -72,6 +72,7 @@ public class COSController extends Controller {
         remainingResponses--;
         if(remainingResponses == 0) {
             //TODO: We now have a complete snap shot of the system. Should we adapt?
+            //Inset call to policy here
         }
     }
 

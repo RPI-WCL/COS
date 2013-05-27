@@ -80,6 +80,8 @@ public class PrivateCloudController extends CloudController
         String vm_address = (String) msg.getParam("vm_address");
         vmTable.put(vm_address, new VmInfo(vm_address, msg.getReply()));
         nodeTable.get(msg.getSender()).addVm();
+
+        cos.write(msg);
     }
 
     protected void handleVmDestruction(Message msg){
