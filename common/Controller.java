@@ -8,8 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import util.CommChannel;
 
-public abstract class Controller
-{
+public abstract class Controller {
     private ServerSocket listener;
 
     protected LinkedList<CommChannel> children;
@@ -19,16 +18,16 @@ public abstract class Controller
 
     abstract public void handleMessage(Message msg);
 
-    public Controller(int port){
+    public Controller(int port) {
         mailbox = new LinkedBlockingQueue<Message>();
         children = new LinkedList<CommChannel>();
         ConnectionListener listenLoop = new ConnectionListener(port, mailbox);
         new Thread(listenLoop, "Socket Listener").start();
     }
 
-    public void checkMessages(){
+    public void checkMessages() {
         Message msg;
-        while(true){
+        while(true) {
             try{
                 msg = mailbox.take();
                 handleMessage(msg);
@@ -39,10 +38,9 @@ public abstract class Controller
         }
     }
 
-    protected void broadcast(Message msg){
-        for( CommChannel s: children ){
+    protected void broadcast(Message msg) {
+        for(CommChannel s: children) {
             s.write(msg);
         }
-
     }
 }

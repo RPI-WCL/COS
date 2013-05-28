@@ -14,9 +14,7 @@ public class COSController extends Controller {
     HashMap<String, VmInfo> vmTable;
     HashMap<String, CloudInfo> cloudTable;
     int remainingResponses;
-    bool adapting;
-
-    public COSController() {
+    boolean adapting; public COSController() {
         super(Constants.COS_PORT);
 
         vmTable = new HashMap<String, VmInfo>();
@@ -30,7 +28,7 @@ public class COSController extends Controller {
     public void handleMessage(Message msg) {
         System.out.println("COS RCVED " + msg.getMethod() + " from " + msg.getParam("type"));
         switch(msg.getMethod()) {
-            case "cpu_usage_resp":
+            case "usage_response":
                 handleUsageResp(msg);
                 break;
             case "dropped_connection":
@@ -39,8 +37,8 @@ public class COSController extends Controller {
             case "new_connection":
                 handleNewConnection(msg);
                 break;
-            case "notify_extreme_cpu_usage":
-                handleUsageResp(msg);
+            case "notify_extreme_usage":
+                handleExtremeUsage(msg);
                 break;
             case "vm_creation":
                 handleVmCreation(msg);
@@ -92,7 +90,8 @@ public class COSController extends Controller {
 
     protected void handleExtremeUsage(Message msg) {
         if(remainingResponses == 0 && !adapting) {
-            Message payload = msgFactory.getCpuUsage();
+            System.out.println("Trying to broadcast get usage");
+            Message payload = msgFactory.getUsage();
             broadcast(payload);
             remainingResponses = vmTable.size() + cloudTable.size();
         }
@@ -102,7 +101,7 @@ public class COSController extends Controller {
         String vm_address = (String) msg.getParam("vm_address");
         vmTable.put(vm_address, new VmInfo(vm_address, msg.getReply()));
 
-        cloudTable.get(msg.getSender()).addVm();
+        cloudTable.get(msg.getReply().getRemoteAddr()).addVm();
         adapting = false;
     }
 

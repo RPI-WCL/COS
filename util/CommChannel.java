@@ -11,7 +11,7 @@ public class CommChannel
     ObjectOutputStream out;
     ObjectInputStream in;
 
-    public CommChannel( Socket sock ){
+    public CommChannel(Socket sock){
         m_sock = sock;
         try{
             out = new ObjectOutputStream(sock.getOutputStream());
@@ -22,7 +22,7 @@ public class CommChannel
         }
     }
 
-    public CommChannel( String addr, int port){
+    public CommChannel(String addr, int port){
         try{
             m_sock = new Socket(addr, port);
             out = new ObjectOutputStream(m_sock.getOutputStream());
@@ -31,7 +31,7 @@ public class CommChannel
 
     }
 
-    public void write( Message message ){
+    public void write(Message message){
         try{
             out.writeObject(message);
         }catch(Exception e){}

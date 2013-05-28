@@ -11,13 +11,14 @@ import common.Constants;
 import common.ConnectionHandler;
 import common.Message;
 import common.MessageFactory;
+import common.Usage;
 import util.CommChannel;
 import util.Utility;
 
 public class VMController
 {
     private CommChannel hostNode;
-    private LinkedList<Double> cpuHistory;
+    private LinkedList<Usage> usageHistory;
     
     LinkedBlockingQueue<Message> mailbox;
     MessageFactory msgFactory;
@@ -25,7 +26,7 @@ public class VMController
     private VMController(String addr, int port){
         hostNode = new CommChannel(addr, port);
         mailbox = new LinkedBlockingQueue<Message>();
-        cpuHistory = new LinkedList<Double>();
+        usageHistory = new LinkedList<Usage>();
         ConnectionHandler listenLoop = new ConnectionHandler(hostNode, mailbox);
         new Thread(listenLoop, "Socket Listener").start();
         
@@ -68,7 +69,7 @@ public class VMController
             public void run() { 
                 String s;
                 try{
-                    while( true) {
+                    while(true) {
                         s = input.readLine();
                         if( s != null)
                             System.out.println(s);
@@ -88,8 +89,7 @@ public class VMController
     private void handleMessage(Message msg){
         Message resp;
         Utility.debugPrint("VM recvd message: " + msg.getMethod());
-        switch(msg.getMethod())
-        {
+        switch(msg.getMethod()) {
             case "shutdown_theater_request":
                 //Runtime.getRuntime().exec("ls");
                 break;
@@ -97,14 +97,13 @@ public class VMController
                 LinkedList<String> peers = (LinkedList<String>) msg.getParam("peers");
                 createTheater(peers);
                 break;
-            case "get_cpu_usage":
-                double load = Utility.getWeightedSystemLoadAverage();
-                //Short circuit for testing
-                load = 1.0;
-                resp = msgFactory.cpuUsageResp(load); 
+            case "get_usage":
+                Usage average = new Usage(usageHistory);
+                resp = msgFactory.usageResponse(average); 
                 hostNode.write(resp);
                 break;
             case "destroy_vm":
+                //TODO: remove true so VM will actually shutdown.
                 if( true ){
                     System.exit(1);
                 }
@@ -117,12 +116,10 @@ public class VMController
         }
     }
 
-    private void run()
-    {
-        double load;
+    private void run() {
         Message msg;
-        while(true)
-        {
+        Usage usage;
+        while(true) {
             try{
                 msg = mailbox.poll(10L, TimeUnit.SECONDS);
                 if( msg != null )
@@ -131,60 +128,28 @@ public class VMController
                 e.printStackTrace();
             }
 
-            load = Utility.getWeightedSystemLoadAverage();
-            updateCpuHistory(load);
-            if( highCpuUsage() || lowCpuUsage())
-            {
-                load = averageLoad();
-                msg = msgFactory.notifyCpuUsage(load);;
+            updateUsageHistory();
+            Usage average = new Usage(usageHistory);
+            if(average.isExtremeUsage()) {
+                msg = msgFactory.notifyExtremeUsage(average);
                 hostNode.write(msg);
             }
         }
     }
 
-    private void updateCpuHistory(double load){
-        if(cpuHistory.size() < Constants.VM_LOOK_BACK){
-            cpuHistory.addLast(load);
+    private void updateUsageHistory(){
+        Usage usage = new Usage();
+        if(usageHistory.size() < Constants.VM_LOOK_BACK){
+            usageHistory.addLast(usage);
         } else{
-            cpuHistory.removeFirst();
-            cpuHistory.addLast(load);
+            usageHistory.removeFirst();
+            usageHistory.addLast(usage);
         }
-    }
-
-    private boolean highCpuUsage(){
-        boolean all = true;
-        for(Double d: cpuHistory){
-            if(d < Constants.HIGH_CPU){
-                all = false;
-                break;
-            }
-        }
-        return all;
-    }
-
-    private boolean lowCpuUsage(){
-        boolean all = true;
-        for(Double d: cpuHistory){
-            if(d > Constants.LOW_CPU){
-                all = false;
-                break;
-            }
-        }
-        return all;
-    }
-
-    private double averageLoad(){
-        double load = 0;
-        for(Double d: cpuHistory){
-            load += d;
-        }
-        return load / cpuHistory.size();
     }
 
     /*
      * args[0] = hostNode ip
      * args[1] = hostNode socket
-     *
      */
     public static void main( String [] args) throws Exception{
         if( args.length != 1)

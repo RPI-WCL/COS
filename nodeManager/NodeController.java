@@ -10,6 +10,7 @@ import common.Constants;
 import common.ConnectionHandler;
 import common.MessageFactory;
 import common.Message;
+import common.Usage;
 import util.CommChannel;
 import util.Utility;
 import util.Messages;
@@ -33,12 +34,20 @@ public class NodeController extends Controller
     }
 
     private CommChannel findChannelByAddress(String addr){
-        for( CommChannel s : children){
-            if( s.getRemoteAddr().equals(addr) ){
+        for(CommChannel s : children){
+            if(s.getRemoteAddr().equals(addr) ){
                 return s;
             }
         }
         return null;
+    }
+
+    private void handleGetUsage(Message msg) {
+        broadcast(msg);
+
+        Usage usage = new Usage();
+        Message resp = msgFactory.usageResponse(usage);
+        cloud.write(resp);
     }
 
     private void handleNewConnection(Message msg){
@@ -48,8 +57,7 @@ public class NodeController extends Controller
         Message payload = msgFactory.vmCreation(msg.getSender());
         cloud.write(payload);
 
-        //TODO: Tell the VM to start running a theater.
-        if( theaters != null)
+        if(theaters != null)
             msg.getReply().write(msgFactory.startTheater(theaters));
     }
 
@@ -70,8 +78,6 @@ public class NodeController extends Controller
             e.printStackTrace();
             //TODO: Notify of failure
         }
-
-
     }
 
     public void handleMessage( Message msg ){
@@ -79,9 +85,8 @@ public class NodeController extends Controller
 
         switch(msg.getMethod())
         {
-            case "get_cpu_usage":
-                broadcast(msg);
-                cloud.write(msgFactory.cpuUsageResp());
+            case "get_usage":
+                handleGetUsage(msg);
                 break;
             case "new_connection":
                 handleNewConnection(msg);

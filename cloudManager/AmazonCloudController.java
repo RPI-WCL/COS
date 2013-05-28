@@ -12,10 +12,11 @@ public class AmazonCloudController extends PublicCloudController {
         return true;
     }
 
-    protected void handleUsageResp(Message msg) {}
     protected void handleExtremeUsage(Message msg) {}
+    protected void handleGetUsage(Message msg) {}
     protected void handleNewConnection(Message msg) {}
     protected void handleDroppedConnection(Message msg) {}
+    protected void handleUsageResp(Message msg) {}
     protected void handleVmCreation(Message msg) {}
     protected void handleVmDestruction(Message msg) {}
     

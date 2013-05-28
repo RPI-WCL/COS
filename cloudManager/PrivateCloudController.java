@@ -17,8 +17,7 @@ import util.CommChannel;
 import util.Utility;
 import vmManager.VmInfo;
 
-public class PrivateCloudController extends CloudController
-{
+public class PrivateCloudController extends CloudController {
 
     CommChannel cos;
 
@@ -48,7 +47,7 @@ public class PrivateCloudController extends CloudController
 
     
     protected void handleUsageResp(Message msg){
-        double load = (double) msg.getParam("load");
+        System.out.println("Cloud printing here!");
         String addr = msg.getSender();
         String type = (String) msg.getParam("type");
         cos.write(msg);
@@ -64,6 +63,10 @@ public class PrivateCloudController extends CloudController
 
     }
     protected void handleDroppedConnection(Message msg) {
+    }
+
+    protected void handleGetUsage(Message msg) {
+        broadcast(msg);
     }
 
     protected void handleExtremeUsage(Message msg) {

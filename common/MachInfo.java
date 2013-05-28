@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Comparator;
 
 import util.CommChannel;
+import common.Usage;
 
 // Information about Nodes and Virtual Machines
 //
@@ -13,7 +14,7 @@ public abstract class MachInfo
 {
     String ipAddress;
     CommChannel contact;
-    double cpuUsage;
+    Usage usage;
 
 
     public MachInfo(String address, CommChannel contact){
@@ -30,15 +31,15 @@ public abstract class MachInfo
     }
 
     public void updateUsage(Message msg) {
-        cpuUsage = (double) msg.getParam("load");
+        usage = (Usage) msg.getParam("usage");
     }
 
-    public void updateCpu(double load){
-       cpuUsage = load; 
+    public void updateCpu(Usage load){
+       usage = load; 
     }
 
-    public double getCpu(){
-        return cpuUsage;
+    public double  getCpu(){
+        return usage.cpu_load;
     }
 
     public static MachInfo findMinCpu(Collection<? extends MachInfo> machines){

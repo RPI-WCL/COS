@@ -16,15 +16,15 @@ public class MessageFactory
         this.localhost = any.getLocalAddr();
     }
 
-    public Message notifyCpuUsage(Double load){
-        Message payload = init( "notify_extreme_cpu_usage");
-        payload.addParam("load", load);
+    public Message notifyExtremeUsage(Usage usage) {
+        Message payload = init("notify_extreme_usage");
+        payload.addParam("usage", usage);
         return payload;
     }
 
-    public Message cpuUsageResp(Double load){
-        Message payload = init("cpu_usage_resp");
-        payload.addParam("load", load);
+    public Message usageResponse(Usage usage) {
+        Message payload = init("usage_response");
+        payload.addParam("usage", usage);
         return payload;
     }
 
@@ -40,13 +40,8 @@ public class MessageFactory
         return payload;
     }
 
-    public Message cpuUsageResp(){
-        double load = Utility.getWeightedSystemLoadAverage();
-        return this.cpuUsageResp(load);
-    }
-
-    public Message getCpuUsage(){
-        Message payload = init("get_cpu_usage");
+    public Message getUsage(){
+        Message payload = init("get_usage");
         return payload;
     }
 
