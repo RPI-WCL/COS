@@ -1,0 +1,376 @@
+/*
+ * Author:		Shigeru Imai (RCSID:660855993)
+ * Filename:	Stars.salsa
+ * Date:		Nov 11, 2010
+ * 
+ */
+
+
+module salsa.examples.stars;
+
+import java.io.*;
+import java.util.*;
+import salsa.examples.stars.*;
+
+
+behavior Stars {
+	// Input Varialbles
+	int			NUM_WORKERS;
+	int			numStars;	
+	Point3d[]	stars;
+
+	// Output Variables
+	Result		result;		// Interim result collected from workers
+	Vector		closestNeighbors;
+	float		closestDist = Float.MAX_VALUE;
+	Vector		farthestNeighbors;
+	float		farthestDist = 0.0F;
+	Vector		idealHubStars;
+	float		minMaxDist =  Float.MAX_VALUE;
+	Vector		idealJailStars;
+	float		maxMinDist = 0.0F;
+	Vector 		idealCapitalStars;
+	float		minAvgDist =  Float.MAX_VALUE;
+    float       sumWorkerTime = 0.0F;
+
+	// Distribution Support
+    String  defaultTheatersFile = "./theaters.txt";
+	String	nameServer;
+	Vector	theaters;
+
+    long initialTime;
+	
+	void act( String args[] ) {
+		if ( args.length < 2 ) {
+			System.err.println ( "Error: invalid usage" );
+			System.err.println ( "Usage: args[0]=<# of workers> args[1]=<stars file> [args[2]=<theaters file>]" );
+			return;
+		}
+        boolean useDefaultTheatersFile = ( args.length == 2 );
+
+		NUM_WORKERS = Integer.parseInt( args[0] );
+		
+		closestNeighbors	= new Vector();
+		farthestNeighbors	= new Vector();
+		idealHubStars		= new Vector();
+		idealJailStars		= new Vector();
+		idealCapitalStars	= new Vector();
+
+        if (useDefaultTheatersFile) {
+            readTheatersFile( defaultTheatersFile )@
+                readStarsFile( args[1] )@
+                distributeWork()@
+                collectResults( token )@
+                displayResults();
+        } else {
+            readTheatersFile( args[2] )@
+                readStarsFile( args[1] )@
+                distributeWork2()@
+                collectResults( token )@
+                displayResults();
+        }
+            
+	}
+
+	
+	void readTheatersFile( String theatersFile ) {
+    	theaters = new Vector();
+	    String theater;
+
+		try {
+			BufferedReader in = new BufferedReader( new FileReader( theatersFile ) );
+			nameServer = in.readLine();
+	    	while ( (theater = in.readLine() )!= null ) {
+				theaters.add( theater );
+			}
+			in.close(); 
+		} catch ( IOException ex ) {
+			System.err.println( "Error: Can't open the file " + theatersFile + " for reading." );
+		}
+	}
+
+	
+	void readStarsFile( String starsFile )
+	{
+		try {
+			BufferedReader in = new BufferedReader( new FileReader( starsFile ) );
+			numStars = Integer.parseInt( in.readLine() );
+			stars = new Point3d[numStars];
+
+			int line = 0, i = 0, numDuplicated = 0;
+			String str;
+	    	while ( (line < numStars) && (str = in.readLine() )!= null ) {
+                Point3d p = new Point3d( str );
+                boolean flag = false;
+
+                for (int j = 0; j < i; j++) {
+                    if (p.isEqual( stars[j] )) {
+                        flag = true;
+                        numDuplicated++;
+                        break;
+                    }
+                }
+                
+                if (!flag)
+                    stars[i++] = p;
+
+                line++;
+			}
+			in.close(); 
+
+            System.out.println( "Read " + numStars + " lines from the input file" );
+            numStars = i;
+            System.out.println( numStars + " effective data (" + numDuplicated +" duplications found)" );
+		} catch ( IOException ex ) {
+			System.err.println( "Error: Can't open the file " + starsFile + " for reading." );
+		}
+
+
+	}
+
+
+	Object[] getResults( Object[] objs ) {
+		return objs;
+	}
+
+	
+	Vector assignTasks( int i ) {
+		Vector tasks = new Vector();		
+		int numTasks = (numStars/2) / NUM_WORKERS;	/* must be numStars/2 >> NUM_WORKERS */
+		int currTask = i * numTasks;
+        int numComp = 0;
+
+        // (j, numStars - j - 1) pairs --> (numStars - 1) computations
+		if (i < NUM_WORKERS - 1) {
+			for (int j = currTask; j < (currTask + numTasks); j++) {
+				Integer task1 = new Integer(j);
+				tasks.add( task1 );
+                numComp += numStars - task1 - 1;
+				Integer task2 = new Integer(numStars - j - 1);
+				tasks.add( task2 );
+                numComp += numStars - task2 - 1;
+			}
+		}
+		else {
+			for (int j = currTask; j < numStars - currTask; j++) {
+				Integer task = new Integer(j);
+				tasks.add( task );
+                numComp += numStars - task - 1;
+			}
+		}
+
+        System.out.println( "Worker " + i + " is computing " + numComp + " distances" );
+
+		return tasks;
+	}
+
+
+	Object[] distributeWork() {
+		StarsWorker[] workers = new StarsWorker[NUM_WORKERS];
+
+        //start computation
+        standardOutput<-println(">>>>>>Starting the computation");
+        initialTime = System.currentTimeMillis();
+		
+		join {
+			for (int i = 0; i < NUM_WORKERS; i++) {
+				workers[i] = new StarsWorker( i, stars, numStars, assignTasks(i) ) at (
+					new UAN( "uan://" + nameServer + "/a" + i ),
+					new UAL( "rmsp://" + theaters.get( i % theaters.size() ) + "/a" + i ));
+				workers[i]<-compute();
+			}
+		}@getResults( token )@currentContinuation;
+	}
+
+
+	Object[] distributeWork2() {
+		StarsWorker[] workers = new StarsWorker[NUM_WORKERS];
+
+        //start computation
+        standardOutput<-println(">>>>>>Starting the computation");
+        initialTime = System.currentTimeMillis();
+		
+		join {
+            int actor = 0;
+            for (int i = 0; i < theaters.size(); i++) {
+                String[] dest = ((String)theaters.get( i )).split( "," );
+              
+                for (int j = 0; j < Integer.parseInt( dest[1] ); j++) {
+                    if (actor < NUM_WORKERS) {
+                        workers[actor] = new StarsWorker( actor, stars, numStars, assignTasks( actor ) ) at (
+                            new UAN( "uan://" + nameServer + "/a" + actor ),
+                            new UAL( "rmsp://" + dest[0] + "/a" + actor ));
+                        workers[actor]<-compute();
+                        actor++;
+                    }
+                }
+            }
+		}@getResults( token )@currentContinuation;
+	}
+
+	
+	Boolean isDifferentPair( Vector pairs1, Vector pairs2 ) {
+		for (int i = 0; i < pairs1.size(); i++) {
+			Integer[] star1 = (Integer[]) pairs1.elementAt( i );
+
+			for (int j = 0; j < pairs2.size(); j++) {
+				Integer[] star2 = (Integer[]) pairs2.elementAt( i );				
+
+				if (((star1[0].intValue() == star2[0].intValue()) &&
+					 (star1[1].intValue() == star2[1].intValue())) ||
+					((star1[1].intValue() == star2[0].intValue()) &&
+					 (star1[0].intValue() == star2[1].intValue())))  
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	
+	void collectResults( Object[] objs ) {
+		if (objs == null) {
+			System.err.println ("Error: null objects");
+			return;
+		}
+
+		// collect the result from each worker
+		result = new Result( numStars );
+		for (int i = 0;	 i < objs.length; i++) {
+			Result workerResult = (Result) objs[i]; // result from each worker
+
+			for (int j = 0; j < numStars; j++) {
+				if (result.maxDist[j] < workerResult.maxDist[j]) {
+					result.maxDistStars[j].clear();
+					result.maxDistStars[j].addAll( workerResult.maxDistStars[j] );
+					result.maxDist[j] = workerResult.maxDist[j];
+				}
+				else if (workerResult.maxDist[j] != 0.0F &&
+						 result.maxDist[j] == workerResult.maxDist[j])
+					result.maxDistStars[j].addAll( workerResult.maxDistStars[j] );
+
+				if (workerResult.minDist[j] < result.minDist[j]) {
+					result.minDistStars[j].clear();
+					result.minDistStars[j].addAll( workerResult.minDistStars[j] );
+					result.minDist[j] = workerResult.minDist[j];
+				}
+				else if (workerResult.minDist[j] != Float.MAX_VALUE &&
+						 result.minDist[j] == workerResult.minDist[j]) 
+					result.minDistStars[j].addAll( workerResult.minDistStars[j] );
+
+				result.sumDist[j] += workerResult.sumDist[j];
+			}
+
+            sumWorkerTime += workerResult.getElapsedTime();
+		}
+
+		// process the collected results to get the final result
+		for (int i = 0; i < numStars; i++) {
+			// Closest Neighbors
+			if (result.minDist[i] < closestDist) {
+				closestNeighbors.clear();
+				closestNeighbors.addAll( result.minDistStars[i] );
+				closestDist = result.minDist[i];
+			}
+			else
+			if ((closestDist == result.minDist[i]) && isDifferentPair( result.minDistStars[i], closestNeighbors ))
+				closestNeighbors.addAll( result.minDistStars[i] );
+
+			// Farthest Neighbors
+			if (farthestDist < result.maxDist[i]) {
+				farthestNeighbors.clear();
+				farthestNeighbors.addAll( result.maxDistStars[i] );
+				farthestDist = result.maxDist[i];
+			}
+			else
+			if ((farthestDist == result.maxDist[i]) && isDifferentPair( result.maxDistStars[i], farthestNeighbors ))
+				farthestNeighbors.addAll( result.maxDistStars[i] );
+
+			// Ideal Hub Stars
+			if (result.maxDist[i] < minMaxDist) {
+				idealHubStars.clear();
+				idealHubStars.addAll( result.maxDistStars[i] );
+				minMaxDist = result.maxDist[i];
+			}
+			else
+			if ((minMaxDist == result.maxDist[i]) && isDifferentPair( result.maxDistStars[i], idealHubStars ))
+				idealHubStars.addAll( result.maxDistStars[i] );
+			
+			// Ideal Jail Stars
+			if (maxMinDist < result.minDist[i]) {
+				idealJailStars.clear();
+				idealJailStars.addAll( result.minDistStars[i] );
+				maxMinDist = result.minDist[i];
+			}
+			else
+			if ((maxMinDist == result.minDist[i]) && isDifferentPair( result.minDistStars[i], idealJailStars ))
+				idealJailStars.addAll( result.minDistStars[i] );
+
+
+			// Ideal Capital Stars
+			float avgDist = result.sumDist[i] / (numStars - 1);
+			if (avgDist < minAvgDist) {
+				idealCapitalStars.clear();
+				Integer star = new Integer( i );
+				idealCapitalStars.add( star );
+				minAvgDist = avgDist;
+			} else if (avgDist == minAvgDist) {
+				Integer star = new Integer( i );				
+				idealCapitalStars.add( star );
+			}
+		} // end of for (int i = 0; i < numStars; i++) {
+	}
+
+
+	void displayResults() {
+        long finalTime = System.currentTimeMillis();
+
+		System.out.println();		
+		System.out.println( closestDist + " // minimal pairwise distance" );
+		for (int i = 0; i < closestNeighbors.size(); i++) {
+			Integer[] neighbors = (Integer[]) closestNeighbors.elementAt( i );
+			System.out.println( "(" + stars[neighbors[0].intValue()].toString() +
+								") (" + stars[neighbors[1].intValue()].toString() + ")" );
+		}
+
+		System.out.println();
+		System.out.println( farthestDist + " // maximal pairwise distance" );
+		for (int i = 0; i < farthestNeighbors.size(); i++) {
+			Integer[] neighbors = (Integer[]) farthestNeighbors.elementAt( i );
+			System.out.println( "(" + stars[neighbors[0].intValue()].toString() +
+								") (" + stars[neighbors[1].intValue()].toString() + ")" );
+		}
+
+		System.out.println();
+		System.out.println( minMaxDist + " // minimum maximal distance" );
+		for (int i = 0; i < idealHubStars.size(); i++) {
+			Integer[] neighbors = (Integer[]) idealHubStars.elementAt( i );
+			System.out.println( "(" + stars[neighbors[0].intValue()].toString() +
+								") (" + stars[neighbors[1].intValue()].toString() + ")" );
+		}
+
+		System.out.println();
+		System.out.println( maxMinDist + " // maximum minimal distance" );
+		for (int i = 0; i < idealJailStars.size(); i++) {
+			Integer[] neighbors = (Integer[]) idealJailStars.elementAt( i );
+			System.out.println( "(" + stars[neighbors[0].intValue()].toString() +
+								") (" + stars[neighbors[1].intValue()].toString() + ")" );
+		}
+		
+		System.out.println();
+		System.out.println( minAvgDist + " // minimal average distance" );
+		for (int i = 0; i < idealCapitalStars.size(); i++) {
+			Integer capitalStar = (Integer) idealCapitalStars.elementAt( i );
+			System.out.println( "(" + stars[capitalStar.intValue()].toString() + ")" );
+		}
+
+		System.out.println();
+        long runningTime = finalTime - initialTime;
+        double avrgWorkerTime = sumWorkerTime / NUM_WORKERS;
+        System.out.println( "Total execution time: " + runningTime + " ms" );
+        System.out.println( "(Worker avrg: " + avrgWorkerTime + 
+                            " ms, Overhead: " + (runningTime - avrgWorkerTime) + " ms)" );
+        
+	}
+	
+} // behavior Star

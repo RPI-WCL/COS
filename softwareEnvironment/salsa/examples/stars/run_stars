@@ -1,0 +1,2 @@
+# $1=[num workers], $1=[stars file]
+java -Xmx1024m -Xms1024m salsa.examples.stars.Stars $1 $2

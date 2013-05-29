@@ -1,0 +1,105 @@
+/*
+ * Author:		Shigeru Imai (RCSID:660855993)
+ * Filename:	StarsWorker.salsa
+ * Date:		Nov 11, 2010
+ * 
+ */
+
+
+module salsa.examples.stars;
+
+import java.io.*;
+import java.util.*;
+import salsa.examples.stars.*;
+
+
+behavior StarsWorker {
+	int 		id;
+	Point3d[]	stars;
+	int			numStars;
+	Vector		tasks;
+	Result		result;
+	
+	StarsWorker( int id, Point3d[] stars, int numStars, Vector tasks ) {
+		this.id			= id;
+		this.stars		= stars;
+		this.numStars	= numStars;
+		this.tasks		= tasks;
+		this.result 	= new Result( numStars );
+	}
+
+    Result compute() {
+		System.out.println( "Worker " + id + " started" );
+		long startTime = System.currentTimeMillis();
+
+        for (int i = 0;	i < tasks.size(); i++) {
+            Integer task = (Integer) tasks.elementAt( i );
+            int src = task.intValue();
+
+            //System.out.println( "Worker " + id + " is doing task: " + src );
+            for (int dst = src + 1; dst < numStars; dst++) {
+                float distance = stars[src].distance( stars[dst] );
+
+                // -------maxDistStars
+                // distance from src
+                if (result.maxDist[src] < distance) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.maxDistStars[src].clear();
+                    result.maxDistStars[src].addElement( neighbors );
+                    result.maxDist[src] = distance;
+                }
+                else if (distance == result.maxDist[src]) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.maxDistStars[src].addElement( neighbors );
+                }
+                // distance from dst
+                if (result.maxDist[dst] < distance) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.maxDistStars[dst].clear();
+                    result.maxDistStars[dst].addElement( neighbors );
+                    result.maxDist[dst] = distance;
+                }
+                else if (distance == result.maxDist[dst]) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.maxDistStars[dst].addElement( neighbors );
+                }
+							
+                // -------minDistStars
+                // distance from src
+                if (distance < result.minDist[src]) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.minDistStars[src].clear();
+                    result.minDistStars[src].addElement( neighbors );
+                    result.minDist[src] = distance;
+                }
+                else if (distance == result.minDist[src]) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.minDistStars[src].addElement( neighbors );
+                }
+                // distance from dst
+                if (distance < result.minDist[dst]) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.minDistStars[dst].clear();
+                    result.minDistStars[dst].addElement( neighbors );
+                    result.minDist[dst] = distance;
+                }
+                else if (distance == result.minDist[dst]) {
+                    Integer[] neighbors = { new Integer(src), new Integer(dst) };
+                    result.minDistStars[dst].addElement( neighbors );
+                }
+
+                // -------ideal capital stars
+                result.sumDist[src] += distance;
+                result.sumDist[dst] += distance;						
+            }
+        }
+
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        result.setElapsedTime( elapsedTime );
+		System.out.println( "Worker " + id + " finished (time=" + (System.currentTimeMillis() - startTime) + " ms)" );
+
+        return result;
+    }
+
+
+} // behavior StarsWorker
