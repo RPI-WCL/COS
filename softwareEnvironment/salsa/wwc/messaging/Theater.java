@@ -133,8 +133,7 @@ public class Theater implements TheaterService {
                 try {
 
                   final Socket incoming = passive.accept();
-System.out.println("accept .........");
-System.out.flush();
+//System.out.println("accept .........");
                   ReceptionService handler = ServiceFactory.getReception();
                    //*****recovery************
                   Runnable handlerThread = new Runnable() {
