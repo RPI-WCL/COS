@@ -16,9 +16,9 @@ public class MeanTempMapper implements Mapper, Serializable {
             return;
 
         String[] tokens = text.split( " +" );
-        String year = tokens[2].substring(0, 4);
+        String yearmon = tokens[2].substring(0, 6);
         double temp = Double.parseDouble( tokens[3] );
-        context.write( year, new DoubleIntPair( temp, 1 ) );
+        context.write( yearmon, new DoubleIntPair( temp, 1 ) );
     }
 
 }
