@@ -287,13 +287,13 @@ public class TaskTracker extends UniversalActor  {
 		public HashMap runMapper(Vector texts) {
 			int numTasks = texts.size();
 			Context cont = new Context();
-			System.out.println("Mapper started (#tasks = "+numTasks+")");
+			System.out.println("Mapper "+id+" started (#tasks = "+numTasks+")");
 			long startTime = System.currentTimeMillis();
 			for (int task = 0; task<numTasks; task++){
 				String text = (String)texts.remove(0);
 				mapper.map(text, cont);
 			}
-			System.out.println("Mapper finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
+			System.out.println("Mapper "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
 			{
 				// runCombiner(cont)
 				{
@@ -313,14 +313,14 @@ public class TaskTracker extends UniversalActor  {
 			Iterator it = map.entrySet().iterator();
 			int numTasks = map.entrySet().size();
 			Context cont = new Context();
-			System.out.println(" Combiner started (#tasks = "+numTasks+")");
+			System.out.println(" Combiner "+id+" started (#tasks = "+numTasks+")");
 			long startTime = System.currentTimeMillis();
 			while (it.hasNext()) {
 				Map.Entry entry = (Map.Entry)it.next();
 				combiner.reduce((String)entry.getKey(), (Vector)entry.getValue(), cont);
 				it.remove();
 			}
-			System.out.println(" Combiner finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
+			System.out.println(" Combiner "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
 			{
 				// returnMap(cont)
 				{
@@ -339,7 +339,7 @@ public class TaskTracker extends UniversalActor  {
 }			Iterator it = map.entrySet().iterator();
 			int numTasks = map.entrySet().size();
 			Context cont = new Context();
-			System.out.println("  Reducer started (#tasks = "+numTasks+")");
+			System.out.println("  Reducer "+id+" started (#tasks = "+numTasks+")");
 			long startTime = System.currentTimeMillis();
 			int task = 0;
 			while (it.hasNext()) {
@@ -347,7 +347,7 @@ public class TaskTracker extends UniversalActor  {
 				reducer.reduce((String)entry.getKey(), (Vector)entry.getValue(), cont);
 				it.remove();
 			}
-			System.out.println("  Reducer finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
+			System.out.println("  Reducer "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
 			{
 				// returnMap(cont)
 				{
