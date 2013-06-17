@@ -1,0 +1,66 @@
+module salsa.examples.mapreduce;
+
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Vector;
+
+import salsa.examples.mapreduce.*;
+
+
+behavior MeanTemp {
+	// input varialbles
+	int         numWorkers;
+    String      inputFile; 
+    String      outputFile; 
+    String      theatersFile;
+        
+    // disribution support
+	String      nameServer;
+	Vector      theaters;
+
+    long initialTime;
+	
+	void act( String args[] ) {
+		if ( args.length < 3 ) {
+			System.err.println ( "Error: invalid usage" );
+			System.err.println ( "Usage: java MeanTemp <#workers> <input file> <output file> <theaters file>" );
+			return;
+		}
+
+        // parse input parameters
+		numWorkers = Integer.parseInt( args[0] );
+        inputFile = args[1];
+        outputFile = args[2];
+        theatersFile = args[3];
+    	theaters = new Vector();
+	    String theater;
+		try {
+			BufferedReader in = new BufferedReader( new FileReader( theatersFile ) );
+			nameServer = in.readLine();
+	    	while ( (theater = in.readLine() )!= null ) {
+				theaters.add( theater );
+			}
+			in.close(); 
+		} catch ( IOException ex ) {
+			System.err.println( "Error: Can't open the file " + theatersFile + " for reading." );
+		}
+
+        startMapReduce();
+	}
+
+
+    void startMapReduce() {
+        MapReduce mapReduce = new MapReduce() at (new UAN( "uan://" + nameServer + "/meantemp" ), null );
+
+        mapReduce<-submitJob( new MeanTempMapper(),     // mapper
+                              new MeanTempCombiner(),   // combiner
+                              new MeanTempReducer(),    // reducer
+                              numWorkers, 
+                              inputFile, 
+                              outputFile, 
+                              nameServer, 
+                              theaters )@currentContinuation;
+    }
+	
+}

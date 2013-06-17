@@ -10,7 +10,7 @@ import salsa.examples.mapreduce.Reducer;
 public class WordCountReducer implements Reducer, Serializable {
 
     public void reduce( String key, Vector value, Context context ) {
-        System.out.println( "reduce, key=" + key + ", value=" + value );
+        // System.out.println( "reduce, key=" + key + ", value=" + value );
         
         int valueSize = value.size();
         int sum = 0;
