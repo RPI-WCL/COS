@@ -335,28 +335,9 @@ public class TaskTracker extends UniversalActor  {
 			return context.getMap();
 		}
 		public HashMap runReducer(HashMap map) {
-			if (reducer==null) {			return map;
-}			Iterator it = map.entrySet().iterator();
 			int numTasks = map.entrySet().size();
-			Context cont = new Context();
 			System.out.println("  Reducer "+id+" started (#tasks = "+numTasks+")");
-			long startTime = System.currentTimeMillis();
-			int task = 0;
-			while (it.hasNext()) {
-				Map.Entry entry = (Map.Entry)it.next();
-				reducer.reduce((String)entry.getKey(), (Vector)entry.getValue(), cont);
-				it.remove();
-			}
-			System.out.println("  Reducer "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
-			{
-				// returnMap(cont)
-				{
-					Object _arguments[] = { cont };
-					Message message = new Message( self, self, "returnMap", _arguments, null, currentMessage.getContinuationToken() );
-					__messages.add( message );
-				}
-				throw new CurrentContinuationException();
-			}
+			return map;
 		}
 	}
 }

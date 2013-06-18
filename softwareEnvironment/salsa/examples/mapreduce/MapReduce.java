@@ -327,22 +327,32 @@ public class MapReduce extends UniversalActor  {
 			int currentDataSize = 0;
 			Vector texts = new Vector();
 			startTime = System.currentTimeMillis();
-			System.out.println("Running mappers (inputFileSize="+inputFileSize+")...");
+			System.out.println("Running mappers (inputFileSize = "+(inputFileSize/(1024*1024))+"Mbytes)...");
+			HashMap map = new HashMap();
+			for (int i = 0; i<theaters.size(); i++){
+				String[] dest = ((String)theaters.get(i)).split(",");
+				map.put(dest[0], new Integer(dest[1]));
+			}
+			Iterator it = map.entrySet().iterator();
 			{
 				Token token_2_0 = new Token();
 				// join block
 				token_2_0.setJoinDirector();
 				try {
 					BufferedReader in = new BufferedReader(new FileReader(inputFile));
-					for (int i = 0; i<numWorkers; i++){
+					int i = 0;
+					while ((i<numWorkers)||(0<map.entrySet().size())) {
 						texts.clear();
 						String text;
 						while ((currentDataSize<(i+1)*numData)&&(text=in.readLine())!=null) {
 							texts.add(text);
 							currentDataSize += text.length()+1;
 						}
-						System.out.println(" Creating actor uan://"+nameServer+"/a"+i+" on rmsp://"+theaters.get(i%theaters.size())+"/a"+i);
-						workers[i] = ((TaskTracker)new TaskTracker(new UAN("uan://"+nameServer+"/a"+i), new UAL("rmsp://"+theaters.get(i%theaters.size())+"/a"+i),this).construct(i, mapper, combiner, reducer));
+						if (!it.hasNext()) {it = map.entrySet().iterator();
+}						Map.Entry entry = (Map.Entry)it.next();
+						String theater = (String)entry.getKey();
+						System.out.println(" Creating actor uan://"+nameServer+"/a"+i+" on rmsp://"+theater+"/a"+i);
+						workers[i] = ((TaskTracker)new TaskTracker(new UAN("uan://"+nameServer+"/a"+i), new UAL("rmsp://"+theater+"/a"+i),this).construct(i, mapper, combiner, reducer));
 						{
 							// workers[i]<-runMapper(texts)
 							{
@@ -351,6 +361,13 @@ public class MapReduce extends UniversalActor  {
 								__messages.add( message );
 							}
 						}
+						int numActor = ((Integer)entry.getValue()).intValue();
+						if (numActor-1==0) {{
+							map.remove(entry.getKey());
+							it = map.entrySet().iterator();
+						}
+}						else {map.put(entry.getKey(), new Integer(numActor-1));
+}						i++;
 					}
 					in.close();
 				}
@@ -394,16 +411,25 @@ public class MapReduce extends UniversalActor  {
 			HashMap map = (HashMap)obj;
 			Iterator it = map.entrySet().iterator();
 			int numKeys = map.entrySet().size();
-			int mapSize = numKeys/numWorkers;
-			System.out.println("Running reducers (#merged entries="+numKeys+")...");
+			int mapSize;
+			int numReducers;
+			if (numKeys<numWorkers) {{
+				mapSize = 1;
+				numReducers = numKeys;
+			}
+}			else {{
+				mapSize = numKeys/numWorkers;
+				numReducers = numWorkers;
+			}
+}			System.out.println("Running reducers (#merged entries="+numKeys+")...");
 			{
 				Token token_2_0 = new Token();
 				// join block
 				token_2_0.setJoinDirector();
 				int j = 0;
-				for (int i = 0; i<numWorkers; i++){
+				for (int i = 0; i<numReducers; i++){
 					HashMap newMap = new HashMap();
-					while ((j<(i+1)*mapSize)||((i==(numWorkers-1))&&(j<numKeys))) {
+					while ((j<(i+1)*mapSize)||((i==(numReducers-1))&&(j<numKeys))) {
 						Map.Entry entry = (Map.Entry)it.next();
 						newMap.put(entry.getKey(), entry.getValue());
 						j++;
