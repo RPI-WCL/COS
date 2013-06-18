@@ -389,6 +389,7 @@ public class MapReduce extends UniversalActor  {
 			return objs;
 		}
 		public HashMap mergeMapResults(Object[] objs) {
+			System.out.println("Merging "+objs.length+" results from mappers");
 			HashMap mergedMap = new HashMap();
 			for (int i = 0; i<objs.length; i++){
 				HashMap map = (HashMap)objs[i];
@@ -421,7 +422,7 @@ public class MapReduce extends UniversalActor  {
 				mapSize = numKeys/numWorkers;
 				numReducers = numWorkers;
 			}
-}			System.out.println("Running reducers (#merged entries="+numKeys+")...");
+}			System.out.println("Running reducers (#merged keys="+numKeys+")...");
 			{
 				Token token_2_0 = new Token();
 				// join block

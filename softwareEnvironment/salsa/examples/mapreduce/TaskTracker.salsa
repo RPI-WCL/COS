@@ -101,31 +101,27 @@ behavior TaskTracker {
     // }
 
     HashMap runReducer( HashMap map ) {
+        if (reducer == null)
+            return map;
+
+        Iterator it = map.entrySet().iterator();
         int numTasks = map.entrySet().size();
+        Context cont = new Context();
+
         System.out.println( "  Reducer " + id + " started (#tasks = " + numTasks + ")" );
-        return map;
+        long startTime = System.currentTimeMillis();
 
-        // if (reducer == null)
-        //     return map;
+        int task = 0;
+        while (it.hasNext()) {
+            Map.Entry entry = (Map.Entry)it.next();
+            reducer.reduce(  (String)entry.getKey(), (Vector)entry.getValue(), cont );
+            // reportReduceProgress( new Integer( task++ ) );
+            it.remove();
+        }
 
-        // Iterator it = map.entrySet().iterator();
-        // int numTasks = map.entrySet().size();
-        // Context cont = new Context();
+        System.out.println( "  Reducer " + id + " finished (elapsed time = " +
+                            ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
 
-        // System.out.println( "  Reducer " + id + " started (#tasks = " + numTasks + ")" );
-        // long startTime = System.currentTimeMillis();
-
-        // int task = 0;
-        // while (it.hasNext()) {
-        //     Map.Entry entry = (Map.Entry)it.next();
-        //     reducer.reduce(  (String)entry.getKey(), (Vector)entry.getValue(), cont );
-        //     // reportReduceProgress( new Integer( task++ ) );
-        //     it.remove();
-        // }
-
-        // System.out.println( "  Reducer " + id + " finished (elapsed time = " +
-        //                     ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
-
-        // returnMap( cont )@currentContinuation;
+        returnMap( cont )@currentContinuation;
     }
 }

@@ -125,6 +125,8 @@ behavior MapReduce {
     }
 
     HashMap mergeMapResults( Object[] objs ) {
+        System.out.println( "Merging " + objs.length + " results from mappers" );
+
         HashMap mergedMap = new HashMap();
 
         for (int i = 0; i < objs.length; i++) {
@@ -164,7 +166,7 @@ behavior MapReduce {
             numReducers = numWorkers;
         }
 
-        System.out.println( "Running reducers (#merged entries=" + numKeys + ")..." );
+        System.out.println( "Running reducers (#merged keys=" + numKeys + ")..." );
 
         join {
             int j = 0;
