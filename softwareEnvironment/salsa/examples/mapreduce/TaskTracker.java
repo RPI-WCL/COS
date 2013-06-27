@@ -178,8 +178,8 @@ public class TaskTracker extends UniversalActor  {
 		}
 	}
 
-	public UniversalActor construct (int id, Mapper mapper, Reducer combiner, Reducer reducer) {
-		Object[] __arguments = { new Integer(id), mapper, combiner, reducer };
+	public UniversalActor construct (int id, Mapper mapper, Reducer combiner, Reducer reducer, String farmerUAN) {
+		Object[] __arguments = { new Integer(id), mapper, combiner, reducer, farmerUAN };
 		this.send( new Message(this, this, "construct", __arguments, null, null) );
 		return this;
 	}
@@ -272,67 +272,127 @@ public class TaskTracker extends UniversalActor  {
 		Mapper mapper;
 		Reducer combiner;
 		Reducer reducer;
+		Context cont;
 		ActorReference farmer = null;
-		int numMapTasks, numReduceTasks;
-		int REPORT_PROGRESS_FREQUENCY = 10;
-		void construct(int id, Mapper mapper, Reducer combiner, Reducer reducer){
+		int REPORT_PROGRESS_INTERVAL = 1000;
+		void construct(int id, Mapper mapper, Reducer combiner, Reducer reducer, String farmerUAN){
 			this.id = id;
 			this.mapper = mapper;
 			this.combiner = combiner;
 			this.reducer = reducer;
-			this.farmer = farmer;
-			this.numMapTasks = 0;
-			this.numReduceTasks = 0;
+			this.cont = new Context();
+			this.farmer = (MapReduce)MapReduce.getReferenceByName(farmerUAN);
+		}
+		long lastReportedTime = 0;
+		public int reportMapProgress(boolean report, int completed) {
+			long currentTime = 0;
+			boolean report_ = report;
+			if (!report) {{
+				currentTime = System.currentTimeMillis();
+				if (lastReportedTime+REPORT_PROGRESS_INTERVAL<=currentTime) {{
+					report = true;
+				}
+}			}
+}			if (report) {{
+				System.out.println(" Mapper "+id+" completed "+completed);
+				System.out.flush();
+				lastReportedTime = currentTime;
+				{
+					// farmer<-reportMapProgress(report_, id, completed)
+					{
+						Object _arguments[] = { report_, id, completed };
+						Message message = new Message( self, farmer, "reportMapProgress", _arguments, null, currentMessage.getContinuationToken() );
+						__messages.add( message );
+					}
+					throw new CurrentContinuationException();
+				}
+			}
+}			return 0;
+		}
+		public int map(String text) {
+			mapper.map(text, cont);
+			return 0;
+		}
+		public HashMap returnMap(Context cont) {
+			return cont.getMap();
 		}
 		public HashMap runMapper(Vector texts) {
 			int numTasks = texts.size();
-			Context cont = new Context();
+			cont.clear();
 			System.out.println("Mapper "+id+" started (#tasks = "+numTasks+")");
 			long startTime = System.currentTimeMillis();
-			for (int task = 0; task<numTasks; task++){
-				String text = (String)texts.remove(0);
-				mapper.map(text, cont);
-			}
-			System.out.println("Mapper "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
-			{
-				// runCombiner(cont)
+			int task = 0;
+			for (task = 0; task<numTasks; task++){
+				Token x = new Token("x");
 				{
-					Object _arguments[] = { cont };
-					Message message = new Message( self, self, "runCombiner", _arguments, null, currentMessage.getContinuationToken() );
+					// token x = map((String)texts.remove(0))
+					{
+						Object _arguments[] = { (String)texts.remove(0) };
+						Message message = new Message( self, self, "map", _arguments, null, x );
+						__messages.add( message );
+					}
+				}
+				Token y = new Token("y");
+				{
+					// token y = reportMapProgress(false, task)
+					{
+						Object _arguments[] = { false, task };
+						Message message = new Message( self, self, "reportMapProgress", _arguments, null, y );
+						__messages.add( message );
+					}
+				}
+				x = y;
+			}
+			{
+				Token token_2_0 = new Token();
+				Token token_2_1 = new Token();
+				// reportMapProgress(true, task)
+				{
+					Object _arguments[] = { true, task };
+					Message message = new Message( self, self, "reportMapProgress", _arguments, null, token_2_0 );
+					__messages.add( message );
+				}
+				// standardOutput<-println("Mapper "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)")
+				{
+					Object _arguments[] = { "Mapper "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)" };
+					Message message = new Message( self, standardOutput, "println", _arguments, token_2_0, token_2_1 );
+					__messages.add( message );
+				}
+				// runCombiner()
+				{
+					Object _arguments[] = {  };
+					Message message = new Message( self, self, "runCombiner", _arguments, token_2_1, currentMessage.getContinuationToken() );
 					__messages.add( message );
 				}
 				throw new CurrentContinuationException();
 			}
 		}
-		public HashMap runCombiner(Context context) {
+		public HashMap runCombiner() {
 			if (combiner==null) {{
 				System.out.println(" No combiner defined");
-				return context.getMap();
+				return cont.getMap();
 			}
-}			HashMap map = context.getMap();
+}			HashMap map = cont.getMap();
 			Iterator it = map.entrySet().iterator();
 			int numTasks = map.entrySet().size();
-			Context cont = new Context();
+			Context context = new Context();
 			System.out.println(" Combiner "+id+" started (#tasks = "+numTasks+")");
 			long startTime = System.currentTimeMillis();
 			while (it.hasNext()) {
 				Map.Entry entry = (Map.Entry)it.next();
-				combiner.reduce((String)entry.getKey(), (Vector)entry.getValue(), cont);
+				combiner.reduce((String)entry.getKey(), (Vector)entry.getValue(), context);
 				it.remove();
 			}
 			System.out.println(" Combiner "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
 			{
-				// returnMap(cont)
+				// returnMap(context)
 				{
-					Object _arguments[] = { cont };
+					Object _arguments[] = { context };
 					Message message = new Message( self, self, "returnMap", _arguments, null, currentMessage.getContinuationToken() );
 					__messages.add( message );
 				}
 				throw new CurrentContinuationException();
 			}
-		}
-		public HashMap returnMap(Context context) {
-			return context.getMap();
 		}
 		public HashMap runReducer(HashMap map) {
 			if (reducer==null) {			return map;

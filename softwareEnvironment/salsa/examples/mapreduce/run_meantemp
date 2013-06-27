@@ -1,0 +1,1 @@
+java -Dnogc -Dnetif=eth0 -Dport=8443 -Dstdout -Xmx1024m -Xms1024m salsa.examples.mapreduce.MeanTemp 16 inputs/meantemp/data-slim output $1

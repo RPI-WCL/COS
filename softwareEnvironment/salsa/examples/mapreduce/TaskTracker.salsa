@@ -14,91 +14,97 @@ behavior TaskTracker {
     Mapper mapper;
     Reducer combiner;
     Reducer reducer;
+    Context cont;
 
     ActorReference farmer = null;
-    int numMapTasks, numReduceTasks;
-    int REPORT_PROGRESS_FREQUENCY = 10; // report progress every 10%
+    int REPORT_PROGRESS_INTERVAL = 1000; // report progress every this milliseconds
 
-    // TaskTracker( int id, Mapper mapper, Reducer combiner, Reducer reducer, ActorReference farmer ) {
-    TaskTracker( int id, Mapper mapper, Reducer combiner, Reducer reducer ) {
+    TaskTracker( int id, Mapper mapper, Reducer combiner, Reducer reducer, String farmerUAN ) {
         this.id = id;
         this.mapper = mapper;
         this.combiner = combiner;
         this.reducer = reducer;
-        this.farmer = farmer;
-        this.numMapTasks = 0;
-        this.numReduceTasks = 0;
+        this.cont = new Context();
+        this.farmer = (MapReduce)MapReduce.getReferenceByName( farmerUAN  );
     }
 
-    // int lastReportedMapProgress = 0;
-    // void reportMapProgress( Integer completed ) {
-    //     double progress = (double)completed.intValue() / numMapTasks;
-    //     if (lastReportedMapProgress + REPORT_PROGRESS_FREQUENCY < progress) {
-    //         lastReportedMapProgress += REPORT_PROGRESS_FREQUENCY;
-    //         farmer<-reportMapProgress( completed )@currentContinuation;
-    //     }
-    // }
+    long lastReportedTime = 0;
+    int reportMapProgress( boolean report, int completed ) {
+        long currentTime = 0;
+        boolean report_ = report;
+
+        if (!report) {
+            currentTime = System.currentTimeMillis();
+            if (lastReportedTime + REPORT_PROGRESS_INTERVAL <= currentTime) {
+                report = true;
+            }
+        }
+
+        if (report) {
+            System.out.println( " Mapper " + id + " completed " + completed );
+            System.out.flush();
+            lastReportedTime = currentTime;
+
+            farmer<-reportMapProgress( report_, id, completed )@currentContinuation;
+        }
+
+        return 0;
+    }
+
+    int map( String text ) {
+        mapper.map( text, cont );
+        return 0;
+    }
+
+    HashMap returnMap( Context cont ) {
+        return cont.getMap();
+    }
 
     HashMap runMapper( Vector texts ) {
-
         int numTasks = texts.size();
-        Context cont = new Context();
+        cont.clear();
 
         System.out.println( "Mapper " + id + " started (#tasks = " + numTasks + ")" );
         long startTime = System.currentTimeMillis();
 
-        for (int task = 0; task < numTasks; task++) {
-            String text = (String)texts.remove( 0 );
-            mapper.map( text, cont );
-            // reportMapProgress( new Integer( task ) );
+        int task = 0;
+        for (task = 0; task < numTasks; task++) {
+            token x = map( (String)texts.remove( 0 ) );
+            token y = reportMapProgress( false, task );
+            x = y;
         }
 
-        System.out.println( "Mapper " + id + " finished (elapsed time = " +
-                            ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
-
-        runCombiner( cont )@currentContinuation;
+        reportMapProgress( true, task )@
+        standardOutput<-println( "Mapper " + id + " finished (elapsed time = " +
+                                 ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" )@
+        runCombiner()@currentContinuation;
     }
 
-    HashMap runCombiner( Context context ) {
+    HashMap runCombiner() {
         if (combiner == null) {
             System.out.println( " No combiner defined" );
-            return context.getMap();
+            return cont.getMap();
         }
 
-        HashMap map = context.getMap();
+        HashMap map = cont.getMap();
         Iterator it = map.entrySet().iterator();
         int numTasks = map.entrySet().size();
-        Context cont = new Context();
+        Context context = new Context();
 
         System.out.println( " Combiner " + id + " started (#tasks = " + numTasks + ")" );
         long startTime = System.currentTimeMillis();
 
         while (it.hasNext()) {
             Map.Entry entry = (Map.Entry)it.next();
-            combiner.reduce( (String)entry.getKey(), (Vector)entry.getValue(), cont );
+            combiner.reduce( (String)entry.getKey(), (Vector)entry.getValue(), context );
             it.remove();
         }
 
         System.out.println( " Combiner " + id + " finished (elapsed time = " +
                             ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
         
-        returnMap( cont )@currentContinuation;
+        returnMap( context )@currentContinuation;
     }
-
-    HashMap returnMap( Context context ) {
-        return context.getMap();
-    }
-
-
-
-    // int lastReportedReduceProgress = 0;
-    // void reportReduceProgress( Integer completed ) {
-    //     double progress = (double)completed.intValue() / numReduceTasks;
-    //     if (lastReportedReduceProgress + REPORT_PROGRESS_FREQUENCY < progress) {
-    //         lastReportedReduceProgress += REPORT_PROGRESS_FREQUENCY;
-    //         farmer<-reportReduceProgress( completed )@currentContinuation;
-    //     }
-    // }
 
     HashMap runReducer( HashMap map ) {
         if (reducer == null)

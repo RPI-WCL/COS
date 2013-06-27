@@ -35,6 +35,11 @@ behavior MapReduce {
 
     long        startTime;
 
+    // progress report
+    int         numTasks = 0;
+    int REPORT_PROGRESS_INTERVAL = 5000; // report progress every this milliseconds
+    int[]       completedMapTasks;
+
     void submitJob( Mapper mapper, Reducer combiner, Reducer reducer,
                     int numWorkers, String inputFile, String outputFile, String nameServer, Vector theaters ) {
         this.mapper = mapper;
@@ -47,6 +52,7 @@ behavior MapReduce {
         this.nameServer = nameServer;
         this.theaters = theaters;
         this.workers = new TaskTracker[numWorkers];
+        this.completedMapTasks = new int[numWorkers];
         
         runMappers()@
         mergeMapResults( token )@
@@ -94,10 +100,11 @@ behavior MapReduce {
                     // create an actor on the theater
                     System.out.println( " Creating actor uan://" + nameServer + "/a" + i + 
                                         " on rmsp://" + theater + "/a" + i );
-                    workers[i] = new TaskTracker( i, mapper, combiner, reducer ) at (
+                    workers[i] = new TaskTracker( i, mapper, combiner, reducer, this.getUAN().toString() ) at (
                         new UAN( "uan://" + nameServer + "/a" + i ), 
                         new UAL( "rmsp://" + theater + "/a" + i ));
                     workers[i]<-runMapper( texts );
+                    numTasks += texts.size();
 
                     // update the hashmap
                     int numActor = ((Integer)entry.getValue()).intValue();
@@ -179,18 +186,6 @@ behavior MapReduce {
                     j++;
                 }
                 workers[i]<-runReducer( newMap );
-                // System.out.println( "i=" + i );
-                // Iterator newIt = newMap.entrySet().iterator();
-                // while (newIt.hasNext()) {
-                //     Map.Entry entry = (Map.Entry)newIt.next();
-                //     System.out.print( "key=" + entry.getKey() + ", value=" );
-                //     Vector value = (Vector)entry.getValue();
-                //     for (int k = 0; k < value.size(); k++) {
-                //         Object object = value.get( k );
-                //         System.out.print( object + " " );
-                //     }
-                //     System.out.println();
-                // }
             }
         }@dummy( token )@currentContinuation;
     }
@@ -241,17 +236,24 @@ behavior MapReduce {
     }
 
 
-    int completedMapTasks = 0;
-    void reportMapProgress( Integer completed ) {
-        completedMapTasks += completed.intValue();
-        System.out.println( "Map: " + completedMapTasks + " completed" );
-    }
 
-    int completedReduceTasks = 0;
-    void reportReduceProgress( Integer completed ) {
-        completedReduceTasks += completed.intValue();
-        System.out.println( "Reduce: " + completedReduceTasks + " completed" );
+    long lastReportedTime = 0;
+    int reportMapProgress( boolean report, int id, int completed ) {
+        long currentTime = System.currentTimeMillis();
+        completedMapTasks[id] = completed;      // #total completed tasks is sent from workers
+
+        if (report ||
+            lastReportedTime + REPORT_PROGRESS_INTERVAL <= currentTime) {
+            lastReportedTime = currentTime;
+
+            int sum = 0;
+            for (int i = 0; i < numWorkers; i++)
+                sum += completedMapTasks[i];
+
+            System.out.println( "Map: " + sum + " (" + 
+                                (100 * (double)sum / numTasks) + "%) completed" );
+        }
+
+        return 0;
     }
-        
-	
 }

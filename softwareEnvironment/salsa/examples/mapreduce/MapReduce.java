@@ -280,6 +280,9 @@ public class MapReduce extends UniversalActor  {
 		TaskTracker[] workers;
 		int numWorkers;
 		long startTime;
+		int numTasks = 0;
+		int REPORT_PROGRESS_INTERVAL = 5000;
+		int[] completedMapTasks;
 		public void submitJob(Mapper mapper, Reducer combiner, Reducer reducer, int numWorkers, String inputFile, String outputFile, String nameServer, Vector theaters) {
 			this.mapper = mapper;
 			this.combiner = combiner;
@@ -291,6 +294,7 @@ public class MapReduce extends UniversalActor  {
 			this.nameServer = nameServer;
 			this.theaters = theaters;
 			this.workers = new TaskTracker[numWorkers];
+			this.completedMapTasks = new int[numWorkers];
 			{
 				Token token_2_0 = new Token();
 				Token token_2_1 = new Token();
@@ -352,7 +356,7 @@ public class MapReduce extends UniversalActor  {
 }						Map.Entry entry = (Map.Entry)it.next();
 						String theater = (String)entry.getKey();
 						System.out.println(" Creating actor uan://"+nameServer+"/a"+i+" on rmsp://"+theater+"/a"+i);
-						workers[i] = ((TaskTracker)new TaskTracker(new UAN("uan://"+nameServer+"/a"+i), new UAL("rmsp://"+theater+"/a"+i),this).construct(i, mapper, combiner, reducer));
+						workers[i] = ((TaskTracker)new TaskTracker(new UAN("uan://"+nameServer+"/a"+i), new UAL("rmsp://"+theater+"/a"+i),this).construct(i, mapper, combiner, reducer, this.getUAN().toString()));
 						{
 							// workers[i]<-runMapper(texts)
 							{
@@ -361,6 +365,7 @@ public class MapReduce extends UniversalActor  {
 								__messages.add( message );
 							}
 						}
+						numTasks += texts.size();
 						int numActor = ((Integer)entry.getValue()).intValue();
 						if (numActor-1==0) {{
 							map.remove(entry.getKey());
@@ -490,15 +495,17 @@ public class MapReduce extends UniversalActor  {
 			System.out.println("Finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
 			System.out.println();
 		}
-		int completedMapTasks = 0;
-		public void reportMapProgress(Integer completed) {
-			completedMapTasks += completed.intValue();
-			System.out.println("Map: "+completedMapTasks+" completed");
-		}
-		int completedReduceTasks = 0;
-		public void reportReduceProgress(Integer completed) {
-			completedReduceTasks += completed.intValue();
-			System.out.println("Reduce: "+completedReduceTasks+" completed");
+		long lastReportedTime = 0;
+		public int reportMapProgress(boolean report, int id, int completed) {
+			long currentTime = System.currentTimeMillis();
+			completedMapTasks[id] = completed;
+			if (report||lastReportedTime+REPORT_PROGRESS_INTERVAL<=currentTime) {{
+				lastReportedTime = currentTime;
+				int sum = 0;
+				for (int i = 0; i<numWorkers; i++)sum += completedMapTasks[i];
+				System.out.println("Map: "+sum+" ("+(100*(double)sum/numTasks)+"%) completed");
+			}
+}			return 0;
 		}
 	}
 }
