@@ -17,7 +17,11 @@ behavior TaskTracker {
     Context cont;
 
     ActorReference farmer = null;
-    int REPORT_PROGRESS_INTERVAL = 1000; // report progress every this milliseconds
+    int numTasks = 0, minBurst = 0;
+    Vector texts = null;
+    int REPORT_PROGRESS_INTERVAL = 10000;       // report progress every this milliseconds
+    int BURST_MAP_EXECUTION_TIME = 3000;        // mapper executes at least this time for every turn
+    double MIN_BURST_PERCENTAGE = 0.05;         // minBurst = numTasks * this percentage
 
     TaskTracker( int id, Mapper mapper, Reducer combiner, Reducer reducer, String farmerUAN ) {
         this.id = id;
@@ -41,46 +45,65 @@ behavior TaskTracker {
         }
 
         if (report) {
-            System.out.println( " Mapper " + id + " completed " + completed );
-            System.out.flush();
+            System.out.println( " Mapper " + id + " completed " + completed + "/" + numTasks );
             lastReportedTime = currentTime;
 
-            farmer<-reportMapProgress( report_, id, completed )@currentContinuation;
+            // farmer<-reportMapProgress( report_, id, completed )@currentContinuation;
+            farmer<-reportMapProgress( report_, id, completed );
         }
 
-        return 0;
+        return completed;
     }
 
-    int map( String text ) {
-        mapper.map( text, cont );
-        return 0;
+
+    int runMapperBurst( int iter ) {
+        long startTime = System.currentTimeMillis();
+        
+        do {
+            if (texts.size() < minBurst)
+                minBurst = texts.size();
+
+            for (int i = 0; i < minBurst; i++)
+                mapper.map( (String)texts.remove( 0 ), cont );
+
+            iter += minBurst;
+            // System.out.println( " Mapper " + id + " texts.size()=" + texts.size() + ", iter=" + iter );
+
+        } while (0 < texts.size() &&
+                 startTime + BURST_MAP_EXECUTION_TIME > System.currentTimeMillis() );
+
+        return iter;
     }
 
-    HashMap returnMap( Context cont ) {
-        return cont.getMap();
+
+    void runMapperIter( int iter ) {
+        if (iter == this.numTasks)
+            return;
+        
+        token t1 = runMapperBurst( iter );
+        token t2 = reportMapProgress( false, t1 );
+        runMapperIter( t2 )@currentContinuation;
     }
 
+    long startTime = 0;
     HashMap runMapper( Vector texts ) {
-        int numTasks = texts.size();
+        this.numTasks = texts.size();
+        this.minBurst = (int)(numTasks * MIN_BURST_PERCENTAGE);
+        this.texts = texts;
         cont.clear();
 
         System.out.println( "Mapper " + id + " started (#tasks = " + numTasks + ")" );
-        long startTime = System.currentTimeMillis();
-
-        int task = 0;
-        for (task = 0; task < numTasks; task++) {
-            token x = map( (String)texts.remove( 0 ) );
-            token y = reportMapProgress( false, task );
-            x = y;
-        }
-
-        reportMapProgress( true, task )@
-        standardOutput<-println( "Mapper " + id + " finished (elapsed time = " +
-                                 ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" )@
+        startTime = System.currentTimeMillis();
+        
+        runMapperIter( 0 )@
+        reportMapProgress( true, numTasks )@
         runCombiner()@currentContinuation;
-    }
+    }        
 
     HashMap runCombiner() {
+        System.out.println( "Mapper " + id + " finished (elapsed time = " +
+                            ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
+
         if (combiner == null) {
             System.out.println( " No combiner defined" );
             return cont.getMap();
@@ -103,7 +126,7 @@ behavior TaskTracker {
         System.out.println( " Combiner " + id + " finished (elapsed time = " +
                             ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
         
-        returnMap( context )@currentContinuation;
+        return context.getMap();
     }
 
     HashMap runReducer( HashMap map ) {
@@ -128,6 +151,6 @@ behavior TaskTracker {
         System.out.println( "  Reducer " + id + " finished (elapsed time = " +
                             ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
 
-        returnMap( cont )@currentContinuation;
+        return cont.getMap();
     }
 }

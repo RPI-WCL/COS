@@ -37,7 +37,7 @@ behavior MapReduce {
 
     // progress report
     int         numTasks = 0;
-    int REPORT_PROGRESS_INTERVAL = 5000; // report progress every this milliseconds
+    int REPORT_PROGRESS_INTERVAL = 10000; // report progress every this milliseconds
     int[]       completedMapTasks;
 
     void submitJob( Mapper mapper, Reducer combiner, Reducer reducer,
@@ -250,10 +250,10 @@ behavior MapReduce {
             for (int i = 0; i < numWorkers; i++)
                 sum += completedMapTasks[i];
 
-            System.out.println( "Map: " + sum + " (" + 
-                                (100 * (double)sum / numTasks) + "%) completed" );
+            System.out.println( " Map: " + sum + "/" + numTasks + " (" + 
+                                (100 * sum / numTasks) + "%) completed" );
         }
 
-        return 0;
+        return completed;
     }
 }

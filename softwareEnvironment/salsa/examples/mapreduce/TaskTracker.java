@@ -274,7 +274,11 @@ public class TaskTracker extends UniversalActor  {
 		Reducer reducer;
 		Context cont;
 		ActorReference farmer = null;
-		int REPORT_PROGRESS_INTERVAL = 1000;
+		int numTasks = 0, minBurst = 0;
+		Vector texts = null;
+		int REPORT_PROGRESS_INTERVAL = 10000;
+		int BURST_MAP_EXECUTION_TIME = 3000;
+		double MIN_BURST_PERCENTAGE = 0.05;
 		void construct(int id, Mapper mapper, Reducer combiner, Reducer reducer, String farmerUAN){
 			this.id = id;
 			this.mapper = mapper;
@@ -294,68 +298,80 @@ public class TaskTracker extends UniversalActor  {
 				}
 }			}
 }			if (report) {{
-				System.out.println(" Mapper "+id+" completed "+completed);
-				System.out.flush();
+				System.out.println(" Mapper "+id+" completed "+completed+"/"+numTasks);
 				lastReportedTime = currentTime;
 				{
 					// farmer<-reportMapProgress(report_, id, completed)
 					{
 						Object _arguments[] = { report_, id, completed };
-						Message message = new Message( self, farmer, "reportMapProgress", _arguments, null, currentMessage.getContinuationToken() );
+						Message message = new Message( self, farmer, "reportMapProgress", _arguments, null, null );
 						__messages.add( message );
 					}
-					throw new CurrentContinuationException();
 				}
 			}
-}			return 0;
+}			return completed;
 		}
-		public int map(String text) {
-			mapper.map(text, cont);
-			return 0;
+		public int runMapperBurst(int iter) {
+			long startTime = System.currentTimeMillis();
+do {
+				if (texts.size()<minBurst) {minBurst = texts.size();
+}				for (int i = 0; i<minBurst; i++)mapper.map((String)texts.remove(0), cont);
+				iter += minBurst;
+			}
+ while (0<texts.size()&&startTime+BURST_MAP_EXECUTION_TIME>System.currentTimeMillis());
+			return iter;
 		}
-		public HashMap returnMap(Context cont) {
-			return cont.getMap();
+		public void runMapperIter(int iter) {
+			if (iter==this.numTasks) {			return;
+}			Token t1 = new Token("t1");
+			{
+				// token t1 = runMapperBurst(iter)
+				{
+					Object _arguments[] = { iter };
+					Message message = new Message( self, self, "runMapperBurst", _arguments, null, t1 );
+					__messages.add( message );
+				}
+			}
+			Token t2 = new Token("t2");
+			{
+				// token t2 = reportMapProgress(false, t1)
+				{
+					Object _arguments[] = { false, t1 };
+					Message message = new Message( self, self, "reportMapProgress", _arguments, null, t2 );
+					__messages.add( message );
+				}
+			}
+			{
+				// runMapperIter(t2)
+				{
+					Object _arguments[] = { t2 };
+					Message message = new Message( self, self, "runMapperIter", _arguments, null, currentMessage.getContinuationToken() );
+					__messages.add( message );
+				}
+				throw new CurrentContinuationException();
+			}
 		}
+		long startTime = 0;
 		public HashMap runMapper(Vector texts) {
-			int numTasks = texts.size();
+			this.numTasks = texts.size();
+			this.minBurst = (int)(numTasks*MIN_BURST_PERCENTAGE);
+			this.texts = texts;
 			cont.clear();
 			System.out.println("Mapper "+id+" started (#tasks = "+numTasks+")");
-			long startTime = System.currentTimeMillis();
-			int task = 0;
-			for (task = 0; task<numTasks; task++){
-				Token x = new Token("x");
-				{
-					// token x = map((String)texts.remove(0))
-					{
-						Object _arguments[] = { (String)texts.remove(0) };
-						Message message = new Message( self, self, "map", _arguments, null, x );
-						__messages.add( message );
-					}
-				}
-				Token y = new Token("y");
-				{
-					// token y = reportMapProgress(false, task)
-					{
-						Object _arguments[] = { false, task };
-						Message message = new Message( self, self, "reportMapProgress", _arguments, null, y );
-						__messages.add( message );
-					}
-				}
-				x = y;
-			}
+			startTime = System.currentTimeMillis();
 			{
 				Token token_2_0 = new Token();
 				Token token_2_1 = new Token();
-				// reportMapProgress(true, task)
+				// runMapperIter(0)
 				{
-					Object _arguments[] = { true, task };
-					Message message = new Message( self, self, "reportMapProgress", _arguments, null, token_2_0 );
+					Object _arguments[] = { new Integer(0) };
+					Message message = new Message( self, self, "runMapperIter", _arguments, null, token_2_0 );
 					__messages.add( message );
 				}
-				// standardOutput<-println("Mapper "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)")
+				// reportMapProgress(true, numTasks)
 				{
-					Object _arguments[] = { "Mapper "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)" };
-					Message message = new Message( self, standardOutput, "println", _arguments, token_2_0, token_2_1 );
+					Object _arguments[] = { true, numTasks };
+					Message message = new Message( self, self, "reportMapProgress", _arguments, token_2_0, token_2_1 );
 					__messages.add( message );
 				}
 				// runCombiner()
@@ -368,6 +384,7 @@ public class TaskTracker extends UniversalActor  {
 			}
 		}
 		public HashMap runCombiner() {
+			System.out.println("Mapper "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
 			if (combiner==null) {{
 				System.out.println(" No combiner defined");
 				return cont.getMap();
@@ -384,15 +401,7 @@ public class TaskTracker extends UniversalActor  {
 				it.remove();
 			}
 			System.out.println(" Combiner "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
-			{
-				// returnMap(context)
-				{
-					Object _arguments[] = { context };
-					Message message = new Message( self, self, "returnMap", _arguments, null, currentMessage.getContinuationToken() );
-					__messages.add( message );
-				}
-				throw new CurrentContinuationException();
-			}
+			return context.getMap();
 		}
 		public HashMap runReducer(HashMap map) {
 			if (reducer==null) {			return map;
@@ -408,15 +417,7 @@ public class TaskTracker extends UniversalActor  {
 				it.remove();
 			}
 			System.out.println("  Reducer "+id+" finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
-			{
-				// returnMap(cont)
-				{
-					Object _arguments[] = { cont };
-					Message message = new Message( self, self, "returnMap", _arguments, null, currentMessage.getContinuationToken() );
-					__messages.add( message );
-				}
-				throw new CurrentContinuationException();
-			}
+			return cont.getMap();
 		}
 	}
 }

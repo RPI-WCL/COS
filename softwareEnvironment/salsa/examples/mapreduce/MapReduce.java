@@ -281,7 +281,7 @@ public class MapReduce extends UniversalActor  {
 		int numWorkers;
 		long startTime;
 		int numTasks = 0;
-		int REPORT_PROGRESS_INTERVAL = 5000;
+		int REPORT_PROGRESS_INTERVAL = 10000;
 		int[] completedMapTasks;
 		public void submitJob(Mapper mapper, Reducer combiner, Reducer reducer, int numWorkers, String inputFile, String outputFile, String nameServer, Vector theaters) {
 			this.mapper = mapper;
@@ -503,9 +503,9 @@ public class MapReduce extends UniversalActor  {
 				lastReportedTime = currentTime;
 				int sum = 0;
 				for (int i = 0; i<numWorkers; i++)sum += completedMapTasks[i];
-				System.out.println("Map: "+sum+" ("+(100*(double)sum/numTasks)+"%) completed");
+				System.out.println(" Map: "+sum+"/"+numTasks+" ("+(100*sum/numTasks)+"%) completed");
 			}
-}			return 0;
+}			return completed;
 		}
 	}
 }
