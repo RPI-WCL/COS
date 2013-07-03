@@ -332,6 +332,53 @@ public class MapReduce extends UniversalActor  {
 			Vector texts = new Vector();
 			startTime = System.currentTimeMillis();
 			System.out.println("Running mappers (inputFileSize = "+(inputFileSize/(1024*1024))+"Mbytes)...");
+			{
+				Token token_2_0 = new Token();
+				// join block
+				token_2_0.setJoinDirector();
+				try {
+					BufferedReader in = new BufferedReader(new FileReader(inputFile));
+					for (int i = 0; i<numWorkers; i++){
+						texts.clear();
+						String text;
+						while ((currentDataSize<(i+1)*numData)&&(text=in.readLine())!=null) {
+							texts.add(text);
+							currentDataSize += text.length()+1;
+						}
+						System.out.println(" Creating actor uan://"+nameServer+"/a"+i+" on rmsp://"+theaters.get(i%theaters.size())+"/a"+i);
+						workers[i] = ((TaskTracker)new TaskTracker(new UAN("uan://"+nameServer+"/a"+i), new UAL("rmsp://"+theaters.get(i%theaters.size())+"/a"+i),this).construct(i, mapper, combiner, reducer, this.getUAN().toString()));
+						{
+							// workers[i]<-runMapper(texts)
+							{
+								Object _arguments[] = { texts };
+								Message message = new Message( self, workers[i], "runMapper", _arguments, null, token_2_0 );
+								__messages.add( message );
+							}
+						}
+						numTasks += texts.size();
+					}
+					in.close();
+				}
+				catch (IOException ex) {
+					System.err.println(" Can't open the file "+inputFile+" for reading");
+				}
+
+				addJoinToken(token_2_0);
+				// dummy(token)
+				{
+					Object _arguments[] = { token_2_0 };
+					Message message = new Message( self, self, "dummy", _arguments, token_2_0, currentMessage.getContinuationToken() );
+					__messages.add( message );
+				}
+				throw new CurrentContinuationException();
+			}
+		}
+		public Object[] runMappers2() {
+			long numData = inputFileSize/numWorkers;
+			int currentDataSize = 0;
+			Vector texts = new Vector();
+			startTime = System.currentTimeMillis();
+			System.out.println("Running mappers (inputFileSize = "+(inputFileSize/(1024*1024))+"Mbytes)...");
 			HashMap map = new HashMap();
 			for (int i = 0; i<theaters.size(); i++){
 				String[] dest = ((String)theaters.get(i)).split(",");
@@ -460,6 +507,8 @@ public class MapReduce extends UniversalActor  {
 			}
 		}
 		public void writeOutput(Object[] objs) {
+			System.out.println("Finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
+			System.out.println();
 			try {
 				PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(outputFile)));
 				for (int i = 0; i<objs.length; i++){
@@ -492,8 +541,6 @@ public class MapReduce extends UniversalActor  {
 				System.err.println("Can't write the file "+outputFile);
 			}
 
-			System.out.println("Finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
-			System.out.println();
 		}
 		long lastReportedTime = 0;
 		public int reportMapProgress(boolean report, int id, int completed) {
