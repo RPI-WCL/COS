@@ -1,4 +1,0 @@
-cos
-===
-
-Cloud Operating System
