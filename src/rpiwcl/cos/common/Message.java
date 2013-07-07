@@ -1,9 +1,9 @@
-package common;
+package rpiwcl.cos.common;
 
 import java.io.*;
 import java.util.*;
 
-import util.CommChannel;
+import rpiwcl.cos.util.CommChannel;
 
 /* Class encapsulating message transmissions
  *
@@ -47,4 +47,8 @@ public class Message implements Serializable
         return args.get(key);
     }
 
+    public String toString() {
+        String str = "method=" + method + ", sender=" + sender + ", comm=" + reply + ", args=" + args;
+        return str;
+    }
 }

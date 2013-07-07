@@ -1,10 +1,10 @@
-package common;
+package rpiwcl.cos.common;
 
 import java.util.*;
 
-import common.Constants;
-import util.CommChannel;
-import util.Utility;
+import rpiwcl.cos.common.Constants;
+import rpiwcl.cos.util.CommChannel;
+import rpiwcl.cos.util.Utility;
 
 public class MessageFactory
 {
@@ -15,6 +15,18 @@ public class MessageFactory
         this.type = type; 
         this.localhost = any.getLocalAddr();
     }
+
+    public Message notifyConfig( String config ) {
+        Message payload = init( "notify_config" );
+        payload.addParam( "config", config );
+        return payload;
+    }
+
+    public Message startEntity( String id ) {
+        Message payload = init( "start_entity" );
+        payload.addParam( "id", id );
+        return payload;
+    }        
 
     public Message notifyCpuUsage(Double load){
         Message payload = init( "notify_extreme_cpu_usage");

@@ -1,116 +1,32 @@
-package nodeManager;
+package rpiwcl.cos.node;
 
-import java.io.*;
-import java.util.*;
-import java.net.Socket;
-import java.lang.Thread;
-
-import common.Controller;
-import common.Constants;
-import common.ConnectionHandler;
-import common.MessageFactory;
-import common.Message;
-import util.CommChannel;
-import util.Utility;
-import util.Messages;
-import vmManager.VmInfo;
-
-public class NodeController extends Controller
-{
-    CommChannel cos;
-
-    LinkedList<String> theaters;
-
-    public NodeController(String cos_addr, int cos_port, int listen_port){
-        super(listen_port);
+import rpiwcl.cos.common.*;
+// import rpiwcl.cos.node.NodeInfo;
 
 
-        cos = new CommChannel(cos_addr, cos_port); 
-        ConnectionHandler cosHandler = new ConnectionHandler(cos, mailbox);
-        new Thread(cosHandler, "COS connection").start();
-
-        msgFactory = new MessageFactory("NODE", cos);
-        theaters = null;
+public class NodeController extends Controller {
+    public NodeController( String cloudIpAddr, int cloudPort, int listenPort ) {
+        super( listen_port );
     }
 
-    private CommChannel findChannelByAddress(String addr){
-        for( CommChannel s : children){
-            if( s.getRemoteAddr().equals(addr) ){
-                return s;
-            }
-        }
-        return null;
+    // public int getInstance();
+    // public List<Instance> getInstances();
+    // // async calls
+    // public void startInstances(ArrayList<String> instanceIds);
+
+    public void handleMessage( Message msg ) {
     }
 
-    private void handleNewConnection(Message msg){
-        children.add(msg.getReply());
-
-        //We have a new connection. We should let COS know.
-        Message payload = msgFactory.vmCreation(msg.getSender());
-        cos.write(payload);
-
-        if(theaters != null) {
-            String childRMSP = VmInfo.convertIPtoRMSP(msg.getReply().getRemoteAddr());
-            theaters.addLast(childRMSP);
-            msg.getReply().write(msgFactory.startTheater(theaters));
-        }
-    }
-
-    private void droppedConnection(Message msg){
-        String addr = (String) msg.getParam("dropped_connection");
-        Message result = msgFactory.vmDestruction(addr);
-        cos.write(result);
-        children.remove(msg.getReply());
-    }
-
-    private void create_vm(Message msg){
-        //TODO: Should fix this warning eventually,
-        theaters = (LinkedList<String>) msg.getParam("theaters");
-        try{
-            Runtime.getRuntime().exec("xm create " + Constants.PATH_TO_VM_IMAGE);
-            //Runtime.getRuntime().exec("Terminal -x java vmManager.VMController 127.0.0.1");
-        } catch(IOException e){
-            e.printStackTrace();
-            //TODO: Notify of failure
-        }
-
-
-    }
-
-    public void handleMessage( Message msg ){
-        Utility.debugPrint("Node recieved: " + msg.getMethod());
-
-        switch(msg.getMethod())
-        {
-            case "get_cpu_usage":
-                broadcast(msg);
-                cos.write(msgFactory.cpuUsageResp());
-                break;
-            case "new_connection":
-                handleNewConnection(msg);
-                break;
-            case "create_vm":
-                create_vm(msg);
-                break;
-            case "destroy_vm":
-                String addr = (String) msg.getParam("target_vm");
-                CommChannel target = findChannelByAddress(addr);
-                target.write(msg);
-                break;
-            case "dropped_connection":
-                droppedConnection(msg);
-                break;
-            default:
-                //If we don't know how to deal with it, pass it up.
-                cos.write(msg);
-                break;
-        }
-    }
-
-    public static void main( String [] args ) throws Exception{
-        if( args.length != 1)
+    public static void main( String[] args ) {
+        if ( args.length != 1) {
+            System.err.println( 
+                "Usage: java rpiwcl.cos.node.NodeController <cloud_ipaddr> <cloud_port> <listen_port>" );
             return;
-        NodeController runner = new NodeController( args[0], Constants.COS_PORT, Constants.NODE_PORT );
+        }
+
+        NodeController runner= NodeController( 
+            args[0], Integer.parseInt( args[1] ), Integer.parseInt( args[2] ) );
         runner.checkMessages();
     }
+            
 }

@@ -1,8 +1,8 @@
-package util;
+package rpiwcl.cos.util;
 
 import java.lang.management.*;
 
-import common.Constants;
+import rpiwcl.cos.common.Constants;
 
 public class Utility
 {

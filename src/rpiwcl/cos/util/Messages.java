@@ -1,11 +1,11 @@
-package util;
+package rpiwcl.cos.util;
 
 import java.lang.StringBuilder;
 import java.util.List;
 import java.util.ArrayList;
 import java.net.*;
 
-import util.CommChannel;
+import rpiwcl.cos.util.CommChannel;
 
 public class Messages
 {

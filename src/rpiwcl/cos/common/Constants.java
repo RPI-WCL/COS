@@ -1,7 +1,11 @@
-package common;
+package rpiwcl.cos.common;
 
 public class Constants
 {
+    // Yaml files
+    public final static String CONFIG_FILE = "config.yaml";
+    public final static String CPU_DB_FILE = "cpuDb.yaml";    
+
     //Stastics
     public final static double HIGH_CPU = .75;
     public final static double IDEAL_CPU = .5;

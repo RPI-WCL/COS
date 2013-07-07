@@ -1,10 +1,10 @@
-package common;
+package rpiwcl.cos.common;
 
 import java.util.Collections;
 import java.util.Collection;
 import java.util.Comparator;
 
-import util.CommChannel;
+import rpiwcl.cos.util.CommChannel;
 
 // Information about Nodes and Virtual Machines
 //

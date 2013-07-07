@@ -1,11 +1,11 @@
-package common;
+package rpiwcl.cos.common;
 
 import java.net.Socket;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import common.Message;
-import common.MessageFactory;
-import util.CommChannel;
+import rpiwcl.cos.common.Message;
+import rpiwcl.cos.common.MessageFactory;
+import rpiwcl.cos.util.CommChannel;
 
 public class ConnectionHandler implements Runnable
 {
@@ -33,6 +33,7 @@ public class ConnectionHandler implements Runnable
             if(rcved instanceof Message) {
                 count = 0;
                 msg = (Message) rcved;
+                System.out.println( "[ConnectionHandler] Rcved " + msg );
                 msg.setReply(channel);
                 try{
                     mailbox.put(msg);

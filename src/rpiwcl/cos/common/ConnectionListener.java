@@ -1,13 +1,13 @@
-package common;
+package rpiwcl.cos.common;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import common.Message;
-import common.MessageFactory;
-import util.CommChannel;
+import rpiwcl.cos.common.Message;
+import rpiwcl.cos.common.MessageFactory;
+import rpiwcl.cos.util.CommChannel;
 
 public class ConnectionListener implements Runnable
 {
@@ -40,6 +40,7 @@ public class ConnectionListener implements Runnable
             try{
                 CommChannel incoming = new CommChannel(listen.accept());
                 tellController(incoming);
+System.out.println( "incoming=" + incoming );
                 ConnectionHandler connection = new ConnectionHandler(incoming, mailbox);
                 new Thread(connection, "ConnectionHandler " + i).start();
             } catch(IOException e) {
