@@ -1,7 +1,7 @@
-package cos.cloud;
+package rpiwcl.cos.cloud;
 
-import common.Controller;
-import common.Message;
+import rpiwcl.cos.common.Controller;
+import rpiwcl.cos.common.Message;
 
 public abstract class CloudController extends Controller {
 

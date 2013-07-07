@@ -8,19 +8,18 @@ import rpiwcl.cos.cloud.CloudController;
 import rpiwcl.cos.node.NodeInfo;
 import rpiwcl.cos.util.*;
 
-public class PrivCloudController extends Controller {
-    private CommChannel starter;
-    private CommChannel cos;
+public class AmazonEC2Controller extends Controller {
+    private MessageFactory msgFactory = null;
+    private CommChannel starter = null;
+    private CommChannel cos = null;
 
-    public PrivCloudController( int port, String cosIpAddr, int cosPort ) {
+    public AmazonEC2Controller( int port, String cosIpAddr, int cosPort ) {
         super( port );
-
-        msgFactory = null;
-        starter = null;
+        
         try {
             cos = new CommChannel( cosIpAddr, cosPort );
         } catch (IOException ioe) {
-            System.err.println( "[PrivCloud] ERROR CosManager must be running" );
+            System.err.println( "[AmazonEC2] this should not happen, CosManager must be running" );
         }
 
         ConnectionHandler cosHandler = new ConnectionHandler( cos, mailbox );
@@ -40,7 +39,7 @@ public class PrivCloudController extends Controller {
 
 
     public void handleMessage( Message msg ) {
-        System.out.println( "[PrivCloud] Rcved " + msg.getMethod() + " from " + msg.getParam("type") );
+        System.out.println( "[AmazonEC2] Rcved " + msg.getMethod() + " from " + msg.getParam("type") );
 
         switch( msg.getMethod() ) {
         case "new_connection":
@@ -64,33 +63,24 @@ public class PrivCloudController extends Controller {
             // nodeTable.put(msg.getSender(), new NodeInfo(msg.getSender(), msg.getReply()));
         }
 
-        System.out.println( "[PrivCloud] handleNewConnection, msg.getSender()=" + msg.getSender() );
+        System.out.println( "[AmazonEC2] handleNewConnection, msg.getSender()=" + msg.getSender() );
     }
 
 
     protected void handleNotifyConfig( Message msg ) {
         HashMap config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
-        System.out.println( "[PrivCloud] config:" + config );
-        
-        // immediately start NodeControllers
-        ArrayList nodes = (ArrayList)config.get( "nodes" );
-        for (int i = 0; i < nodes.size(); i++) {
-            String node = (String)nodes.get( i );
-            msg = msgFactory.startEntity( node );
-System.out.println( "handleNotifyConfig, node=" + node + ", starter=" + starter );
-            // starter.write( msg );
-        }
+        System.out.println( "[AmazonEC2] config:" + config );
     }
 
 
     public static void main( String[] args ) {
         if (3 != args.length) {
-            System.err.println( "[PrivCloud] invalid arguments" );
+            System.err.println( "[AmazonEC2] invalid arguments" );
             System.exit( 1 );
         }
         
         // arguments: listen_port, parent_ipaddr, parent_port
-        PrivCloudController runner = new PrivCloudController( 
+        AmazonEC2Controller runner = new AmazonEC2Controller( 
             Integer.parseInt( args[0] ), args[1], Integer.parseInt( args[2] ) );
         runner.checkMessages();
     }

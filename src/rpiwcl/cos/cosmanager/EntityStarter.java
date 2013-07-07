@@ -61,14 +61,17 @@ public class EntityStarter extends Controller {
             cmd = "java -cp " + classpath + " " + mainClass + " " + listenPort;
         }
         else { 
-            HashMap parentSpec = (HashMap)config.get( parent );
+            HashMap parentConf = (HashMap)config.get( parent );
+            HashMap parentSpec = (HashMap)parentConf.get( "launch_spec" );
             String parentIpAddr = (String)parentSpec.get( "ipaddr" );
-            String parentPort = (String)parentSpec.get( "port" );
+            Integer parentPort = (Integer)parentSpec.get( "port" );
             cmd = "java -cp " + classpath + " " + mainClass + " " + 
                 listenPort + " " + parentIpAddr + " " + parentPort;
         }
 
-        terminal.open( profile, classpath, user, ipAddr, cmd );
+        String title = "[" + id + "] " + mainClass;
+
+        terminal.open( profile, title, user, ipAddr, cmd );
 
         int retry = 0;
         boolean result = false;
@@ -117,7 +120,7 @@ public class EntityStarter extends Controller {
     protected void handleStartEntity( Message msg ) {
         String id = (String)msg.getParam( "id" );
 
-        System.out.println( "[CosManager] handleStartEntity, id=" + id );
+        System.out.println( "[EntityStarter] handleStartEntity, id=" + id );
         try {
             startEntity( id );
         } catch (IOException ioe) {

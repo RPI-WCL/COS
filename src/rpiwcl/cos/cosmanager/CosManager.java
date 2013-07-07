@@ -10,16 +10,19 @@ import rpiwcl.cos.util.*;
 
 
 public class CosManager extends Controller {
-    // private ArrayList<CloudControllerApi> privClouds = new ArrayList<CloudControllerApi>();
-    // private ArrayList<CloudControllerApi> pubClouds = new ArrayList<CloudControllerApi>();
-    private MessageFactory msgFactory = null;
+    private MessageFactory msgFactory;
     // private PolicyScheduler scheduler = null;
-    private CommChannel starter = null;
-    private String reconfiguration = null;
+    private CommChannel starter;
+    private String reconfiguration;
+    private HashMap<String, CloudInfo> cloudTable;
 
 
     public CosManager( int port ) {
         super( port );
+        msgFactory = null;
+        starter = null;
+        reconfiguration = null;
+        cloudTable = new HashMap<String, CloudInfo>();
     }
 
     public void handleMessage( Message msg ) {
@@ -40,13 +43,14 @@ public class CosManager extends Controller {
         if (this.msgFactory == null) {
             this.msgFactory = new MessageFactory( "cos", msg.getReply() );
         }
+
         if (this.starter == null) {
             // if this is the first connection, it must be from EntityStarter
             this.starter = msg.getReply();
         }
         else {
-            // children.add(msg.getReply());
-            // cloudTable.put(msg.getSender(), new CloudInfo(msg.getSender(), msg.getReply()));
+            children.add( msg.getReply() );
+            cloudTable.put( msg.getSender(), new CloudInfo( msg.getSender(), msg.getReply() ) );
         }
 
         System.out.println( "[CosManager] handleNewConnection, msg.getSender()=" + msg.getSender() );
