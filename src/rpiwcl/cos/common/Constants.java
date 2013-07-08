@@ -2,9 +2,11 @@ package rpiwcl.cos.common;
 
 public class Constants
 {
+    public final static boolean DEBUG = false;
+
     // Yaml files
-    public final static String CONFIG_FILE = "config.yaml";
-    public final static String CPU_DB_FILE = "cpuDb.yaml";    
+    public final static String DEFAULT_CONFIG_FILE = "yaml/config.yaml";
+    public final static String DEFAULT_CPU_DB_FILE = "yaml/cpuDb.yaml";    
 
     //Stastics
     public final static double HIGH_CPU = .75;
@@ -30,7 +32,7 @@ public class Constants
     public final static String LAUNCH_IOSTHEATER = "java -Dnetif=eth0 -cp " + CLASS_PATH + " src.IOSTheater > ios_log.txt";
     public final static String CONNECT_THEATERS = "java -Dnetif=eth0 -cp " + CLASS_PATH + " src.testing.reachability.Full theaters.txt > connect_log.txt";
 
-    public final static boolean DEBUG = true;
+
     private Constants(){}
 }
 

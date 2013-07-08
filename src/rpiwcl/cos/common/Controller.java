@@ -43,6 +43,9 @@ public abstract class Controller {
         while(true) {
             try{
                 msg = mailbox.take();
+                if (msg.getMethod().equals( "shutdown" )) {
+                    break;
+                }
                 handleMessage(msg);
             } catch(InterruptedException e) {
                 //Don't thhink this needs to be worried about;

@@ -26,7 +26,12 @@ public class MessageFactory
         Message payload = init( "start_entity" );
         payload.addParam( "id", id );
         return payload;
-    }        
+    }
+
+    public Message shutdown() {
+        Message payload = init( "shutdown" );
+        return payload;
+    }
 
     public Message notifyCpuUsage(Double load){
         Message payload = init( "notify_extreme_cpu_usage");

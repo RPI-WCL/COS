@@ -10,6 +10,7 @@ import rpiwcl.cos.util.*;
 
 
 public class CosManager extends Controller {
+    private String id;
     private MessageFactory msgFactory;
     // private PolicyScheduler scheduler = null;
     private CommChannel starter;
@@ -17,8 +18,9 @@ public class CosManager extends Controller {
     private HashMap<String, CloudInfo> cloudTable;
 
 
-    public CosManager( int port ) {
+    public CosManager( String id, int port ) {
         super( port );
+        this.id = id;
         msgFactory = null;
         starter = null;
         reconfiguration = null;
@@ -26,7 +28,8 @@ public class CosManager extends Controller {
     }
 
     public void handleMessage( Message msg ) {
-        System.out.println( "[CosManager] Rcved " + msg.getMethod() + " from " + msg.getParam("type") );
+        System.out.println( "[CosManager] Rcved " + msg.getMethod() +
+                            " from " + msg.getParam( "type" ) );
 
         switch( msg.getMethod() ) {
         case "new_connection":
@@ -41,7 +44,7 @@ public class CosManager extends Controller {
 
     protected void handleNewConnection( Message msg ) {
         if (this.msgFactory == null) {
-            this.msgFactory = new MessageFactory( "cos", msg.getReply() );
+            this.msgFactory = new MessageFactory( id, msg.getReply() );
         }
 
         if (this.starter == null) {
@@ -74,12 +77,12 @@ System.out.println( "handleNotifyConfig, cloud=" + cloud + ", starter=" + starte
     }
 
     public static void main(String[] args) {
-        if (1 != args.length) {
+        if (2 != args.length) {
             System.err.println( "[CosManager] invalid arguments" );
             System.exit( 1 );
         }
 
-        CosManager runner = new CosManager( Integer.parseInt( args[0] ) );
+        CosManager runner = new CosManager( args[0], Integer.parseInt( args[1] ) );
         runner.checkMessages();
     }
 }

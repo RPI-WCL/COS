@@ -6,6 +6,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import rpiwcl.cos.common.Message;
 import rpiwcl.cos.common.MessageFactory;
 import rpiwcl.cos.util.CommChannel;
+import rpiwcl.cos.util.Utility;
+
 
 public class ConnectionHandler implements Runnable
 {
@@ -33,7 +35,7 @@ public class ConnectionHandler implements Runnable
             if(rcved instanceof Message) {
                 count = 0;
                 msg = (Message) rcved;
-                System.out.println( "[ConnectionHandler] Rcved " + msg );
+                Utility.debugPrint( "[ConnHandler] Rcved " + msg + " from " + msg.getParam( "type" ) );
                 msg.setReply(channel);
                 try{
                     mailbox.put(msg);

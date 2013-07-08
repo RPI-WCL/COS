@@ -5,6 +5,7 @@ import java.net.*;
 import java.net.InetSocketAddress;
 
 import rpiwcl.cos.common.Message;
+import rpiwcl.cos.util.Utility;
 
 public class CommChannel
 {
@@ -35,7 +36,7 @@ public class CommChannel
 
     public void write( Message message ){
         try{
-            System.out.println( "[CommChannel] Sending " + message );
+            Utility.debugPrint( "[CommChannel] Sending " + message );
             out.writeObject(message);
         }catch(Exception e){
             System.err.println( "ERROR!!" + e );

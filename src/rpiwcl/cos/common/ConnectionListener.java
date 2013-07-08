@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import rpiwcl.cos.common.Message;
 import rpiwcl.cos.common.MessageFactory;
 import rpiwcl.cos.util.CommChannel;
+import rpiwcl.cos.util.Utility;
 
 public class ConnectionListener implements Runnable
 {
@@ -40,7 +41,7 @@ public class ConnectionListener implements Runnable
             try{
                 CommChannel incoming = new CommChannel(listen.accept());
                 tellController(incoming);
-System.out.println( "incoming=" + incoming );
+                Utility.debugPrint( "[ConnListener] Rcved incoming=" + incoming );
                 ConnectionHandler connection = new ConnectionHandler(incoming, mailbox);
                 new Thread(connection, "ConnectionHandler " + i).start();
             } catch(IOException e) {

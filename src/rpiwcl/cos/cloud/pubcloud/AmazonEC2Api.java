@@ -37,7 +37,7 @@ public class AmazonEC2Api implements CloudApi {
 
         try {
              credentials = new PropertiesCredentials(
-                 AmazonEC2Interface.class.getResourceAsStream( credentialFile ) );
+                 AmazonEC2Api.class.getResourceAsStream( credentialFile ) );
         } catch (IOException ex) {
             System.err.println( ex );
         }

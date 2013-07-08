@@ -1,9 +1,9 @@
-package cloudif;
+package rpiwcl.cos.cloud.pubcloud;
 
 import java.util.ArrayList;
 import java.util.Date;
 import com.amazonaws.services.ec2.model.Instance;
-import cloudif.VmInstance;
+import rpiwcl.cos.cloud.pubcloud.*;
 
 public class AmazonEC2VmInstance extends VmInstance {
     private String privateDnsName;

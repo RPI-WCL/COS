@@ -4,19 +4,28 @@ import java.io.*;
 import java.util.*;
 import java.net.Socket;
 import java.lang.Thread;
-
+import org.ho.yaml.Yaml;
 import rpiwcl.cos.common.*;
 import rpiwcl.cos.util.*;
 
 
 public class NodeController extends Controller {
-    CommChannel cloud;
-
+    private String id;
+    private CommChannel starter;
+    private CommChannel cloud;
+    private boolean useVm;
+    private boolean vmSupport;
+    private String vmUser;
+    private String vmImage;
+    
+    
     // LinkedList<String> theaters;
 
-    public NodeController( int port, String cloudIpAddr, int cloudPort ) {
+    public NodeController( String id, int port, String cloudIpAddr, int cloudPort ) {
         super( port );
+        this.id = id;
 
+        starter = null;
         try {
             cloud = new CommChannel( cloudIpAddr, cloudPort );
         } catch (IOException ioe) {
@@ -26,7 +35,12 @@ public class NodeController extends Controller {
         ConnectionHandler cloudHandler = new ConnectionHandler( cloud, mailbox );
         new Thread( cloudHandler, "Cloud connection" ).start();
 
-        msgFactory = new MessageFactory( "node", cloud );
+        useVm = false;
+        vmSupport = false;
+        vmUser = null;
+        vmImage = null;
+
+        msgFactory = new MessageFactory( id, cloud );
     }
 
     private CommChannel findChannelByAddress( String addr ) {
@@ -38,6 +52,40 @@ public class NodeController extends Controller {
         return null;
     }
 
+
+    public void handleMessage( Message msg ){
+        System.out.println( "[Node] Rcved: " + msg.getMethod() +
+                            " from " + msg.getParam( "type" ) );
+
+        switch(msg.getMethod()) {
+            // case "get_usage":
+            //     handleGetUsage(msg);
+            //     break;
+        case "new_connection":
+            handleNewConnection( msg );
+            break;
+        case "notify_config":
+            handleNotifyConfig( msg );
+            break;
+            // case "create_vm":
+            //     create_vm(msg);
+            //     break;
+            // case "destroy_vm":
+            //     String addr = (String) msg.getParam("target_vm");
+            //     CommChannel target = findChannelByAddress(addr);
+            //     target.write(msg);
+            //     break;
+        case "dropped_connection":
+            droppedConnection(msg);
+        break;
+        default:
+            //If we don't know how to deal with it, pass it up.
+            //cloud.write(msg);
+            break;
+        }
+    }
+
+
     // private void handleGetUsage(Message msg) {
     //     broadcast(msg);
 
@@ -46,16 +94,31 @@ public class NodeController extends Controller {
     //     cloud.write(resp);
     // }
 
-    private void handleNewConnection( Message msg ){
-        children.add( msg.getReply() );
-
-        //We have a new connection. We should let COS know.
-        Message payload = msgFactory.vmCreation( msg.getSender() );
-        cloud.write(payload);
-
+    private void handleNewConnection( Message msg ) {
+        if (this.starter == null) {
+            // if this is the first connection, it must be from EntityStarter
+            this.starter = msg.getReply();
+        }
+        else {
+            children.add( msg.getReply() );
+            //We have a new connection. We should let COS know.
+            Message payload = msgFactory.vmCreation( msg.getSender() );
+            cloud.write(payload);
+        }
         // if(theaters != null)
         //     msg.getReply().write(msgFactory.startTheater(theaters));
     }
+
+
+    private void handleNotifyConfig( Message msg ) {
+        HashMap config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
+        System.out.println( "[Node] config:" + config );
+        useVm = ((Boolean)config.get( "use_vm" )).booleanValue();
+        vmSupport = ((Boolean)config.get( "vm_support" )).booleanValue();
+        vmUser = (String)config.get( "vm_user" );
+        vmImage = (String)config.get( "vm_image" );
+    }
+
 
     private void droppedConnection( Message msg ){
         String addr = (String) msg.getParam( "dropped_connection" );
@@ -76,43 +139,16 @@ public class NodeController extends Controller {
     //     }
     // }
 
-    public void handleMessage( Message msg ){
-        Utility.debugPrint("Node recieved: " + msg.getMethod());
-
-        switch(msg.getMethod())
-        {
-            // case "get_usage":
-            //     handleGetUsage(msg);
-            //     break;
-            case "new_connection":
-                handleNewConnection(msg);
-                break;
-            // case "create_vm":
-            //     create_vm(msg);
-            //     break;
-            // case "destroy_vm":
-            //     String addr = (String) msg.getParam("target_vm");
-            //     CommChannel target = findChannelByAddress(addr);
-            //     target.write(msg);
-            //     break;
-            case "dropped_connection":
-                droppedConnection(msg);
-                break;
-            default:
-                //If we don't know how to deal with it, pass it up.
-                cloud.write(msg);
-                break;
-        }
-    }
 
     public static void main( String [] args ) throws Exception{
-        if (3 != args.length) {
+        if (4 != args.length) {
             System.err.println( "[Node] invalid arguments" );
             System.exit( 1 );
         }
 
+        // arguments: id, listen_port, parent_ipaddr, parent_port
         NodeController runner = new NodeController( 
-            Integer.parseInt( args[0] ), args[1], Integer.parseInt( args[2] ) );
+            args[0], Integer.parseInt( args[1] ), args[2], Integer.parseInt( args[3] ) );
         runner.checkMessages();
     }
 }

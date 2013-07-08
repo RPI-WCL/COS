@@ -9,13 +9,14 @@ import rpiwcl.cos.node.NodeInfo;
 import rpiwcl.cos.util.*;
 
 public class PrivCloudController extends Controller {
+    private String id;
     private CommChannel starter;
     private CommChannel cos;
 
-    public PrivCloudController( int port, String cosIpAddr, int cosPort ) {
+    public PrivCloudController( String id, int port, String cosIpAddr, int cosPort ) {
         super( port );
+        this.id = id;
 
-        msgFactory = null;
         starter = null;
         try {
             cos = new CommChannel( cosIpAddr, cosPort );
@@ -26,7 +27,7 @@ public class PrivCloudController extends Controller {
         ConnectionHandler cosHandler = new ConnectionHandler( cos, mailbox );
         new Thread( cosHandler, "Cos connection" ).start();
 
-        msgFactory = new MessageFactory( "privCloud", cos );
+        msgFactory = new MessageFactory( id, cos );
     }
 
     // // sync calls
@@ -40,7 +41,8 @@ public class PrivCloudController extends Controller {
 
 
     public void handleMessage( Message msg ) {
-        System.out.println( "[PrivCloud] Rcved " + msg.getMethod() + " from " + msg.getParam("type") );
+        System.out.println( "[PrivCloud] Rcved " + msg.getMethod() + 
+                            " from " + msg.getParam( "type" ) );
 
         switch( msg.getMethod() ) {
         case "new_connection":
@@ -54,7 +56,7 @@ public class PrivCloudController extends Controller {
     }
 
 
-    protected void handleNewConnection( Message msg ) {
+    private void handleNewConnection( Message msg ) {
         if (this.starter == null) {
             // if this is the first connection, it must be from EntityStarter
             this.starter = msg.getReply();
@@ -68,7 +70,7 @@ public class PrivCloudController extends Controller {
     }
 
 
-    protected void handleNotifyConfig( Message msg ) {
+    private void handleNotifyConfig( Message msg ) {
         HashMap config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
         System.out.println( "[PrivCloud] config:" + config );
         
@@ -78,20 +80,20 @@ public class PrivCloudController extends Controller {
             String node = (String)nodes.get( i );
             msg = msgFactory.startEntity( node );
 System.out.println( "handleNotifyConfig, node=" + node + ", starter=" + starter );
-            // starter.write( msg );
+            starter.write( msg );
         }
     }
 
 
     public static void main( String[] args ) {
-        if (3 != args.length) {
+        if (4 != args.length) {
             System.err.println( "[PrivCloud] invalid arguments" );
             System.exit( 1 );
         }
         
-        // arguments: listen_port, parent_ipaddr, parent_port
+        // arguments: id, listen_port, parent_ipaddr, parent_port
         PrivCloudController runner = new PrivCloudController( 
-            Integer.parseInt( args[0] ), args[1], Integer.parseInt( args[2] ) );
+            args[0], Integer.parseInt( args[1] ), args[2], Integer.parseInt( args[3] ) );
         runner.checkMessages();
     }
 

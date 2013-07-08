@@ -1,11 +1,12 @@
 package rpiwcl.cos.runtime;
 
+import rpiwcl.cos.util.Utility;
 import rpiwcl.cos.runtime.Terminal;
 
 public class GnomeTerminal implements Terminal {
 
     public void open( String profile, String title, String user, 
-                       String ipAddr, String cmd ) {
+                      String ipAddr, String cmd ) {
         // if (ipAddr.equals( "localhost" ) || ipAddr.equals( "127.0.0.1" ))
         //     openLocal( profile, title, cmd );
         // else if ((ipAddr != null) && (user != null)) {
@@ -17,7 +18,7 @@ public class GnomeTerminal implements Terminal {
     private void openLocal( String profile, String title, String cmd ) {
         String terminalCmd = "gnome-terminal --window-with-profile=\"" + profile + 
             "\" --command=\"" + cmd + "\"";
-        System.out.println( terminalCmd );
+        Utility.debugPrint( terminalCmd );
         runtimeExec( terminalCmd );
     }
 
@@ -26,7 +27,7 @@ public class GnomeTerminal implements Terminal {
         String terminalCmd = "gnome-terminal --window-with-profile=\"" + profile + "\"" +
             " --title=\"" + title + "\"" +
             " --command=\"ssh " + user + "@" + ipAddr + " " + cmd + "\"";
-        System.out.println( terminalCmd );
+        Utility.debugPrint( terminalCmd );
         runtimeExec( terminalCmd );
     }
 

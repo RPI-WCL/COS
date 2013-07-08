@@ -14,7 +14,6 @@ public class EntityStarter extends Controller {
     private ArrayList cpuDb;
     private HashMap<String, CommChannel> channels;
     private Terminal terminal ;
-    private MessageFactory msgFactory;
 
     private static final int MAX_CONNECT_RETRY_NUM = 5;
     private static final int CONNECT_RETRY_INTERVAL = 3000; // [ms]
@@ -42,7 +41,17 @@ public class EntityStarter extends Controller {
         } catch (IllegalAccessException e) {
             throw new RuntimeException( e );
         }
+
     }
+
+    // public void hookShutdown() {
+    //     Runtime.getRuntime().addShutdownHook( new Thread() {
+    //             @Override
+    //             public void run() {
+    //                 System.out.println( "######Shutdown hook ran!" );
+    //             }
+    //         });
+    // }
         
     public void startEntity( String id ) throws IOException {
         HashMap launchSpec = (HashMap)((HashMap)config.get( id )).get( "launch_spec" );
@@ -58,7 +67,7 @@ public class EntityStarter extends Controller {
         String parent = (String)launchSpec.get( "parent" );
         String cmd = null;
         if (parent == null) {
-            cmd = "java -cp " + classpath + " " + mainClass + " " + listenPort;
+            cmd = "java -cp " + classpath + " " + mainClass + " " + id + " " + listenPort;
         }
         else { 
             HashMap parentConf = (HashMap)config.get( parent );
@@ -66,7 +75,7 @@ public class EntityStarter extends Controller {
             String parentIpAddr = (String)parentSpec.get( "ipaddr" );
             Integer parentPort = (Integer)parentSpec.get( "port" );
             cmd = "java -cp " + classpath + " " + mainClass + " " + 
-                listenPort + " " + parentIpAddr + " " + parentPort;
+                id + " " + listenPort + " " + parentIpAddr + " " + parentPort;
         }
 
         String title = "[" + id + "] " + mainClass;
@@ -100,14 +109,15 @@ public class EntityStarter extends Controller {
         System.out.println( "[EntityStarter] Connection established on " + comm );
 
         channels.put( id, comm );
-        this.msgFactory = new MessageFactory( "entityStarter", comm );
+        msgFactory = new MessageFactory( "entity-starter", comm );
         Message msg = msgFactory.notifyConfig( Yaml.dump( runtimeConf ) );
         comm.write( msg );
     }
 
     
     public void handleMessage(Message msg) {
-        System.out.println( "[EntityStarter] Rcved " + msg.getMethod() + " from " + msg.getParam("type") );
+        System.out.println( "[EntityStarter] Rcved " + msg.getMethod() +
+                            " from " + msg.getParam( "type" ) );
 
         switch( msg.getMethod() ) {
         case "start_entity":
@@ -116,7 +126,6 @@ public class EntityStarter extends Controller {
         }
     }
 
-
     protected void handleStartEntity( Message msg ) {
         String id = (String)msg.getParam( "id" );
 
@@ -124,7 +133,7 @@ public class EntityStarter extends Controller {
         try {
             startEntity( id );
         } catch (IOException ioe) {
-            System.err.println( "[EntityStarter] ERROR startEntity failed" );
+            System.err.println( "[EntityStarter] ERROR starting " + id + " failed" );
         }
     }
 
@@ -132,8 +141,8 @@ public class EntityStarter extends Controller {
     public static void main(String[] args) {
         YamlParser yamlParser = new YamlParser();
         
-        String configFile = Constants.CONFIG_FILE;
-        String cpuDbFile = Constants.CPU_DB_FILE;
+        String configFile = Constants.DEFAULT_CONFIG_FILE;
+        String cpuDbFile = Constants.DEFAULT_CPU_DB_FILE;
         if (2 <= args.length) {
             configFile = args[0];
             cpuDbFile = args[1];
@@ -147,9 +156,10 @@ public class EntityStarter extends Controller {
         try {
             runner.startEntity( "cos" );
         } catch (IOException ioe) {
-            System.err.println( "[EntityStarter] ERROR startEntity failed" );
+            System.err.println( "[EntityStarter] ERROR starting cos failed" );
             System.exit( 1 );
         }
+
         runner.checkMessages();
     }
 }

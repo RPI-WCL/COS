@@ -9,12 +9,14 @@ import rpiwcl.cos.node.NodeInfo;
 import rpiwcl.cos.util.*;
 
 public class AmazonEC2Controller extends Controller {
+    private String id;
     private MessageFactory msgFactory = null;
     private CommChannel starter = null;
     private CommChannel cos = null;
 
-    public AmazonEC2Controller( int port, String cosIpAddr, int cosPort ) {
+    public AmazonEC2Controller( String id, int port, String cosIpAddr, int cosPort ) {
         super( port );
+        this.id = id;
         
         try {
             cos = new CommChannel( cosIpAddr, cosPort );
@@ -25,7 +27,7 @@ public class AmazonEC2Controller extends Controller {
         ConnectionHandler cosHandler = new ConnectionHandler( cos, mailbox );
         new Thread( cosHandler, "Cos connection" ).start();
 
-        msgFactory = new MessageFactory( "privCloud", cos );
+        msgFactory = new MessageFactory( id, cos );
     }
 
     // // sync calls
@@ -39,7 +41,8 @@ public class AmazonEC2Controller extends Controller {
 
 
     public void handleMessage( Message msg ) {
-        System.out.println( "[AmazonEC2] Rcved " + msg.getMethod() + " from " + msg.getParam("type") );
+        System.out.println( "[AmazonEC2] Rcved " + msg.getMethod() + 
+                            " from " + msg.getParam( "type" ) );
 
         switch( msg.getMethod() ) {
         case "new_connection":
@@ -74,14 +77,14 @@ public class AmazonEC2Controller extends Controller {
 
 
     public static void main( String[] args ) {
-        if (3 != args.length) {
+        if (4 != args.length) {
             System.err.println( "[AmazonEC2] invalid arguments" );
             System.exit( 1 );
         }
         
-        // arguments: listen_port, parent_ipaddr, parent_port
+        // arguments: id, listen_port, parent_ipaddr, parent_port
         AmazonEC2Controller runner = new AmazonEC2Controller( 
-            Integer.parseInt( args[0] ), args[1], Integer.parseInt( args[2] ) );
+            args[0], Integer.parseInt( args[1] ), args[2], Integer.parseInt( args[3] ) );
         runner.checkMessages();
     }
 
