@@ -12,6 +12,7 @@ public class PrivCloudController extends Controller {
     private String id;
     private CommChannel starter;
     private CommChannel cos;
+    private ArrayList nodes;
 
     public PrivCloudController( String id, int port, String cosIpAddr, int cosPort ) {
         super( port );
@@ -57,16 +58,19 @@ public class PrivCloudController extends Controller {
 
 
     private void handleNewConnection( Message msg ) {
+        System.out.println( "[PrivCloud] handleNewConnection, msg.getSender()=" + msg.getSender() );
+
         if (this.starter == null) {
             // if this is the first connection, it must be from EntityStarter
             this.starter = msg.getReply();
         }
         else {
-            // children.add(msg.getReply());
+            children.add( msg.getReply() );
+            if (children.size() == nodes.size()) {
+                System.out.println( "[PrivCloud] Connected to all nodes, PrivCloud READY" );
+            }
             // nodeTable.put(msg.getSender(), new NodeInfo(msg.getSender(), msg.getReply()));
         }
-
-        System.out.println( "[PrivCloud] handleNewConnection, msg.getSender()=" + msg.getSender() );
     }
 
 
@@ -75,7 +79,7 @@ public class PrivCloudController extends Controller {
         System.out.println( "[PrivCloud] config:" + config );
         
         // immediately start NodeControllers
-        ArrayList nodes = (ArrayList)config.get( "nodes" );
+        nodes = (ArrayList)config.get( "nodes" );
         for (int i = 0; i < nodes.size(); i++) {
             String node = (String)nodes.get( i );
             msg = msgFactory.startEntity( node );

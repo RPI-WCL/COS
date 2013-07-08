@@ -16,6 +16,7 @@ public class CosManager extends Controller {
     private CommChannel starter;
     private String reconfiguration;
     private HashMap<String, CloudInfo> cloudTable;
+    private ArrayList clouds;
 
 
     public CosManager( String id, int port ) {
@@ -25,6 +26,7 @@ public class CosManager extends Controller {
         starter = null;
         reconfiguration = null;
         cloudTable = new HashMap<String, CloudInfo>();
+        clouds = null;
     }
 
     public void handleMessage( Message msg ) {
@@ -53,6 +55,9 @@ public class CosManager extends Controller {
         }
         else {
             children.add( msg.getReply() );
+            if (children.size() == clouds.size()) {
+                System.out.println( "[CosManager] Connected to all clouds, CosManager READY" );
+            }            
             cloudTable.put( msg.getSender(), new CloudInfo( msg.getSender(), msg.getReply() ) );
         }
 
@@ -67,7 +72,7 @@ public class CosManager extends Controller {
         this.reconfiguration = (String)config.get( "reconfiguration" );
         
         // immediately start CloudControllers
-        ArrayList clouds = (ArrayList)config.get( "clouds" );
+        clouds = (ArrayList)config.get( "clouds" );
         for (int i = 0; i < clouds.size(); i++) {
             String cloud = (String)clouds.get( i );
             msg = msgFactory.startEntity( cloud );

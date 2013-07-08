@@ -17,6 +17,9 @@ public class NodeController extends Controller {
     private boolean vmSupport;
     private String vmUser;
     private String vmImage;
+    private ArrayList cpuDb;
+    private String cloudIpAddr;
+    private int cloudPort;
     
     
     // LinkedList<String> theaters;
@@ -24,23 +27,18 @@ public class NodeController extends Controller {
     public NodeController( String id, int port, String cloudIpAddr, int cloudPort ) {
         super( port );
         this.id = id;
+        this.cloudIpAddr = cloudIpAddr;
+        this.cloudPort = cloudPort;
 
         starter = null;
-        try {
-            cloud = new CommChannel( cloudIpAddr, cloudPort );
-        } catch (IOException ioe) {
-            System.err.println( "[Node] ERROR parent CloudController must be running" );
-        }
-
-        ConnectionHandler cloudHandler = new ConnectionHandler( cloud, mailbox );
-        new Thread( cloudHandler, "Cloud connection" ).start();
-
+        cloud = null;
         useVm = false;
         vmSupport = false;
         vmUser = null;
         vmImage = null;
+        cpuDb = null;
 
-        msgFactory = new MessageFactory( id, cloud );
+        msgFactory = new MessageFactory( id );
     }
 
     private CommChannel findChannelByAddress( String addr ) {
@@ -66,6 +64,11 @@ public class NodeController extends Controller {
             break;
         case "notify_config":
             handleNotifyConfig( msg );
+            requestCpuDb();
+            break;
+        case "request_cpu_db_resp":
+            handleRequestCpuDbResp( msg );
+            connectCloud();
             break;
             // case "create_vm":
             //     create_vm(msg);
@@ -125,6 +128,30 @@ public class NodeController extends Controller {
         Message result = msgFactory.vmDestruction( addr );
         cloud.write( result );
         children.remove( msg.getReply() );
+    }
+
+
+    private void requestCpuDb() {
+        Message msg = msgFactory.requestCpuDb();
+        starter.write( msg );
+    }
+
+
+    private void connectCloud() {
+        try {
+            cloud = new CommChannel( cloudIpAddr, cloudPort );
+        } catch (IOException ioe) {
+            System.err.println( "[Node] ERROR parent CloudController must be running" );
+        }
+
+        ConnectionHandler cloudHandler = new ConnectionHandler( cloud, mailbox );
+        new Thread( cloudHandler, "Cloud connection" ).start();
+    }
+
+
+    private void handleRequestCpuDbResp( Message msg ) {
+        cpuDb = (ArrayList)Yaml.load( (String)msg.getParam( "cpu_db" ) );
+        System.out.println( "[Node] cpuDb: " + cpuDb );
     }
 
     // private void create_vm(Message msg){

@@ -123,10 +123,13 @@ public class EntityStarter extends Controller {
         case "start_entity":
             handleStartEntity( msg );
             break;
+        case "request_cpu_db":
+            handleRequestCpuDb( msg );
+            break;
         }
     }
 
-    protected void handleStartEntity( Message msg ) {
+    private void handleStartEntity( Message msg ) {
         String id = (String)msg.getParam( "id" );
 
         System.out.println( "[EntityStarter] handleStartEntity, id=" + id );
@@ -135,6 +138,11 @@ public class EntityStarter extends Controller {
         } catch (IOException ioe) {
             System.err.println( "[EntityStarter] ERROR starting " + id + " failed" );
         }
+    }
+
+    private void handleRequestCpuDb( Message msg ) {
+        Message resp = msgFactory.requestCpuDbResp( Yaml.dump( cpuDb ) );
+        msg.getReply().write( resp );
     }
 
 

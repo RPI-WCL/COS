@@ -41,7 +41,7 @@ cloud-rpiwcl:
         type: private
         nodes:
             - node-nimbus
-#            - node-cirrus
+            - node-cirrus
 node-nimbus:
     launch_spec:
         ipaddr: localhost
@@ -66,6 +66,7 @@ node-cirrus:
         classpath: *cp
         parent: cloud-rpiwcl
     runtime_conf:
+        use_vm: *use-vm
         vm_support: true
         vm_user: ubuntu
         vm_image: *vm-image

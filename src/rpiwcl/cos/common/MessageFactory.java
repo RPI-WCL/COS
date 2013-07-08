@@ -8,8 +8,13 @@ import rpiwcl.cos.util.Utility;
 
 public class MessageFactory
 {
-    String type; //VM, NODE, COS
-    String localhost;
+    private String type; //VM, NODE, COS
+    private String localhost;
+
+    public MessageFactory( String type ) {
+        this.type = type; 
+        this.localhost = null;
+    }
 
     public MessageFactory(String type, CommChannel any){
         this.type = type; 
@@ -25,6 +30,17 @@ public class MessageFactory
     public Message startEntity( String id ) {
         Message payload = init( "start_entity" );
         payload.addParam( "id", id );
+        return payload;
+    }
+
+    public Message requestCpuDb() {
+        Message payload = init( "request_cpu_db" );
+        return payload;
+    }
+
+    public Message requestCpuDbResp( String cpuDb ) {
+        Message payload = init( "request_cpu_db_resp" );
+        payload.addParam( "cpu_db", cpuDb );
         return payload;
     }
 
