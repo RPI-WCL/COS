@@ -1,7 +1,6 @@
-- name: Intel(R) Xeon(R) CPU E31220 @ 3.10GHz
-  cpumark: 6276
-- name: Intel(R) Xeon(R) CPU E5645 @ 2.40GHz
-  cpumark: 6629
-- name: Intel(R) Core(R) CPU i5-2520M @ 2.50GHz
-  cpumark: 3551
+# name : cpuMark
+Intel(R) Xeon(R) CPU E31220 @ 3.10GHz: 6276
+Intel(R) Xeon(R) CPU E5645 @ 2.40GHz: 6629
+Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz: 3551
+
  

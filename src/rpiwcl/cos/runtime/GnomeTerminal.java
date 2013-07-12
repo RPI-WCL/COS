@@ -19,7 +19,7 @@ public class GnomeTerminal implements Terminal {
         String terminalCmd = "gnome-terminal --window-with-profile=\"" + profile + 
             "\" --command=\"" + cmd + "\"";
         Utility.debugPrint( terminalCmd );
-        runtimeExec( terminalCmd );
+        Utility.runtimeExec( terminalCmd );
     }
 
     private void openRemote( String profile, String title, String user, 
@@ -28,16 +28,7 @@ public class GnomeTerminal implements Terminal {
             " --title=\"" + title + "\"" +
             " --command=\"ssh " + user + "@" + ipAddr + " " + cmd + "\"";
         Utility.debugPrint( terminalCmd );
-        runtimeExec( terminalCmd );
+        Utility.runtimeExec( terminalCmd );
     }
-
-    private void runtimeExec( String cmd ) {
-        Process proc;
-        try {
-            proc = Runtime.getRuntime().exec( new String[] {"/bin/bash", "-c", cmd} );
-        } catch (Exception ex) {
-            System.err.println( ex );
-        }
-    }        
 }
     

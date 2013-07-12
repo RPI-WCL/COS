@@ -1,4 +1,4 @@
-package rpiwcl.cos.cosmanager;
+package rpiwcl.cos.manager;
 
 import java.io.IOException;
 import java.util.*;
@@ -11,7 +11,7 @@ import rpiwcl.cos.runtime.Terminal;
 
 public class EntityStarter extends Controller {
     private HashMap config;
-    private ArrayList cpuDb;
+    private HashMap cpuDb;
     private HashMap<String, CommChannel> channels;
     private Terminal terminal ;
 
@@ -19,7 +19,7 @@ public class EntityStarter extends Controller {
     private static final int CONNECT_RETRY_INTERVAL = 3000; // [ms]
 
 
-    public EntityStarter( int port, HashMap config, ArrayList cpuDb ) {
+    public EntityStarter( int port, HashMap config, HashMap cpuDb ) {
         super( port );
 
         this.config = config;
@@ -109,7 +109,12 @@ public class EntityStarter extends Controller {
         System.out.println( "[EntityStarter] Connection established on " + comm );
 
         channels.put( id, comm );
+
+        // send runtime configurations
         msgFactory = new MessageFactory( "entity-starter", comm );
+        HashMap common = (HashMap)config.get( "common" );
+        runtimeConf.put( "common", common );
+        runtimeConf.put( "cpu_db", cpuDb );
         Message msg = msgFactory.notifyConfig( Yaml.dump( runtimeConf ) );
         comm.write( msg );
     }
@@ -122,9 +127,6 @@ public class EntityStarter extends Controller {
         switch( msg.getMethod() ) {
         case "start_entity":
             handleStartEntity( msg );
-            break;
-        case "request_cpu_db":
-            handleRequestCpuDb( msg );
             break;
         }
     }
@@ -140,11 +142,6 @@ public class EntityStarter extends Controller {
         }
     }
 
-    private void handleRequestCpuDb( Message msg ) {
-        Message resp = msgFactory.requestCpuDbResp( Yaml.dump( cpuDb ) );
-        msg.getReply().write( resp );
-    }
-
 
     public static void main(String[] args) {
         YamlParser yamlParser = new YamlParser();
@@ -157,8 +154,8 @@ public class EntityStarter extends Controller {
         }
 
         HashMap config = (HashMap)yamlParser.parse( configFile );
-        ArrayList cpuDb = (ArrayList)yamlParser.parse( cpuDbFile );
-        Integer port = (Integer)config.get( "launcher_port" );
+        HashMap cpuDb = (HashMap)yamlParser.parse( cpuDbFile );
+        Integer port = (Integer)config.get( "starter_port" );
 
         EntityStarter runner = new EntityStarter( port, config, cpuDb );
         try {

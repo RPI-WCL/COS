@@ -1,14 +1,14 @@
 common:
     runtime: rpiwcl.cos.runtime.SalsaRuntime
     terminal: rpiwcl.cos.runtime.GnomeTerminal
-    cpumark_per_runtime: 2000
+    cpumark_per_runtime: 3000
     base_runtime_port: 4040
     classpath: &cp /home/shigeru/Git/COS/cos-0.3.jar:/home/shigeru/Git/COS/lib/jyaml-1.3.jar
     vm_image: &vm-image /home/xen/domains/ubuntu/ubuntu.img
-    vm_cost_per_hour: &vm-cost-per-hour 0.48USD
+    vm_cost_per_hour: 0.48USD
     use_vm: &use-vm false
 
-launcher_port: 49152
+starter_port: 49152
 
 cos:
     launch_spec:
@@ -16,13 +16,11 @@ cos:
         port: 49153
         user: shigeru
         terminal_profile: Blue
-        main_class: rpiwcl.cos.cosmanager.CosManager
+        main_class: rpiwcl.cos.manager.CosManager
         classpath: *cp
     runtime_conf:
         policy: deadline-30min
-        # policy: budget-10USD
         reconfiguration: cos
-        #reconfiguration: ios
         clouds:
             - cloud-rpiwcl
             - cloud-aws
@@ -83,7 +81,6 @@ cloud-aws:
         parent: cos
     runtime_conf:
         type: public
-        vm_cost_per_hour: *vm-cost-per-hour
         vm_instance_ids: 
             - i-da6431b2
             - i-e1cd058c

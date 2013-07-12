@@ -13,12 +13,17 @@ import rpiwcl.cos.util.CommChannel;
 
 
 public abstract class Controller {
+    protected static final int STATE_NULL = 0;
+    protected static final int STATE_INITIALIZING = 1;
+    protected static final int STATE_READY = 2;
+
     private ServerSocket listener;
 
     protected LinkedList<CommChannel> children;
     protected LinkedBlockingQueue<Message> mailbox;
     protected MessageFactory msgFactory;
     protected String id;
+    protected int state;
 
     abstract public void handleMessage(Message msg);
 
@@ -26,6 +31,7 @@ public abstract class Controller {
         this.mailbox = new LinkedBlockingQueue<Message>();
         this.children = new LinkedList<CommChannel>();
         this.id = null;
+        this.state = STATE_NULL;
         ConnectionListener listenLoop = new ConnectionListener(port, mailbox);
         new Thread(listenLoop, "Socket Listener").start();
     }

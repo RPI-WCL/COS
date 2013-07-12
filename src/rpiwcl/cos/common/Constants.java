@@ -2,8 +2,6 @@ package rpiwcl.cos.common;
 
 public class Constants
 {
-    public final static boolean DEBUG = false;
-
     // Yaml files
     public final static String DEFAULT_CONFIG_FILE = "yaml/config.yaml";
     public final static String DEFAULT_CPU_DB_FILE = "yaml/cpuDb.yaml";    

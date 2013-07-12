@@ -23,7 +23,7 @@
 
   <target name="compile">
 	<mkdir dir="${build.dest}" />
-	<javac includeantruntime="false" srcdir="${build.src}" destdir="${build.dest}">
+	<javac includeantruntime="false" srcdir="${build.src}" destdir="${build.dest}" debug="true">
 		<classpath refid="classpath" />
 	</javac>
   </target>

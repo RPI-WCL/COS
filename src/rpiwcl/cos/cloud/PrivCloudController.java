@@ -9,82 +9,99 @@ import rpiwcl.cos.node.NodeInfo;
 import rpiwcl.cos.util.*;
 
 public class PrivCloudController extends Controller {
-    private String id;
     private CommChannel starter;
     private CommChannel cos;
     private ArrayList nodes;
+    private HashMap config;
+    private HashMap<String, NodeInfo> nodeTable;
+    private int runtimeCapacity;
+
 
     public PrivCloudController( String id, int port, String cosIpAddr, int cosPort ) {
         super( port );
         this.id = id;
-
+        this.state = STATE_INITIALIZING;
         starter = null;
+        config = null;
+        nodeTable = new HashMap<String, NodeInfo>();
+        runtimeCapacity = 0;
+
+        // connecting to CosManager
         try {
             cos = new CommChannel( cosIpAddr, cosPort );
         } catch (IOException ioe) {
-            System.err.println( "[PrivCloud] ERROR CosManager must be running" );
+            System.err.println( "[PrivCloud] this should not happen, CosManager must be running" );
         }
-
         ConnectionHandler cosHandler = new ConnectionHandler( cos, mailbox );
         new Thread( cosHandler, "Cos connection" ).start();
 
         msgFactory = new MessageFactory( id, cos );
     }
 
-    // // sync calls
-    // public int getMaxRuntimesNum();
-    // public int getCurrentRuntimesNum();
-    // public List<RuntimeInfo> getRuntimesInfo();
-
-    // // async calls
-    // public void createRuntimes(NodeInfo node, int numRuntimes);
-    // public void createRuntimesResp(NodeInfo node, ArrayList<RuntimeInfo> runtimes);
-
 
     public void handleMessage( Message msg ) {
         System.out.println( "[PrivCloud] Rcved " + msg.getMethod() + 
-                            " from " + msg.getParam( "type" ) );
+                            " from " + msg.getParam( "id" ) );
 
         switch( msg.getMethod() ) {
         case "new_connection":
             handleNewConnection( msg );
             break;
-            
         case "notify_config":
             handleNotifyConfig( msg );
+            break;
+        case "notify_ready":
+            handleNotifyReady( msg );
             break;
         }
     }
 
 
-    private void handleNewConnection( Message msg ) {
-        System.out.println( "[PrivCloud] handleNewConnection, msg.getSender()=" + msg.getSender() );
 
+   private void handleNewConnection( Message msg ) {
         if (this.starter == null) {
             // if this is the first connection, it must be from EntityStarter
             this.starter = msg.getReply();
         }
         else {
+            // otherwise, it is from NodeController
             children.add( msg.getReply() );
-            if (children.size() == nodes.size()) {
-                System.out.println( "[PrivCloud] Connected to all nodes, PrivCloud READY" );
-            }
-            // nodeTable.put(msg.getSender(), new NodeInfo(msg.getSender(), msg.getReply()));
+            nodeTable.put(msg.getSender(), new NodeInfo(msg.getSender(), msg.getReply()));
         }
     }
 
 
     private void handleNotifyConfig( Message msg ) {
-        HashMap config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
-        System.out.println( "[PrivCloud] config:" + config );
+        config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
+        // System.out.println( "[PrivCloud] config:" + config );
         
-        // immediately start NodeControllers
+        // start NodeControllers
         nodes = (ArrayList)config.get( "nodes" );
         for (int i = 0; i < nodes.size(); i++) {
             String node = (String)nodes.get( i );
             msg = msgFactory.startEntity( node );
-System.out.println( "handleNotifyConfig, node=" + node + ", starter=" + starter );
             starter.write( msg );
+        }
+    }
+
+
+    private int readyReceived = 0;
+    private void handleNotifyReady( Message msg ) {
+        readyReceived++;
+
+        int runtimeCap = ((Integer)msg.getParam( "runtime_cap" )).intValue();
+        nodeTable.get( msg.getSender() ).setRuntimeCapacity( runtimeCap );
+        runtimeCapacity += runtimeCap;
+
+        if ((state == STATE_INITIALIZING) && (nodes.size() == readyReceived)) {
+            Message ready = msgFactory.notifyReady( new Integer( runtimeCapacity ) );
+            cos.write( ready );
+            state = STATE_READY;
+            System.out.println( "[PrivCloud] READY received from all nodes, notify CosManager" );
+        }
+        else if (state == STATE_READY) {
+            //TODO: new resource is added, notify CosManager the new runtimeCapacity
+            System.out.println( "[PrivCloud] TODO: new resource is added" );
         }
     }
 

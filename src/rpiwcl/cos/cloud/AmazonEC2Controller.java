@@ -7,26 +7,36 @@ import rpiwcl.cos.common.*;
 import rpiwcl.cos.cloud.CloudController;
 import rpiwcl.cos.node.NodeInfo;
 import rpiwcl.cos.util.*;
+import rpiwcl.cos.vm.*;
 
 public class AmazonEC2Controller extends Controller {
-    private String id;
     private CommChannel starter;
     private CommChannel cos;
-    private ArrayList cpuDb;
-    private String cosIpAddr;
-    private int cosPort;
+    private HashMap config;
+    private HashMap cpuDb;
+    private HashMap<String, VmInfo> vmTable;
+    private int runtimeCapacity;
+
 
     public AmazonEC2Controller( String id, int port, String cosIpAddr, int cosPort ) {
         super( port );
         this.id = id;
-        this.cosIpAddr = cosIpAddr;
-        this.cosPort = cosPort;
-        
+        this.state = STATE_INITIALIZING;
         starter = null;
-        cos = null;
+        config = null;
         cpuDb = null;
+        vmTable = new HashMap<String, VmInfo>();
 
-        msgFactory = new MessageFactory( id );
+
+        try {
+            cos = new CommChannel( cosIpAddr, cosPort );
+        } catch (IOException ioe) {
+            System.err.println( "[AmazonEC2] this should not happen, CosManager must be running" );
+        }
+        ConnectionHandler cosHandler = new ConnectionHandler( cos, mailbox );
+        new Thread( cosHandler, "Cos connection" ).start();
+
+        msgFactory = new MessageFactory( id, cos );
     }
 
     // // sync calls
@@ -49,11 +59,7 @@ public class AmazonEC2Controller extends Controller {
             break;
         case "notify_config":
             handleNotifyConfig( msg );
-            requestCpuDb();
-            break;
-        case "request_cpu_db_resp":
-            handleRequestCpuDbResp( msg );
-            connectCos();
+            notifyReady();
             break;
         }
     }
@@ -67,41 +73,25 @@ public class AmazonEC2Controller extends Controller {
             this.starter = msg.getReply();
         }
         else {
-            // children.add(msg.getReply());
-            // nodeTable.put(msg.getSender(), new NodeInfo(msg.getSender(), msg.getReply()));
+            children.add(msg.getReply());
+            vmTable.put(msg.getSender(), new VmInfo(msg.getSender(), msg.getReply()));
         }
     }
 
 
     protected void handleNotifyConfig( Message msg ) {
-        HashMap config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
-        System.out.println( "[AmazonEC2] config:" + config );
+        config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
+        Utility.debugPrint( "[AmazonEC2] config:" + config );
+        cpuDb = (HashMap)config.get( "cpu_db" );
     }
 
 
-    private void requestCpuDb() {
-        System.out.println( "[AmazonEC2] requesting CpuDB" );
-        Message msg = msgFactory.requestCpuDb();
-        starter.write( msg );
-    }
-
-
-    private void connectCos() {
-        try {
-            cos = new CommChannel( cosIpAddr, cosPort );
-        } catch (IOException ioe) {
-            System.err.println( "[AmazonEC2] this should not happen, CosManager must be running" );
-        }
-
-        ConnectionHandler cosHandler = new ConnectionHandler( cos, mailbox );
-        new Thread( cosHandler, "Cos connection" ).start();
-    }
-
-
-    private void handleRequestCpuDbResp( Message msg ) {
-        cpuDb = (ArrayList)Yaml.load( (String)msg.getParam( "cpu_db" ) );
-        System.out.println( "[AmazonEC2] cpuDb: " + cpuDb );
-        System.out.println( "[AmazonEC2] AmazonEC2 READY" );
+    private void notifyReady() {
+        HashMap common = (HashMap)config.get( "common" );
+        Message msg = msgFactory.notifyReady( 0 );
+        cos.write( msg );
+        System.err.println( "[AmazonEC2] AmazonEC2Controller READY" );
+        state = STATE_READY;
     }
 
 

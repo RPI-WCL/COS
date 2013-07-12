@@ -11,9 +11,13 @@ import rpiwcl.cos.util.CommChannel;
 // 
 public abstract class MachInfo
 {
-    String ipAddress;
-    CommChannel contact;
-    double cpuUsage;
+    private String ipAddress;
+    private CommChannel contact;
+    private double cpuUsage;
+
+    private String cpu;
+    private int cpuMark;        // acquired from CpuDb
+    private int runtimeCapacity;
 
 
     public MachInfo(String address, CommChannel contact){
@@ -29,22 +33,45 @@ public abstract class MachInfo
         return contact;
     }
 
-    public void updateCpu(double load){
+    public void updateCpuUsage(double load){
        cpuUsage = load; 
     }
 
-    public double getCpu(){
+    public double getCpuUsage(){
         return cpuUsage;
     }
 
-    public static MachInfo findMinCpu(Collection<? extends MachInfo> machines){
+    public static MachInfo findMinCpuUsage(Collection<? extends MachInfo> machines){
 
         return Collections.min(machines, new Comparator<MachInfo>() {
             public int compare(MachInfo a, MachInfo b) {
-                Double first = a.getCpu();
-                return first.compareTo(b.getCpu());
+                Double first = a.getCpuUsage();
+                return first.compareTo(b.getCpuUsage());
             }
         });
     }
 
+    public String getCpu() {
+        return cpu;
+    }
+
+    public void setCpu( String cpu ) {
+        this.cpu = cpu;
+    }
+
+    public int getCpuMark() {
+        return cpuMark;
+    }
+
+    public void setCpuMark( int cpuMark ) {
+        this.cpuMark = cpuMark;
+    }
+
+    public int getRuntimeCapacity() {
+        return runtimeCapacity;
+    }
+
+    public void setRuntimeCapacity( int runtimeCapacity ) {
+        this.runtimeCapacity = runtimeCapacity;
+    }
 }

@@ -1,33 +1,38 @@
 package rpiwcl.cos.cloud;
 
+import java.util.*;
 import rpiwcl.cos.common.MachInfo;
 import rpiwcl.cos.common.Message;
 import rpiwcl.cos.util.CommChannel;
 
 public class CloudInfo extends MachInfo {
 
-    int vm_count;
+    private HashMap<String, MachInfo> machTable;    // VM or node
+    private LinkedList<String> runtimes;
 
     public CloudInfo(String address, CommChannel contact) {
         super(address, contact);
-        vm_count = 0;
+        machTable = null;
+        runtimes = null;
     }
 
-    // @Override
-    // public void updateUsage(Message msg) {
-    //     //TODO: Clouds usage contains stats for all their Nodes. Must use a list of something.
+    // public void appendMachTable( HashMap<String, MachInfo> machTable ) {
     // }
 
-    public void addVm(){
-        vm_count += 1;
-    }
+    // public void setNumRuntimesInUse( int numRuntimesInUse ) {
+    //     this.numRuntimesInUse = numRuntimesInUse;
+    // }
+    
+    // public int getNumRuntimesInUse() {
+    //     return numRuntimesInUse;
+    // }
 
-    public int vmCount() {
-        return vm_count;
-    }
+    // public void setNumRuntimesLimit( int numRuntimesLimit ) {
+    //     this.numRuntimesLimit = numRuntimesLimit;
+    // }
 
-    public void removeVm() {
-        vm_count -= 1;
-    }
+    // public int getNumRuntimesLimit() {
+    //     return numRuntimesLimit;
+    // }
 
 }

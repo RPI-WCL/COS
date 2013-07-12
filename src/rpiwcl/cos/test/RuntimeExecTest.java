@@ -1,10 +1,12 @@
 package rpiwcl.cos.tests;
 
 import java.util.*;
+import java.util.regex.*;
+import java.io.InputStream;
+import rpiwcl.cos.util.Utility;
 
 public class RuntimeExecTest {
-    public static void main(String[] args) {
-        // String launchTerminal = "gnome-terminal --window-with-profile=\"Blue\" --command=\"ssh imais@nimbus.cs.rpi.edu java -cp ~/Git/COS_master/softwareEnvironment/salsa/salsa1.1.5.jar wwc.messaging.Theater\"";
+    void testLaunchTerminal() {
         String launchTerminal = "gnome-terminal --window-with-profile=\"Blue\" --command=\"ssh imais@localhost java -cp ~/Git/COS/classes rpiwcl.cos.cosmanager.CosManager 49153\"";
         System.out.println( launchTerminal );
 
@@ -14,5 +16,18 @@ public class RuntimeExecTest {
         } catch (Exception ex) {
             System.err.println( ex );
         }
+    }        
+
+    void testGetOutput() {
+        String str = Utility.runtimeExecWithStdout( "cat /proc/cpuinfo | grep 'model name' | cut -c14- " );
+        Pattern pt = Pattern.compile( "\n\\Z" );
+        Matcher match = pt.matcher( str );
+        System.out.println( match.replaceAll( "" ) );
+    }        
+
+    public static void main(String[] args) {
+        RuntimeExecTest runtime = new RuntimeExecTest();
+        // runtime.testLaunchTerminal();
+        runtime.testGetOutput();
     }
 }

@@ -2,44 +2,72 @@ package rpiwcl.cos.node;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 import java.net.Socket;
 import java.lang.Thread;
 import org.ho.yaml.Yaml;
 import rpiwcl.cos.common.*;
 import rpiwcl.cos.util.*;
+import rpiwcl.cos.vm.*;
 
 
 public class NodeController extends Controller {
     private String id;
     private CommChannel starter;
     private CommChannel cloud;
+
+    private HashMap config;
+    private HashMap cpuDb;
     private boolean useVm;
     private boolean vmSupport;
     private String vmUser;
     private String vmImage;
-    private ArrayList cpuDb;
-    private String cloudIpAddr;
-    private int cloudPort;
-    
-    
-    // LinkedList<String> theaters;
+
+    private HashMap<String, VmInfo> vmTable;
+    // private HashMap<String, ArrayList<String>> rtTable;    // <hostIpAddr, runtimeIds>
+    private String cpu;
+    private int runtimeCapacity;
+
 
     public NodeController( String id, int port, String cloudIpAddr, int cloudPort ) {
         super( port );
         this.id = id;
-        this.cloudIpAddr = cloudIpAddr;
-        this.cloudPort = cloudPort;
-
+        this.state = STATE_INITIALIZING;
         starter = null;
         cloud = null;
+
+        // extracted from config
+        config = null;
+        cpuDb = null;
         useVm = false;
         vmSupport = false;
         vmUser = null;
         vmImage = null;
-        cpuDb = null;
 
-        msgFactory = new MessageFactory( id );
+        vmTable = new HashMap<String, VmInfo>();
+        // rtTable = new <String, ArrayList<String>>();
+        runtimeCapacity = 0;
+
+        // connecting to CloudController
+        try {
+            cloud = new CommChannel( cloudIpAddr, cloudPort );
+        } catch (IOException ioe) {
+            System.err.println( "[Node] ERROR parent CloudController must be running" );
+        }
+        ConnectionHandler cloudHandler = new ConnectionHandler( cloud, mailbox );
+        new Thread( cloudHandler, "Cloud connection" ).start();
+
+        msgFactory = new MessageFactory( id, cloud );
+
+        // cpuinfo
+        String str = Utility.runtimeExecWithStdout(
+            "cat /proc/cpuinfo | grep 'model name' | cut -c14- | uniq" );
+        Pattern pt = Pattern.compile( "\n\\Z" );
+        Matcher match = pt.matcher( str );
+        cpu = match.replaceAll( "" );
+        System.out.println( "[Node] " + cpu + " found" );
     }
+
 
     private CommChannel findChannelByAddress( String addr ) {
         for (CommChannel s : children) {
@@ -59,16 +87,12 @@ public class NodeController extends Controller {
             // case "get_usage":
             //     handleGetUsage(msg);
             //     break;
-        case "new_connection":
+        case "new_connection":  // from EntityStarter/VmController
             handleNewConnection( msg );
             break;
-        case "notify_config":
+        case "notify_config":   // from EntityStarter
             handleNotifyConfig( msg );
-            requestCpuDb();
-            break;
-        case "request_cpu_db_resp":
-            handleRequestCpuDbResp( msg );
-            connectCloud();
+            notifyReady();
             break;
             // case "create_vm":
             //     create_vm(msg);
@@ -114,12 +138,14 @@ public class NodeController extends Controller {
 
 
     private void handleNotifyConfig( Message msg ) {
-        HashMap config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
-        System.out.println( "[Node] config:" + config );
+        config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
+        Utility.debugPrint( "[Node] config:" + config );
+
         useVm = ((Boolean)config.get( "use_vm" )).booleanValue();
         vmSupport = ((Boolean)config.get( "vm_support" )).booleanValue();
         vmUser = (String)config.get( "vm_user" );
         vmImage = (String)config.get( "vm_image" );
+        cpuDb = (HashMap)config.get( "cpu_db" );
     }
 
 
@@ -131,28 +157,23 @@ public class NodeController extends Controller {
     }
 
 
-    private void requestCpuDb() {
-        Message msg = msgFactory.requestCpuDb();
-        starter.write( msg );
+    private void notifyReady() {
+        Integer cpumark = (Integer)cpuDb.get( cpu );
+        HashMap common = (HashMap)config.get( "common" );
+        Integer cpumarkPerRuntime = (Integer)common.get( "cpumark_per_runtime" );
+        runtimeCapacity = cpumark / cpumarkPerRuntime;
+
+        System.out.println( "[Node] cpuMark=" + cpumark +
+                            ", cpumarkPerRuntime=" + cpumarkPerRuntime +
+                            ", runtimeCapacity=" + runtimeCapacity );
+        
+        Message msg = msgFactory.notifyReady( new Integer( runtimeCapacity ) );
+        cloud.write( msg );
+
+        state = STATE_READY;
+        System.err.println( "[Node] NodeController READY" );
     }
 
-
-    private void connectCloud() {
-        try {
-            cloud = new CommChannel( cloudIpAddr, cloudPort );
-        } catch (IOException ioe) {
-            System.err.println( "[Node] ERROR parent CloudController must be running" );
-        }
-
-        ConnectionHandler cloudHandler = new ConnectionHandler( cloud, mailbox );
-        new Thread( cloudHandler, "Cloud connection" ).start();
-    }
-
-
-    private void handleRequestCpuDbResp( Message msg ) {
-        cpuDb = (ArrayList)Yaml.load( (String)msg.getParam( "cpu_db" ) );
-        System.out.println( "[Node] cpuDb: " + cpuDb );
-    }
 
     // private void create_vm(Message msg){
     //     //TODO: Should fix this warning eventually,

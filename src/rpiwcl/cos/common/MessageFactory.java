@@ -8,16 +8,16 @@ import rpiwcl.cos.util.Utility;
 
 public class MessageFactory
 {
-    private String type; //VM, NODE, COS
+    private String id; //VM, NODE, COS
     private String localhost;
 
-    public MessageFactory( String type ) {
-        this.type = type; 
+    public MessageFactory( String id ) {
+        this.id = id; 
         this.localhost = null;
     }
 
-    public MessageFactory(String type, CommChannel any){
-        this.type = type; 
+    public MessageFactory(String id, CommChannel any){
+        this.id = id; 
         this.localhost = any.getLocalAddr();
     }
 
@@ -32,15 +32,10 @@ public class MessageFactory
         payload.addParam( "id", id );
         return payload;
     }
-
-    public Message requestCpuDb() {
-        Message payload = init( "request_cpu_db" );
-        return payload;
-    }
-
-    public Message requestCpuDbResp( String cpuDb ) {
-        Message payload = init( "request_cpu_db_resp" );
-        payload.addParam( "cpu_db", cpuDb );
+    
+    public Message notifyReady( Integer runtimeCapacity ) {
+        Message payload = init( "notify_ready" );
+        payload.addParam( "runtime_cap", runtimeCapacity );
         return payload;
     }
 
@@ -116,7 +111,7 @@ public class MessageFactory
 
     private Message init(String method){
         Message payload = new Message( method, localhost);
-        payload.addParam("type", type);
+        payload.addParam("id", id);
         return payload;
     }
 

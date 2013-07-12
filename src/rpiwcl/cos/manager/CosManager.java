@@ -1,4 +1,4 @@
-package rpiwcl.cos.cosmanager;
+package rpiwcl.cos.manager;
 
 import java.util.*;
 import org.ho.yaml.Yaml;
@@ -22,6 +22,7 @@ public class CosManager extends Controller {
     public CosManager( String id, int port ) {
         super( port );
         this.id = id;
+        this.state = STATE_INITIALIZING;
         msgFactory = null;
         starter = null;
         reconfiguration = null;
@@ -31,7 +32,7 @@ public class CosManager extends Controller {
 
     public void handleMessage( Message msg ) {
         System.out.println( "[CosManager] Rcved " + msg.getMethod() +
-                            " from " + msg.getParam( "type" ) );
+                            " from " + msg.getParam( "id" ) );
 
         switch( msg.getMethod() ) {
         case "new_connection":
@@ -41,10 +42,13 @@ public class CosManager extends Controller {
         case "notify_config":
             handleNotifyConfig( msg );
             break;
+
+        case "notify_ready":
+            handleNotifyReady( msg );
         }
     }
 
-    protected void handleNewConnection( Message msg ) {
+    private void handleNewConnection( Message msg ) {
         if (this.msgFactory == null) {
             this.msgFactory = new MessageFactory( id, msg.getReply() );
         }
@@ -55,18 +59,13 @@ public class CosManager extends Controller {
         }
         else {
             children.add( msg.getReply() );
-            if (children.size() == clouds.size()) {
-                System.out.println( "[CosManager] Connected to all clouds, CosManager READY" );
-            }            
             cloudTable.put( msg.getSender(), new CloudInfo( msg.getSender(), msg.getReply() ) );
         }
-
-        System.out.println( "[CosManager] handleNewConnection, msg.getSender()=" + msg.getSender() );
     }
 
-    protected void handleNotifyConfig( Message msg ) {
+    private void handleNotifyConfig( Message msg ) {
         HashMap config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
-        System.out.println( "[CosManager] config:" + config );
+        Utility.debugPrint( "[CosManager] config:" + config );
         
         // this.scheduler = new PolicyScheduler( (String)config.get( "policy" ) );
         this.reconfiguration = (String)config.get( "reconfiguration" );
@@ -76,10 +75,27 @@ public class CosManager extends Controller {
         for (int i = 0; i < clouds.size(); i++) {
             String cloud = (String)clouds.get( i );
             msg = msgFactory.startEntity( cloud );
-System.out.println( "handleNotifyConfig, cloud=" + cloud + ", starter=" + starter );
             starter.write( msg );
         }
     }
+
+    private int readyReceived = 0;
+    private void handleNotifyReady( Message msg ) {
+        readyReceived++;
+
+        int runtimeCap = ((Integer)msg.getParam( "runtime_cap" )).intValue();
+        cloudTable.get( msg.getSender() ).setRuntimeCapacity( runtimeCap );
+
+        if ((state == STATE_INITIALIZING) && (clouds.size() == readyReceived)) {
+            state = STATE_READY;
+            System.out.println( "[CosManager] READY received from all clouds, runtimeCap=" + runtimeCap );
+        }
+        else if (state == STATE_READY) {
+            //TODO: new resource is added, notify CosManager the new runtimeCapacity
+            System.out.println( "[CosManager] TODO: new resource is added" );
+        }
+    }
+
 
     public static void main(String[] args) {
         if (2 != args.length) {
