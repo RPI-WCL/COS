@@ -13,11 +13,11 @@ public abstract class MachInfo
 {
     private String ipAddress;
     private CommChannel contact;
-    private double cpuUsage;
+    protected double cpuUsage;
 
-    private String cpu;
-    private int cpuMark;        // acquired from CpuDb
-    private int runtimeCapacity;
+    protected String cpu;
+    protected int cpuMark;        // acquired from CpuDb
+    protected int numRuntimesLimit;
 
 
     public MachInfo(String address, CommChannel contact){
@@ -67,11 +67,11 @@ public abstract class MachInfo
         this.cpuMark = cpuMark;
     }
 
-    public int getRuntimeCapacity() {
-        return runtimeCapacity;
+    public int getNumRuntimesLimit() {
+        return numRuntimesLimit;
     }
 
-    public void setRuntimeCapacity( int runtimeCapacity ) {
-        this.runtimeCapacity = runtimeCapacity;
+    public void setNumRuntimesLimit( int numRuntimesLimit ) {
+        this.numRuntimesLimit = numRuntimesLimit;
     }
 }

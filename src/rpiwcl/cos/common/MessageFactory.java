@@ -5,6 +5,7 @@ import java.util.*;
 import rpiwcl.cos.common.Constants;
 import rpiwcl.cos.util.CommChannel;
 import rpiwcl.cos.util.Utility;
+import rpiwcl.cos.runtime.RuntimeInfo;
 
 public class MessageFactory
 {
@@ -33,14 +34,46 @@ public class MessageFactory
         return payload;
     }
     
-    public Message notifyReady( Integer runtimeCapacity ) {
+    public Message notifyReady( Integer numRuntimesLimit, String type ) {
         Message payload = init( "notify_ready" );
-        payload.addParam( "runtime_cap", runtimeCapacity );
+        payload.addParam( "num_runtimes_limit", numRuntimesLimit );
+        payload.addParam( "type", type );
         return payload;
     }
 
     public Message shutdown() {
         Message payload = init( "shutdown" );
+        return payload;
+    }
+
+    public Message createRuntimes( Integer numRuntimes ) {
+        Message payload = init( "create_runtimes" );
+        payload.addParam( "num_runtimes", numRuntimes );
+        return payload;
+    }
+
+    public Message createRuntimesResp( HashSet<String> runtimeIds ) {
+        Message payload = init( "create_runtimes_resp" );
+        payload.addParam( "runtime_ids", runtimeIds );
+        return payload;
+    }
+
+    public Message createRuntimesResp( HashMap<String, String> runtimeTable ) {
+        Message payload = init( "create_runtimes_resp" );
+        payload.addParam( "runtime_table", runtimeTable );
+        return payload;
+    }
+
+    public Message startRuntime( RuntimeInfo runtime ) {
+        Message payload = init( "start_runtime" );
+        payload.addParam( "runtime", runtime );
+        return payload;
+    }
+
+    public Message startRuntimeResp( String runtimeId, String result ) {
+        Message payload = init( "start_runtime_resp" );
+        payload.addParam( "runtime_id", runtimeId );
+        payload.addParam( "result", result );
         return payload;
     }
 

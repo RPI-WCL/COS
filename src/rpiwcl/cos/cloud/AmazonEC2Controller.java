@@ -15,7 +15,7 @@ public class AmazonEC2Controller extends Controller {
     private HashMap config;
     private HashMap cpuDb;
     private HashMap<String, VmInfo> vmTable;
-    private int runtimeCapacity;
+    private int numRuntimesLimit;
 
 
     public AmazonEC2Controller( String id, int port, String cosIpAddr, int cosPort ) {
@@ -88,7 +88,7 @@ public class AmazonEC2Controller extends Controller {
 
     private void notifyReady() {
         HashMap common = (HashMap)config.get( "common" );
-        Message msg = msgFactory.notifyReady( 0 );
+        Message msg = msgFactory.notifyReady( 0, "public-cloud" );
         cos.write( msg );
         System.err.println( "[AmazonEC2] AmazonEC2Controller READY" );
         state = STATE_READY;

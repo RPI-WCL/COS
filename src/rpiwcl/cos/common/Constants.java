@@ -4,7 +4,10 @@ public class Constants
 {
     // Yaml files
     public final static String DEFAULT_CONFIG_FILE = "yaml/config.yaml";
-    public final static String DEFAULT_CPU_DB_FILE = "yaml/cpuDb.yaml";    
+    public final static String DEFAULT_CPU_DB_FILE = "yaml/cpuDb.yaml"; 
+
+    //COS options
+    public final static int INITIAL_RUNTIME_NUM = 4;
 
     //Stastics
     public final static double HIGH_CPU = .75;
@@ -15,8 +18,7 @@ public class Constants
     public final static int MIN_VMS = 1;
     public final static int MAX_VMS = 1 << 1;
 
-    //COS options
-    public final static int COS_PORT = 9999;
+
 
     //Node Options
     public final static int NODE_PORT = 9998;

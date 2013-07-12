@@ -6,7 +6,7 @@ import org.ho.yaml.Yaml;
 import rpiwcl.cos.cloud.*;
 import rpiwcl.cos.common.*;
 import rpiwcl.cos.util.*;
-import rpiwcl.cos.runtime.Terminal;
+import rpiwcl.cos.runtime.*;
 
 
 public class EntityStarter extends Controller {
@@ -90,7 +90,8 @@ public class EntityStarter extends Controller {
                 comm = new CommChannel( ipAddr, listenPort );
                 result = true;
             } catch (IOException ioe) {
-                System.err.println( "[EntityStarter] " + ipAddr + ":" + listenPort + " not ready yet, retry=" + retry++ );
+                System.err.println( "[EntityStarter] " + ipAddr + ":" + 
+                                    listenPort + " not ready yet, retry=" + ++retry );
             }
             if (!result) {
                 try {
@@ -103,10 +104,11 @@ public class EntityStarter extends Controller {
         if (!result)
             throw new IOException();
 
+        System.out.println( "[EntityStarter] " + ipAddr + ":" + 
+                            listenPort + " successfully connected" );
+
         ConnectionHandler starterHandler = new ConnectionHandler( comm, mailbox );
         new Thread( starterHandler, "Entity connection" ).start();
-
-        System.out.println( "[EntityStarter] Connection established on " + comm );
 
         channels.put( id, comm );
 
@@ -122,11 +124,14 @@ public class EntityStarter extends Controller {
     
     public void handleMessage(Message msg) {
         System.out.println( "[EntityStarter] Rcved " + msg.getMethod() +
-                            " from " + msg.getParam( "type" ) );
+                            " from " + msg.getParam( "id" ) );
 
         switch( msg.getMethod() ) {
         case "start_entity":
             handleStartEntity( msg );
+            break;
+        case "start_runtime":
+            handleStartRuntime( msg );
             break;
         }
     }
@@ -140,6 +145,20 @@ public class EntityStarter extends Controller {
         } catch (IOException ioe) {
             System.err.println( "[EntityStarter] ERROR starting " + id + " failed" );
         }
+    }
+
+    private void handleStartRuntime( Message msg ) {
+        RuntimeInfo runtime = (RuntimeInfo)msg.getParam( "runtime" );
+        System.out.println( "[EntityStarter] handleStartRuntime, runtime=" + runtime.getId() );
+
+        terminal.open( runtime.getProfile(), runtime.getTitle(), 
+                       runtime.getUser(), runtime.getIpAddr(), runtime.getCmd() );
+
+        // TODO: determine if the above command is SUCCESS or not
+        
+        CommChannel comm = channels.get( runtime.getParent() );
+        Message result = msgFactory.startRuntimeResp( runtime.getId(), "SUCCESS" );
+        comm.write( result );
     }
 
 

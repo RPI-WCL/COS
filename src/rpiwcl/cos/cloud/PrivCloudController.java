@@ -14,7 +14,7 @@ public class PrivCloudController extends Controller {
     private ArrayList nodes;
     private HashMap config;
     private HashMap<String, NodeInfo> nodeTable;
-    private int runtimeCapacity;
+    private int numRuntimesLimit;
 
 
     public PrivCloudController( String id, int port, String cosIpAddr, int cosPort ) {
@@ -24,7 +24,7 @@ public class PrivCloudController extends Controller {
         starter = null;
         config = null;
         nodeTable = new HashMap<String, NodeInfo>();
-        runtimeCapacity = 0;
+        numRuntimesLimit = 0;
 
         // connecting to CosManager
         try {
@@ -53,12 +53,18 @@ public class PrivCloudController extends Controller {
         case "notify_ready":
             handleNotifyReady( msg );
             break;
+        case "create_runtimes":
+            handleCreateRuntimes( msg );
+            break;
+        case "create_runtimes_resp":    // from NodeController
+            handleCreateRuntimesResp( msg );
+            break;
         }
     }
 
 
 
-   private void handleNewConnection( Message msg ) {
+    private void handleNewConnection( Message msg ) {
         if (this.starter == null) {
             // if this is the first connection, it must be from EntityStarter
             this.starter = msg.getReply();
@@ -89,21 +95,83 @@ public class PrivCloudController extends Controller {
     private void handleNotifyReady( Message msg ) {
         readyReceived++;
 
-        int runtimeCap = ((Integer)msg.getParam( "runtime_cap" )).intValue();
-        nodeTable.get( msg.getSender() ).setRuntimeCapacity( runtimeCap );
-        runtimeCapacity += runtimeCap;
+        int receivedNum = ((Integer)msg.getParam( "num_runtimes_limit" )).intValue();
+        nodeTable.get( msg.getSender() ).setNumRuntimesLimit( receivedNum );
+        numRuntimesLimit += receivedNum;
 
         if ((state == STATE_INITIALIZING) && (nodes.size() == readyReceived)) {
-            Message ready = msgFactory.notifyReady( new Integer( runtimeCapacity ) );
+            Message ready = msgFactory.notifyReady( new Integer( numRuntimesLimit ), "private-cloud" );
             cos.write( ready );
             state = STATE_READY;
             System.out.println( "[PrivCloud] READY received from all nodes, notify CosManager" );
         }
         else if (state == STATE_READY) {
-            //TODO: new resource is added, notify CosManager the new runtimeCapacity
+            //TODO: new resource is added, notify CosManager the new numRuntimesLimit
             System.out.println( "[PrivCloud] TODO: new resource is added" );
         }
     }
+
+    int respRemain = 0;
+    HashMap<String, String> newRuntimeTable = null;
+    public void handleCreateRuntimes( Message msg ) {
+        int numRuntimes = ((Integer)msg.getParam( "num_runtimes" )).intValue();
+        int totalNumRuntimesLimit = NodeInfo.getTotalNumRuntimesLimit( nodeTable.values() );
+        int totalNumRuntimesInUse = NodeInfo.getTotalNumRuntimesInUse( nodeTable.values() );
+
+        if ((totalNumRuntimesLimit - totalNumRuntimesInUse) < numRuntimes) {
+            System.err.println( "[PrivCloud] no enough room to create " + 
+                                numRuntimes + " runtimes (limit=" + 
+                                totalNumRuntimesLimit + ", inUse=" +
+                                totalNumRuntimesInUse + ")" );
+        }
+        else {
+            System.out.println( "[PrivCloud] handleCreateRuntimes, requested " + numRuntimes
+                                + " runtimes (limit=" + totalNumRuntimesLimit +
+                                ", inUse=" + totalNumRuntimesInUse + ")" );
+
+            Collection<NodeInfo> nodes = nodeTable.values();
+
+            int numRemain = numRuntimes;
+            for (NodeInfo node : nodes) {
+                int numNotInUse = node.getNumRuntimesLimit() - node.getNumRuntimes();
+                int numRequest =  (numNotInUse < numRemain) ? numRemain - numNotInUse : numRemain;
+
+                CommChannel contact = node.getContact();
+                Message req = msgFactory.createRuntimes( new Integer( numRequest ) );
+                contact.write( req );
+
+                numRemain -= numRequest;
+                if (numRemain == 0)
+                    break;
+            }
+
+            // keep track of responses
+            respRemain = numRuntimes;
+            newRuntimeTable = new HashMap<String, String>();
+        }
+    }
+
+    public void handleCreateRuntimesResp( Message msg ) {
+        // update NodeInfo
+        HashSet<String> runtimeIds = (HashSet<String>)msg.getParam( "runtime_ids" );
+        NodeInfo node = nodeTable.get( msg.getSender() );
+        node.addRuntimeIds( runtimeIds );
+        nodeTable.put( msg.getSender(), node );
+
+        respRemain -= runtimeIds.size();
+        for (String runtimeId : runtimeIds )
+            newRuntimeTable.put( runtimeId, msg.getSender() );
+
+        System.out.println( "[PrivCloud] handleCreateRuntimesResp, respRemain=" + respRemain );
+
+        if (respRemain == 0) {
+            // pass the same response to CosManager
+            System.out.println( "[PrivCloud] handleCreateRuntimesResp, sending response to CosManager: " + newRuntimeTable );
+            Message resp = msgFactory.createRuntimesResp( newRuntimeTable );
+            cos.write( resp );
+        }
+    }
+        
 
 
     public static void main( String[] args ) {

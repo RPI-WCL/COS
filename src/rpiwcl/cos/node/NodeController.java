@@ -8,6 +8,7 @@ import java.lang.Thread;
 import org.ho.yaml.Yaml;
 import rpiwcl.cos.common.*;
 import rpiwcl.cos.util.*;
+import rpiwcl.cos.runtime.*;
 import rpiwcl.cos.vm.*;
 
 
@@ -19,14 +20,16 @@ public class NodeController extends Controller {
     private HashMap config;
     private HashMap cpuDb;
     private boolean useVm;
-    private boolean vmSupport;
     private String vmUser;
     private String vmImage;
 
     private HashMap<String, VmInfo> vmTable;
-    // private HashMap<String, ArrayList<String>> rtTable;    // <hostIpAddr, runtimeIds>
     private String cpu;
-    private int runtimeCapacity;
+    private int numRuntimesLimit;
+    private HashSet<String> runtimeIds;
+
+    private AppRuntime appRuntime;
+    private HashMap appRuntimeConf;
 
 
     public NodeController( String id, int port, String cloudIpAddr, int cloudPort ) {
@@ -40,13 +43,12 @@ public class NodeController extends Controller {
         config = null;
         cpuDb = null;
         useVm = false;
-        vmSupport = false;
         vmUser = null;
         vmImage = null;
 
         vmTable = new HashMap<String, VmInfo>();
-        // rtTable = new <String, ArrayList<String>>();
-        runtimeCapacity = 0;
+        numRuntimesLimit = 0;
+        runtimeIds = new HashSet<String>();
 
         // connecting to CloudController
         try {
@@ -66,6 +68,8 @@ public class NodeController extends Controller {
         Matcher match = pt.matcher( str );
         cpu = match.replaceAll( "" );
         System.out.println( "[Node] " + cpu + " found" );
+
+        appRuntime = null;
     }
 
 
@@ -81,18 +85,24 @@ public class NodeController extends Controller {
 
     public void handleMessage( Message msg ){
         System.out.println( "[Node] Rcved: " + msg.getMethod() +
-                            " from " + msg.getParam( "type" ) );
+                            " from " + msg.getParam( "id" ) );
 
         switch(msg.getMethod()) {
             // case "get_usage":
             //     handleGetUsage(msg);
             //     break;
-        case "new_connection":  // from EntityStarter/VmController
+        case "new_connection":          // from EntityStarter/VmController
             handleNewConnection( msg );
             break;
-        case "notify_config":   // from EntityStarter
+        case "notify_config":           // from EntityStarter
             handleNotifyConfig( msg );
             notifyReady();
+            break;
+        case "create_runtimes":         // from CloudController
+            handleCreateRuntimes( msg );
+            break;
+        case "start_runtime_resp":      // from EntityStarter
+            handleStartRuntimeResp( msg );
             break;
             // case "create_vm":
             //     create_vm(msg);
@@ -141,11 +151,72 @@ public class NodeController extends Controller {
         config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
         Utility.debugPrint( "[Node] config:" + config );
 
-        useVm = ((Boolean)config.get( "use_vm" )).booleanValue();
-        vmSupport = ((Boolean)config.get( "vm_support" )).booleanValue();
+        useVm = ((Boolean)config.get( "use_vm" )).booleanValue() &&
+            ((Boolean)config.get( "vm_support" )).booleanValue();
         vmUser = (String)config.get( "vm_user" );
         vmImage = (String)config.get( "vm_image" );
         cpuDb = (HashMap)config.get( "cpu_db" );
+        appRuntimeConf = (HashMap)config.get( "app_runtime" );
+
+        // create an AppRuntime instance
+        HashMap common = (HashMap)config.get( "common" );
+        Class<?> clazz;
+        try {
+            clazz = Class.forName( (String)common.get( "app_runtime" ) );
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException( e );
+        }
+        try {
+            this.appRuntime = (AppRuntime)clazz.newInstance();
+        } catch (InstantiationException e) {
+            throw new RuntimeException( e );
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException( e );
+        }        
+    }
+
+
+    int respRemain = 0;
+    HashSet<String> newRuntimeIds = null;
+    public void handleCreateRuntimes( Message msg ) {
+        // TODO: PrivCloudController does not send a next createRuntimes request until it receives the response --> remove this limitation
+        
+        int numRuntimes = ((Integer)msg.getParam( "num_runtimes" )).intValue();
+        System.out.println( "[Node] handleCreateRuntimes, numRuntimes=" + numRuntimes );
+
+        if (!useVm) {
+            // create runtimes on PM
+            respRemain = numRuntimes;
+            newRuntimeIds = new HashSet<String>();
+
+            RuntimeInfo runtime = appRuntime.createRuntime( appRuntimeConf );
+            Message request = msgFactory.startRuntime( runtime );
+            starter.write( request );
+        }
+        else {
+            // TODO: create runtimes on PM
+            System.err.println( "[Node] ERROR, runtime creation on VM not supported" );
+        }
+    }
+
+    public void handleStartRuntimeResp( Message msg ) {
+        String runtimeId = (String)msg.getParam( "runtime_id" );
+        String result =  (String)msg.getParam( "result" );
+        System.out.println( "[Node] handleStartRuntimeResp, runtimeId=" + runtimeId + 
+                            ", result=" + result );
+        respRemain--;
+        runtimeIds.add( runtimeId );
+        newRuntimeIds.add( runtimeId );
+
+        if (0 < respRemain ) {
+            RuntimeInfo runtime = appRuntime.createRuntime( appRuntimeConf );
+            Message request = msgFactory.startRuntime( runtime );
+            starter.write( request );
+        }
+        else {
+            Message resp = msgFactory.createRuntimesResp( newRuntimeIds );
+            cloud.write( resp );
+        }
     }
 
 
@@ -161,13 +232,13 @@ public class NodeController extends Controller {
         Integer cpumark = (Integer)cpuDb.get( cpu );
         HashMap common = (HashMap)config.get( "common" );
         Integer cpumarkPerRuntime = (Integer)common.get( "cpumark_per_runtime" );
-        runtimeCapacity = cpumark / cpumarkPerRuntime;
+        numRuntimesLimit = cpumark / cpumarkPerRuntime;
 
         System.out.println( "[Node] cpuMark=" + cpumark +
                             ", cpumarkPerRuntime=" + cpumarkPerRuntime +
-                            ", runtimeCapacity=" + runtimeCapacity );
+                            ", numRuntimesLimit=" + numRuntimesLimit );
         
-        Message msg = msgFactory.notifyReady( new Integer( runtimeCapacity ) );
+        Message msg = msgFactory.notifyReady( new Integer( numRuntimesLimit ), "node" );
         cloud.write( msg );
 
         state = STATE_READY;

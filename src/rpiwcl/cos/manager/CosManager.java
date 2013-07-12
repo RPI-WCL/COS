@@ -1,5 +1,4 @@
 package rpiwcl.cos.manager;
-
 import java.util.*;
 import org.ho.yaml.Yaml;
 import rpiwcl.cos.cloud.*;
@@ -15,8 +14,11 @@ public class CosManager extends Controller {
     // private PolicyScheduler scheduler = null;
     private CommChannel starter;
     private String reconfiguration;
-    private HashMap<String, CloudInfo> cloudTable;
-    private ArrayList clouds;
+
+    private HashMap<String, CloudInfo> privCloudTable;
+    private ArrayList privClouds;
+    private HashMap<String, CloudInfo> pubCloudTable;
+    private ArrayList pubClouds;
 
 
     public CosManager( String id, int port ) {
@@ -26,8 +28,10 @@ public class CosManager extends Controller {
         msgFactory = null;
         starter = null;
         reconfiguration = null;
-        cloudTable = new HashMap<String, CloudInfo>();
-        clouds = null;
+        privCloudTable = new HashMap<String, CloudInfo>();
+        privClouds = null;
+        pubCloudTable = new HashMap<String, CloudInfo>();
+        pubClouds = null;
     }
 
     public void handleMessage( Message msg ) {
@@ -38,13 +42,15 @@ public class CosManager extends Controller {
         case "new_connection":
             handleNewConnection( msg );
             break;
-            
         case "notify_config":
             handleNotifyConfig( msg );
             break;
-
         case "notify_ready":
             handleNotifyReady( msg );
+            break;
+        case "create_runtimes_resp":    // from {PrivCloud, AmazonCloud}Controller
+            handleCreateRuntimesResp( msg );
+            break;
         }
     }
 
@@ -59,7 +65,7 @@ public class CosManager extends Controller {
         }
         else {
             children.add( msg.getReply() );
-            cloudTable.put( msg.getSender(), new CloudInfo( msg.getSender(), msg.getReply() ) );
+
         }
     }
 
@@ -70,10 +76,18 @@ public class CosManager extends Controller {
         // this.scheduler = new PolicyScheduler( (String)config.get( "policy" ) );
         this.reconfiguration = (String)config.get( "reconfiguration" );
         
-        // immediately start CloudControllers
-        clouds = (ArrayList)config.get( "clouds" );
-        for (int i = 0; i < clouds.size(); i++) {
-            String cloud = (String)clouds.get( i );
+        // start private clouds
+        privClouds = (ArrayList)config.get( "private_clouds" );
+        for (int i = 0; i < privClouds.size(); i++) {
+            String cloud = (String)privClouds.get( i );
+            msg = msgFactory.startEntity( cloud );
+            starter.write( msg );
+        }
+
+        // start public clouds
+        pubClouds = (ArrayList)config.get( "public_clouds" );
+        for (int i = 0; i < pubClouds.size(); i++) {
+            String cloud = (String)pubClouds.get( i );
             msg = msgFactory.startEntity( cloud );
             starter.write( msg );
         }
@@ -81,18 +95,101 @@ public class CosManager extends Controller {
 
     private int readyReceived = 0;
     private void handleNotifyReady( Message msg ) {
+        int numRuntimesLimit = ((Integer)msg.getParam( "num_runtimes_limit" )).intValue();
+        String type = (String)msg.getParam( "type" );
+
+        CloudInfo cloud = new CloudInfo( msg.getSender(), msg.getReply() );
+        cloud.setNumRuntimesLimit( numRuntimesLimit );
+        cloud.setType( type );
+        boolean flag = false;
+
+        if (type.equals( "private-cloud" )) {
+            privCloudTable.put( msg.getSender(), cloud );
+            flag = true;            
+        } 
+        else if (type.equals( "public-cloud" )) {
+            pubCloudTable.put( msg.getSender(), cloud );
+            flag = true;
+        }
+
+        if (!flag) {
+            System.err.println( "[CosManager] handleNotifyReady, invalid type=" + type );
+            return;
+        }
+
         readyReceived++;
 
-        int runtimeCap = ((Integer)msg.getParam( "runtime_cap" )).intValue();
-        cloudTable.get( msg.getSender() ).setRuntimeCapacity( runtimeCap );
-
-        if ((state == STATE_INITIALIZING) && (clouds.size() == readyReceived)) {
-            state = STATE_READY;
-            System.out.println( "[CosManager] READY received from all clouds, runtimeCap=" + runtimeCap );
+        if ((state == STATE_INITIALIZING) && 
+            ((privClouds.size() + pubClouds.size()) == readyReceived)) {
+            System.out.println( "[CosManager] READY received from all clouds, numRuntimesLimit=" + numRuntimesLimit );
+            
+            createPrivRuntimes( Constants.INITIAL_RUNTIME_NUM );
         }
         else if (state == STATE_READY) {
-            //TODO: new resource is added, notify CosManager the new runtimeCapacity
+            //TODO: new resource is added, notify CosManager the new numRuntimesLimit
             System.out.println( "[CosManager] TODO: new resource is added" );
+        }
+    }
+
+
+    private boolean createPrivRuntimes( int numRuntimes ) {
+        System.out.println( "[CosManager] createPrivRuntimes, numRuntimes=" + numRuntimes );
+
+        int totalNumRuntimesLimit = CloudInfo.getTotalNumRuntimesLimit( privCloudTable.values() );
+        int totalNumRuntimesInUse = CloudInfo.getTotalNumRuntimesInUse( privCloudTable.values() );
+
+        if ((totalNumRuntimesLimit - totalNumRuntimesInUse) < numRuntimes) {
+            System.err.println( "[CosManager] no enough room to create " + 
+                                numRuntimes + " runtimes (limit=" + 
+                                totalNumRuntimesLimit + ", inUse=" +
+                                totalNumRuntimesInUse + ")" );
+            return false;
+        }
+        else {
+            Collection<CloudInfo> clouds = privCloudTable.values();
+            int numRemain = numRuntimes;
+            for (CloudInfo cloud : clouds) {
+                int numNotInUse = cloud.getNumRuntimesLimit() - cloud.getNumRuntimes();
+                int numRequest =  (numNotInUse < numRemain) ? numRemain - numNotInUse : numRemain;
+
+                CommChannel contact = cloud.getContact();
+                Message msg = msgFactory.createRuntimes( new Integer( numRequest ) );
+                contact.write( msg );
+
+                System.out.println( "[CosManager] createPrivRuntimes, (contact=" + 
+                                    contact + ", numRequest=" + numRequest );
+                
+                numRemain -= numRequest;
+                if (numRemain == 0)
+                    break;
+            }
+        }
+
+        return true;
+    }
+
+
+    private void handleCreateRuntimesResp( Message msg ) {
+        HashMap<String, String> runtimeTable =
+            (HashMap<String, String>)msg.getParam( "runtime_table" );
+
+        privCloudTable.get( msg.getSender() ).updateRuntimeTable( runtimeTable );
+
+        if (state == STATE_INITIALIZING) {
+            state = STATE_READY;
+            System.out.println( "[CosManager] First runtime created, CosManager READY" );
+            System.out.println();
+            System.out.println(
+                "########################### MESSAGE TO USER ###########################" );
+            System.out.println(
+                "Please use the following runtime information to start your application" );
+            for (String runtimeId : runtimeTable.keySet())
+                System.out.println( "    " + runtimeId );
+            System.out.println(
+                "#######################################################################" );
+        }
+        else {
+            System.out.println( "[CosManager] Runtime created:" + runtimeTable );
         }
     }
 
