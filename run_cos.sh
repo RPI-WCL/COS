@@ -1,6 +1,6 @@
 #!/bin/bash
 
-java -Ddebug rpiwcl.cos.manager.EntityStarter
+java -DXdebug rpiwcl.cos.manager.EntityStarter
 
 trap 'pkill java; exit' SIGINT
 

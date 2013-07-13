@@ -1,1 +1,1 @@
-java -Dnogc -Dnetif=xenbr0 -Dport=8443 -DXstdout -Xmx4096m -Xms4096m salsa.examples.mapreduce.MeanTemp 24 inputs/meantemp/data-slim output $1
+java -Dnogc -Dnetif=eth0 -Dport=8443 -DXstdout -Xmx1024m -Xms1024m rpiwcl.cos.test.salsa.mapreduce.MeanTemp 24 inputs/meantemp/data-slim output $1 10.0.2.15 49153

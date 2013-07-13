@@ -7,7 +7,7 @@ public class Constants
     public final static String DEFAULT_CPU_DB_FILE = "yaml/cpuDb.yaml"; 
 
     //COS options
-    public final static int INITIAL_RUNTIME_NUM = 4;
+    public final static int INITIAL_RUNTIME_NUM = 1;
 
     //Stastics
     public final static double HIGH_CPU = .75;

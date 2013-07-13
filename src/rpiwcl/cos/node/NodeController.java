@@ -238,7 +238,7 @@ public class NodeController extends Controller {
                             ", cpumarkPerRuntime=" + cpumarkPerRuntime +
                             ", numRuntimesLimit=" + numRuntimesLimit );
         
-        Message msg = msgFactory.notifyReady( new Integer( numRuntimesLimit ), "node" );
+        Message msg = msgFactory.notifyReady( numRuntimesLimit, "node" );
         cloud.write( msg );
 
         state = STATE_READY;

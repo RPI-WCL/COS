@@ -1,4 +1,4 @@
-package salsa.examples.mapreduce;
+package rpiwcl.cos.test.salsa.mapreduce;
 
 import java.util.HashMap;
 import java.util.Vector;

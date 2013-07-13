@@ -1,6 +1,6 @@
 common:
     app_runtime: rpiwcl.cos.runtime.SalsaRuntime
-    app_runtime_cp: &app-runtime-cp /home/shigeru/Git/COS/lib/salsa/salsa1.1.5.jar
+    app_runtime_cp: &app-runtime-cp /home/shigeru/Git/COS/cos-0.3.jar:/home/shigeru/Git/COS/lib/salsa/salsa1.1.5.jar
     app_base_port: &app-base-port 4040
     app_option: &app-option -Dnetif=eth0
     terminal: rpiwcl.cos.runtime.GnomeTerminal
@@ -15,13 +15,16 @@ starter_port: 49152
 
 cos:
     launch_spec:
-        ipaddr: localhost
-        port: 49153
+        ipaddr: &cos-ipaddr 10.0.2.15
+        port: &cos-port 49153
         user: shigeru
         terminal_profile: Blue
         main_class: rpiwcl.cos.manager.CosManager
         classpath: *cp
     runtime_conf:
+        ipaddr: *cos-ipaddr
+        port: *cos-port
+        initial_num_runtimes: 1
         policy: deadline-30min
         reconfiguration: cos
         private_clouds:

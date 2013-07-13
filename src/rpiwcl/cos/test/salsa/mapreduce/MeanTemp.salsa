@@ -1,11 +1,12 @@
-module salsa.examples.mapreduce;
+module rpiwcl.cos.test.salsa.mapreduce;
 
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Vector;
 
-import salsa.examples.mapreduce.*;
+import rpiwcl.cos.test.salsa.mapreduce.*;
+import rpiwcl.cos.runtime.CosInterface;
 
 
 behavior MeanTemp {
@@ -20,11 +21,15 @@ behavior MeanTemp {
 	Vector      theaters;
 
     long initialTime;
+
+    // COS support
+    String      cosIpAddr;
+    int         cosPort;
 	
 	void act( String args[] ) {
-		if ( args.length < 3 ) {
+		if ( args.length < 6 ) {
 			System.err.println ( "Error: invalid usage" );
-			System.err.println ( "Usage: java MeanTemp <#workers> <input file> <output file> <theaters file>" );
+			System.err.println ( "Usage: java MeanTemp <#workers> <input file> <output file> <theaters file> <CosIpAddr> <CosPort>" );
 			return;
 		}
 
@@ -45,6 +50,9 @@ behavior MeanTemp {
 		} catch ( IOException ex ) {
 			System.err.println( "Error: Can't open the file " + theatersFile + " for reading." );
 		}
+        
+        this.cosIpAddr = args[4];
+        this.cosPort = Integer.parseInt( args[5] );
 
         startMapReduce();
 	}
@@ -60,7 +68,9 @@ behavior MeanTemp {
                               inputFile, 
                               outputFile, 
                               nameServer, 
-                              theaters )@currentContinuation;
+                              theaters,
+                              cosIpAddr, cosPort, "MeanTemp"
+            )@currentContinuation;
     }
 	
 }

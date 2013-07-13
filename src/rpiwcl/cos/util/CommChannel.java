@@ -7,8 +7,7 @@ import java.net.InetSocketAddress;
 import rpiwcl.cos.common.Message;
 import rpiwcl.cos.util.Utility;
 
-public class CommChannel
-{
+public class CommChannel implements Serializable {
     Socket m_sock;
     ObjectOutputStream out;
     ObjectInputStream in;

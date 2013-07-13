@@ -1,10 +1,10 @@
-package salsa.examples.mapreduce;
+package rpiwcl.cos.test.salsa.mapreduce;
 
 import java.io.Serializable;
 import java.util.StringTokenizer;
 
-import salsa.examples.mapreduce.Context;
-import salsa.examples.mapreduce.Mapper;
+import rpiwcl.cos.test.salsa.mapreduce.Context;
+import rpiwcl.cos.test.salsa.mapreduce.Mapper;
 
 
 public class WordCountMapper implements Mapper, Serializable {

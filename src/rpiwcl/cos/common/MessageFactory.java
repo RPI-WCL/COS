@@ -1,14 +1,14 @@
 package rpiwcl.cos.common;
 
+import java.io.Serializable;
 import java.util.*;
 
 import rpiwcl.cos.common.Constants;
 import rpiwcl.cos.util.CommChannel;
 import rpiwcl.cos.util.Utility;
 import rpiwcl.cos.runtime.RuntimeInfo;
-
-public class MessageFactory
-{
+ 
+public class MessageFactory implements Serializable {
     private String id; //VM, NODE, COS
     private String localhost;
 
@@ -34,7 +34,7 @@ public class MessageFactory
         return payload;
     }
     
-    public Message notifyReady( Integer numRuntimesLimit, String type ) {
+    public Message notifyReady( int numRuntimesLimit, String type ) {
         Message payload = init( "notify_ready" );
         payload.addParam( "num_runtimes_limit", numRuntimesLimit );
         payload.addParam( "type", type );
@@ -46,7 +46,7 @@ public class MessageFactory
         return payload;
     }
 
-    public Message createRuntimes( Integer numRuntimes ) {
+    public Message createRuntimes( int numRuntimes ) {
         Message payload = init( "create_runtimes" );
         payload.addParam( "num_runtimes", numRuntimes );
         return payload;
@@ -74,6 +74,39 @@ public class MessageFactory
         Message payload = init( "start_runtime_resp" );
         payload.addParam( "runtime_id", runtimeId );
         payload.addParam( "result", result );
+        return payload;
+    }
+
+    public Message cosIfOpen( String appId ) {
+        Message payload = init( "cosif_open" );
+        payload.addParam( "appid", appId );
+        return payload;
+    }
+
+    public Message cosIfReportNumTasks( String appId, int numTasks ) {
+        Message payload = init( "cosif_report_num_tasks" );
+        payload.addParam( "appid", appId );
+        payload.addParam( "num_tasks", numTasks );
+        return payload;
+    }
+
+    public Message cosIfRegisterWorkers( String appId, ArrayList workerRefs ) {
+        Message payload = init( "cosif_register_workers" );
+        payload.addParam( "appid", appId );
+        payload.addParam( "worker_refs", workerRefs );
+        return payload;
+    }
+
+    public Message cosIfReportProgress( String appId, int completedTasks ) {
+        Message payload = init( "cosif_report_progress" );
+        payload.addParam( "appid", appId );
+        payload.addParam( "completed_tasks", completedTasks );
+        return payload;
+    }
+
+    public Message cosIfClose( String appId ) {
+        Message payload = init( "cosif_close" );
+        payload.addParam( "appid", appId );
         return payload;
     }
 

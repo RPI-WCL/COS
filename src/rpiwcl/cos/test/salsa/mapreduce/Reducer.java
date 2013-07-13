@@ -1,7 +1,8 @@
-package salsa.examples.mapreduce;
+package rpiwcl.cos.test.salsa.mapreduce;
 
 import java.util.Vector;
-import salsa.examples.mapreduce.Context;
+import rpiwcl.cos.test.salsa.mapreduce.Context;
+
 
 public interface Reducer {
     public void reduce( String key, Vector value, Context context );

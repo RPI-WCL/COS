@@ -1,11 +1,11 @@
-package salsa.examples.mapreduce;
+package rpiwcl.cos.test.salsa.mapreduce;
 
 import java.io.Serializable;
 import java.util.Vector;
 
-import salsa.examples.mapreduce.Context;
-import salsa.examples.mapreduce.Reducer;
-import salsa.examples.mapreduce.DoubleIntPair;
+import rpiwcl.cos.test.salsa.mapreduce.Context;
+import rpiwcl.cos.test.salsa.mapreduce.Reducer;
+import rpiwcl.cos.test.salsa.mapreduce.DoubleIntPair;
 
 
 public class MeanTempReducer implements Reducer, Serializable {

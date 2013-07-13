@@ -1,11 +1,11 @@
-package salsa.examples.mapreduce;
+package rpiwcl.cos.test.salsa.mapreduce;
 
 import java.io.Serializable;
 import java.util.StringTokenizer;
 
-import salsa.examples.mapreduce.Context;
-import salsa.examples.mapreduce.Mapper;
-import salsa.examples.mapreduce.DoubleIntPair;
+import rpiwcl.cos.test.salsa.mapreduce.Context;
+import rpiwcl.cos.test.salsa.mapreduce.Mapper;
+import rpiwcl.cos.test.salsa.mapreduce.DoubleIntPair;
 
 
 public class MeanTempMapper implements Mapper, Serializable {

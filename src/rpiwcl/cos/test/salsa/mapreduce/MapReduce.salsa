@@ -1,19 +1,10 @@
-module salsa.examples.mapreduce;
+module rpiwcl.cos.test.salsa.mapreduce;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.io.*;
+import java.util.*;
 
-import salsa.examples.mapreduce.*;
+import rpiwcl.cos.test.salsa.mapreduce.*;
+import rpiwcl.cos.runtime.CosInterface;
 
 
 behavior MapReduce {
@@ -39,9 +30,16 @@ behavior MapReduce {
     int         numTasks = 0;
     int REPORT_PROGRESS_INTERVAL = 10000; // report progress every this milliseconds
     int[]       completedMapTasks;
+    String      cosIpAddr;
+    int         cosPort;
+    String      appName;
+    CosInterface cosIf;
+
 
     void submitJob( Mapper mapper, Reducer combiner, Reducer reducer,
-                    int numWorkers, String inputFile, String outputFile, String nameServer, Vector theaters ) {
+                    int numWorkers, String inputFile, String outputFile, 
+                    String nameServer, Vector theaters,
+                    String cosIpAddr, int cosPort, String appName ) {
         this.mapper = mapper;
         this.combiner = combiner;
         this.reducer = reducer;
@@ -53,6 +51,10 @@ behavior MapReduce {
         this.theaters = theaters;
         this.workers = new TaskTracker[numWorkers];
         this.completedMapTasks = new int[numWorkers];
+        this.cosIpAddr = cosIpAddr;
+        this.cosPort = cosPort;
+        this.appName = appName;
+        this.cosIf = new CosInterface( cosIpAddr, cosPort, appName );
         
         runMappers()@
         mergeMapResults( token )@
@@ -67,10 +69,13 @@ behavior MapReduce {
 
         startTime = System.currentTimeMillis();
         System.out.println( "Running mappers (inputFileSize = " + (inputFileSize/(1024*1024)) + "Mbytes)..." );
+        
+        cosIf.open();
 
         join {
             try {
                 BufferedReader in = new BufferedReader( new FileReader( inputFile ) );
+                ArrayList uals = new ArrayList();
 
                 for (int i = 0; i < numWorkers; i++) {
                     // split texts to a process
@@ -83,14 +88,18 @@ behavior MapReduce {
                     }
 
                     // create an actor on the theater
+                    String ual = "rmsp://" + theaters.get( i % theaters.size() ) + "/a" + i;
+                    uals.add( ual );
                     System.out.println( " Creating actor uan://" + nameServer + "/a" + i + 
-                                        " on rmsp://" + theaters.get( i % theaters.size() ) + "/a" + i );
+                                        " on " + ual );
                     workers[i] = new TaskTracker( i, mapper, combiner, reducer, this.getUAN().toString() ) at (
-                        new UAN( "uan://" + nameServer + "/a" + i ), 
-                        new UAL( "rmsp://" + theaters.get( i % theaters.size() ) + "/a" + i ));
+                        new UAN( "uan://" + nameServer + "/a" + i ), new UAL( ual ) );
                     workers[i]<-runMapper( texts );
                     numTasks += texts.size();
                 }
+
+                cosIf.reportNumTasks( numTasks );
+                cosIf.registerWorkers( uals );
 
                 in.close();
 
@@ -293,6 +302,8 @@ behavior MapReduce {
 
             System.out.println( " Map: " + sum + "/" + numTasks + " (" + 
                                 (100 * sum / numTasks) + "%) completed" );
+
+            cosIf.reportProgress( sum );
         }
 
         return completed;

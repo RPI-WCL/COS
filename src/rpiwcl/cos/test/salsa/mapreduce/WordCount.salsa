@@ -1,11 +1,11 @@
-module salsa.examples.mapreduce;
+module rpiwcl.cos.test.salsa.mapreduce;
 
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Vector;
 
-import salsa.examples.mapreduce.*;
+import rpiwcl.cos.test.salsa.mapreduce.*;
 
 
 behavior WordCount {

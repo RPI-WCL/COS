@@ -1,9 +1,9 @@
 package rpiwcl.cos.runtime;
 
 public interface AppInterface {
-    public int open(String appName, int numTasks);
-    public void close(int id);
-    public void registerWorker(int id, String workerRef);
-    public void reportProgress(int id, int completedTasks);
+    public String open( String cosIpAddr, int cosPort, String appName );  // returns appId
+    public void registerWorker( String appId, String workerRef );
+    public void reportNumTasks( String appId, int numTasks );
+    public void reportProgress( String appId, int completedTasks );
+    public void close( String appId );
 }
-

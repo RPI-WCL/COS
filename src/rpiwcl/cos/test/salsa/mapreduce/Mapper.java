@@ -1,6 +1,7 @@
-package salsa.examples.mapreduce;
+package rpiwcl.cos.test.salsa.mapreduce;
 
-import salsa.examples.mapreduce.Context;
+import rpiwcl.cos.test.salsa.mapreduce.Context;
+
 
 public interface Mapper {
     public void map( String text, Context context );

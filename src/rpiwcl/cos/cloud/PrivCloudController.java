@@ -95,12 +95,12 @@ public class PrivCloudController extends Controller {
     private void handleNotifyReady( Message msg ) {
         readyReceived++;
 
-        int receivedNum = ((Integer)msg.getParam( "num_runtimes_limit" )).intValue();
+        int receivedNum = (int)msg.getParam( "num_runtimes_limit" );
         nodeTable.get( msg.getSender() ).setNumRuntimesLimit( receivedNum );
         numRuntimesLimit += receivedNum;
 
         if ((state == STATE_INITIALIZING) && (nodes.size() == readyReceived)) {
-            Message ready = msgFactory.notifyReady( new Integer( numRuntimesLimit ), "private-cloud" );
+            Message ready = msgFactory.notifyReady( numRuntimesLimit, "private-cloud" );
             cos.write( ready );
             state = STATE_READY;
             System.out.println( "[PrivCloud] READY received from all nodes, notify CosManager" );
