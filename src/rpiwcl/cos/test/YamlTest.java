@@ -1,4 +1,4 @@
-package rpiwcl.cos.tests;
+package rpiwcl.cos.test;
 
 import java.io.File;
 import java.io.FileNotFoundException;

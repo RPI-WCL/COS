@@ -1,21 +1,26 @@
 package rpiwcl.cos.manager;
+
+import java.text.ParseException;
 import java.util.*;
 import org.ho.yaml.Yaml;
 import rpiwcl.cos.cloud.*;
 import rpiwcl.cos.common.*;
 import rpiwcl.cos.util.*;
-
-// import rpiwcl.cos.cosmanager.policy.PolicyScheculer;
+import rpiwcl.cos.manager.policy.*;
 
 
 public class CosManager extends Controller {
     private String id;
     private MessageFactory msgFactory;
-    // private PolicyScheduler scheduler = null;
+    private Policy policy;
+    private ThroughputPredictor tpPredictor;
     private CommChannel starter;
     private String reconfiguration;
     private HashMap config;
+    
     private int initialNumRuntimes;
+    private int privNumRuntimes;
+    private int pubNumRuntimes;
 
     private HashMap<String, CloudInfo> privCloudTable;
     private ArrayList privClouds;
@@ -28,10 +33,13 @@ public class CosManager extends Controller {
         this.id = id;
         this.state = STATE_INITIALIZING;
         msgFactory = null;
+        tpPredictor = new ThroughputPredictor( ThroughputPredictor.POLICY_NO_LIMIT, -1 );
         starter = null;
         reconfiguration = null;
         config = null;
         initialNumRuntimes = 0;
+        privNumRuntimes = 0;
+        pubNumRuntimes = 0;
         privCloudTable = new HashMap<String, CloudInfo>();
         privClouds = null;
         pubCloudTable = new HashMap<String, CloudInfo>();
@@ -93,8 +101,13 @@ public class CosManager extends Controller {
     private void handleNotifyConfig( Message msg ) {
         config = (HashMap)Yaml.load( (String)msg.getParam( "config" ) );
         Utility.debugPrint( "[CosManager] config:" + config );
-        
-        // this.scheduler = new PolicyScheduler( (String)config.get( "policy" ) );
+
+        try {
+            this.policy = PolicyFactory.getPolicy( (String)config.get( "policy" ) );
+        } catch (ParseException pex) {
+            System.err.println( pex );
+        }
+
         this.reconfiguration = (String)config.get( "reconfiguration" );
         this.initialNumRuntimes = ((Integer)config.get( "initial_num_runtimes" )).intValue();
         
@@ -143,7 +156,8 @@ public class CosManager extends Controller {
 
         if ((state == STATE_INITIALIZING) && 
             ((privClouds.size() + pubClouds.size()) == readyReceived)) {
-            System.out.println( "[CosManager] READY received from all clouds, numRuntimesLimit=" + numRuntimesLimit );
+            System.out.println( "[CosManager] READY received from all clouds, numRuntimesLimit="
+                                + numRuntimesLimit );
             
             createPrivRuntimes( initialNumRuntimes );
         }
@@ -192,10 +206,12 @@ public class CosManager extends Controller {
 
 
     private void handleCreateRuntimesResp( Message msg ) {
+        // TODO: assuming all the runtimesResp msgs are from privClouds
         HashMap<String, String> runtimeTable =
             (HashMap<String, String>)msg.getParam( "runtime_table" );
 
         privCloudTable.get( msg.getSender() ).updateRuntimeTable( runtimeTable );
+        this.privNumRuntimes = CloudInfo.getTotalNumRuntimesInUse( privCloudTable.values() );
 
         if (state == STATE_INITIALIZING) {
             state = STATE_READY;
@@ -208,7 +224,6 @@ public class CosManager extends Controller {
                 "########################### MESSAGE TO USER ###########################" );
             System.out.println(
                 "Please use the following information to start your application" );
-            System.out.println();
             System.out.println( " COS IP address : " + cosIpAddr );
             System.out.println( " COS Port : " + cosPort );
             System.out.println( " Runtimes : " );
@@ -227,7 +242,7 @@ public class CosManager extends Controller {
         String appId = (String)msg.getParam( "appid" );
         System.out.println( "[CosManager] handleCosIfOpen, appId=" + appId );
     }
-    
+
 
     private void handleCosIfReportNumTasks( Message msg ) {
         String appId = (String)msg.getParam( "appid" );
@@ -235,6 +250,8 @@ public class CosManager extends Controller {
 
         System.out.println( "[CosManager] handleCosIfReportNumTasks, appId=" + appId +
                             ", numTasks=" + numTasks );
+
+        policy.setTasks( numTasks );
     }
     
 
@@ -243,14 +260,49 @@ public class CosManager extends Controller {
         ArrayList<String> workerRefs = (ArrayList<String>)msg.getParam( "worker_refs" );
         System.out.println( "[CosManager] handleCosIfRegisterWorkers, appId=" + appId +
                             ", workerRefs=" + workerRefs );
+
+        policy.setNumWorkers( workerRefs.size() );
     }
 
-        
+
+    private double lastScheduleTimeSec = -1.0;
+    private int lastScheduleNumTasks = -1;
     private void handleCosIfReportProgress( Message msg ) {
         String appId = (String)msg.getParam( "appid" );
         int completedTasks = (int)msg.getParam( "completed_tasks" );
         System.out.println( "[CosManager] handleCosIfReportProgress, appId=" + appId +
                             ", completedTasks=" + completedTasks );
+
+        double currentTimeSec = (double)System.currentTimeMillis() / 1000;
+
+        if (lastScheduleTimeSec < 0) {
+            policy.start();
+            lastScheduleTimeSec = currentTimeSec;
+            lastScheduleNumTasks = completedTasks;
+            return;
+        }
+        if ((lastScheduleTimeSec == currentTimeSec) || 
+            (lastScheduleNumTasks == completedTasks)) {
+            lastScheduleTimeSec = currentTimeSec;
+            lastScheduleNumTasks = completedTasks;
+            return;
+        }
+
+        double tp = (double)(completedTasks - lastScheduleNumTasks) /
+            (currentTimeSec - lastScheduleTimeSec);
+        tpPredictor.addSample( privNumRuntimes, pubNumRuntimes, tp );
+
+        System.out.println( "[CosManager] privNumRuntimes=" + privNumRuntimes +
+                            ", pubNumRuntimes=" + pubNumRuntimes +
+                            ", tp=" + tp );
+        try {
+            policy.schedule( tpPredictor, completedTasks, privNumRuntimes, pubNumRuntimes, 0.0 );
+        } catch (Exception ex) {
+            System.err.println( ex );
+        }
+        
+        lastScheduleTimeSec = currentTimeSec;
+        lastScheduleNumTasks = completedTasks;
     }
 
     
