@@ -34,9 +34,9 @@ public class MessageFactory implements Serializable {
         return payload;
     }
     
-    public Message notifyReady( int numRuntimesLimit, String type ) {
+    public Message notifyReady( int maxRuntimes, String type ) {
         Message payload = init( "notify_ready" );
-        payload.addParam( "num_runtimes_limit", numRuntimesLimit );
+        payload.addParam( "max_runtimes", maxRuntimes );
         payload.addParam( "type", type );
         return payload;
     }
@@ -58,20 +58,23 @@ public class MessageFactory implements Serializable {
         return payload;
     }
 
-    public Message createRuntimesResp( HashMap<String, String> runtimeTable ) {
+    public Message createRuntimesResp( String cloudType, HashMap<String, String> runtimeTable ) {
         Message payload = init( "create_runtimes_resp" );
+        payload.addParam( "cloud_type", cloudType );
         payload.addParam( "runtime_table", runtimeTable );
         return payload;
     }
 
-    public Message startRuntime( RuntimeInfo runtime ) {
+    public Message startRuntime( String hostId, RuntimeInfo runtime ) {
         Message payload = init( "start_runtime" );
+        payload.addParam( "host_id", hostId );
         payload.addParam( "runtime", runtime );
         return payload;
     }
 
-    public Message startRuntimeResp( String runtimeId, String result ) {
+    public Message startRuntimeResp( String hostId, String runtimeId, String result ) {
         Message payload = init( "start_runtime_resp" );
+        payload.addParam( "host_id", hostId );
         payload.addParam( "runtime_id", runtimeId );
         payload.addParam( "result", result );
         return payload;

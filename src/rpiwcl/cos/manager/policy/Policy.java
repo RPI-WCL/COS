@@ -5,7 +5,7 @@ public abstract class Policy {
     protected double tDeadline;         // [msec] --> constraint
     protected double budget;            // [USD] --> constraint
     protected int tasks;
-    protected int Nlimit;
+    protected int Nmax;
     protected double cost;              // [USD/hour] 
     protected int numWorkers;
     
@@ -18,8 +18,8 @@ public abstract class Policy {
         this.tasks = tasks;
     }
 
-    public void setNlimit( int Nlimit ) {
-        this.Nlimit = Nlimit;
+    public void setNmax( int Nmax ) {
+        this.Nmax = Nmax;
     }
 
     public void setCost( double cost ) {

@@ -6,6 +6,7 @@
   <property name="build.src" value="src" />
   <property name="build.dest" value="classes" />
   <property name="build.jar" value="${project}-${version}.jar" />
+  <property name="aws-credential" value="rpiwcl/cos/cloud/AwsCredentials.properties" />
   <path id="classpath">
 	<fileset dir="lib">
 	  <include name="**/*.jar" />
@@ -21,11 +22,17 @@
 	<echo message="CLASSPATH = ${myclasspath}" />
   </target>
 
-  <target name="compile">
+  <target name="compile" depends="copy_credential">
 	<mkdir dir="${build.dest}" />
 	<javac includeantruntime="false" srcdir="${build.src}" destdir="${build.dest}" debug="true">
 		<classpath refid="classpath" />
 	</javac>
+  </target>
+
+  <target name="copy_credential">
+	<copy overwrite="no"
+		  file="${build.src}/${aws-credential}"
+		  tofile="${build.dest}/${aws-credential}" />
   </target>
 
   <target name="clean">

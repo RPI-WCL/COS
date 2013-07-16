@@ -25,7 +25,7 @@ public class NodeController extends Controller {
 
     private HashMap<String, VmInfo> vmTable;
     private String cpu;
-    private int numRuntimesLimit;
+    private int maxRuntimes;
     private HashSet<String> runtimeIds;
 
     private AppRuntime appRuntime;
@@ -47,7 +47,7 @@ public class NodeController extends Controller {
         vmImage = null;
 
         vmTable = new HashMap<String, VmInfo>();
-        numRuntimesLimit = 0;
+        maxRuntimes = 0;
         runtimeIds = new HashSet<String>();
 
         // connecting to CloudController
@@ -190,7 +190,7 @@ public class NodeController extends Controller {
             newRuntimeIds = new HashSet<String>();
 
             RuntimeInfo runtime = appRuntime.createRuntime( appRuntimeConf );
-            Message request = msgFactory.startRuntime( runtime );
+            Message request = msgFactory.startRuntime( runtime.getIpAddr(), runtime );
             starter.write( request );
         }
         else {
@@ -210,7 +210,7 @@ public class NodeController extends Controller {
 
         if (0 < respRemain ) {
             RuntimeInfo runtime = appRuntime.createRuntime( appRuntimeConf );
-            Message request = msgFactory.startRuntime( runtime );
+            Message request = msgFactory.startRuntime( null, runtime );
             starter.write( request );
         }
         else {
@@ -232,13 +232,13 @@ public class NodeController extends Controller {
         Integer cpumark = (Integer)cpuDb.get( cpu );
         HashMap common = (HashMap)config.get( "common" );
         Integer cpumarkPerRuntime = (Integer)common.get( "cpumark_per_runtime" );
-        numRuntimesLimit = cpumark / cpumarkPerRuntime;
+        maxRuntimes = cpumark / cpumarkPerRuntime;
 
         System.out.println( "[Node] cpuMark=" + cpumark +
                             ", cpumarkPerRuntime=" + cpumarkPerRuntime +
-                            ", numRuntimesLimit=" + numRuntimesLimit );
+                            ", maxRuntimes=" + maxRuntimes );
         
-        Message msg = msgFactory.notifyReady( numRuntimesLimit, "node" );
+        Message msg = msgFactory.notifyReady( maxRuntimes, "node" );
         cloud.write( msg );
 
         state = STATE_READY;

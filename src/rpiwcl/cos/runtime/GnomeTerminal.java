@@ -6,12 +6,8 @@ import rpiwcl.cos.runtime.Terminal;
 public class GnomeTerminal implements Terminal {
 
     public void open( String profile, String title, String user, 
-                      String ipAddr, String cmd ) {
-        // if (ipAddr.equals( "localhost" ) || ipAddr.equals( "127.0.0.1" ))
-        //     openLocal( profile, title, cmd );
-        // else if ((ipAddr != null) && (user != null)) {
-            openRemote( profile, title, user, ipAddr, cmd );
-        // }
+                      String ipAddr, String cmd, String sshOption ) {
+        openRemote( profile, title, user, ipAddr, cmd, sshOption );
     }
 
     // does not work properly
@@ -22,11 +18,21 @@ public class GnomeTerminal implements Terminal {
         Utility.runtimeExec( terminalCmd );
     }
 
+
     private void openRemote( String profile, String title, String user, 
-                             String ipAddr, String cmd ) {
-        String terminalCmd = "gnome-terminal --window-with-profile=\"" + profile + "\"" +
-            " --title=\"" + title + "\"" +
-            " --command=\"ssh " + user + "@" + ipAddr + " " + cmd + "\"";
+                             String ipAddr, String cmd, String sshOption ) {
+
+        String terminalCmd = null;
+
+        if (sshOption == null)
+            terminalCmd = "gnome-terminal --window-with-profile=\"" + profile + "\"" +
+                " --title=\"" + title + "\"" +
+                " --command=\"ssh " + user + "@" + ipAddr + " " + cmd + "\"";
+        else
+            terminalCmd = "gnome-terminal --window-with-profile=\"" + profile + "\"" +
+                " --title=\"" + title + "\"" +
+                " --command=\"ssh " + sshOption + " " + user + "@" + ipAddr + " " + cmd + "\"";
+
         Utility.debugPrint( terminalCmd );
         Utility.runtimeExec( terminalCmd );
     }

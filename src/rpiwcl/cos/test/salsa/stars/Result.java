@@ -5,7 +5,7 @@
  * 
  */
 
-package salsa.examples.stars;
+package rpiwcl.cos.test.salsa.stars;
 
 import java.io.Serializable;
 import java.util.Vector;

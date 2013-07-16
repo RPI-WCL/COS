@@ -25,7 +25,7 @@ public class DeadlinePolicy extends Policy {
         Utility.debugPrint( "    tasks    =" + tasks );
         Utility.debugPrint( "    tasksDone=" + tasksDone );
         Utility.debugPrint( "    Ncurr    =" + Ncurr );
-        Utility.debugPrint( "    Nlimit   =" + Nlimit );
+        Utility.debugPrint( "    Nmax   =" + Nmax );
         Utility.debugPrint( "    Mcurr    =" + Mcurr );
 
         if (tDeadline < tCurr) {
@@ -42,7 +42,7 @@ public class DeadlinePolicy extends Policy {
         
         if (tpPredict < tpTarget) {
             do {
-                if (N < Nlimit)
+                if (N < Nmax)
                     N++;
                 else
                     M++;

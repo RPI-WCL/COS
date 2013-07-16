@@ -15,10 +15,6 @@ public abstract class MachInfo
     private CommChannel contact;
     protected double cpuUsage;
 
-    protected String cpu;
-    protected int cpuMark;        // acquired from CpuDb
-    protected int numRuntimesLimit;
-
 
     public MachInfo(String address, CommChannel contact){
         this.ipAddress = address;
@@ -49,29 +45,5 @@ public abstract class MachInfo
                 return first.compareTo(b.getCpuUsage());
             }
         });
-    }
-
-    public String getCpu() {
-        return cpu;
-    }
-
-    public void setCpu( String cpu ) {
-        this.cpu = cpu;
-    }
-
-    public int getCpuMark() {
-        return cpuMark;
-    }
-
-    public void setCpuMark( int cpuMark ) {
-        this.cpuMark = cpuMark;
-    }
-
-    public int getNumRuntimesLimit() {
-        return numRuntimesLimit;
-    }
-
-    public void setNumRuntimesLimit( int numRuntimesLimit ) {
-        this.numRuntimesLimit = numRuntimesLimit;
     }
 }

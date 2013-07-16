@@ -80,7 +80,7 @@ public class EntityStarter extends Controller {
 
         String title = "[" + id + "] " + mainClass;
 
-        terminal.open( profile, title, user, ipAddr, cmd );
+        terminal.open( profile, title, user, ipAddr, cmd, null );
 
         int retry = 0;
         boolean result = false;
@@ -148,16 +148,19 @@ public class EntityStarter extends Controller {
     }
 
     private void handleStartRuntime( Message msg ) {
+        String hostId = (String)msg.getParam( "host_id" );
         RuntimeInfo runtime = (RuntimeInfo)msg.getParam( "runtime" );
-        System.out.println( "[EntityStarter] handleStartRuntime, runtime=" + runtime.getId() );
+        System.out.println( "[EntityStarter] handleStartRuntime, hostId=" + hostId +
+                            ", runtime=" + runtime.getId() );
 
         terminal.open( runtime.getProfile(), runtime.getTitle(), 
-                       runtime.getUser(), runtime.getIpAddr(), runtime.getCmd() );
+                       runtime.getUser(), runtime.getIpAddr(), 
+                       runtime.getCmd(), runtime.getSshOption() );
 
         // TODO: determine if the above command is SUCCESS or not
         
         CommChannel comm = channels.get( runtime.getParent() );
-        Message result = msgFactory.startRuntimeResp( runtime.getId(), "SUCCESS" );
+        Message result = msgFactory.startRuntimeResp( hostId, runtime.getId(), "SUCCESS" );
         comm.write( result );
     }
 

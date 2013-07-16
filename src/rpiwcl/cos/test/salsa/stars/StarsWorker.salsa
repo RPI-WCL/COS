@@ -6,11 +6,11 @@
  */
 
 
-module salsa.examples.stars;
+module rpiwcl.cos.test.salsa.stars;
 
 import java.io.*;
 import java.util.*;
-import salsa.examples.stars.*;
+import rpiwcl.cos.test.salsa.stars.*;
 
 
 behavior StarsWorker {

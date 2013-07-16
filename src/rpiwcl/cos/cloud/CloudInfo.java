@@ -6,7 +6,8 @@ import rpiwcl.cos.common.Message;
 import rpiwcl.cos.util.CommChannel;
 
 public class CloudInfo extends MachInfo {
-    String type;   // private or public
+    private String type;
+    private int maxRuntimes;
     private HashMap<String, String> runtimeTable;   // runtimeId, hostIpAddr
 
     public CloudInfo(String address, CommChannel contact) {
@@ -14,6 +15,24 @@ public class CloudInfo extends MachInfo {
         type = null;
         runtimeTable = new HashMap<String, String>();
     }
+
+    
+    public void setType( String type ) {
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public int getMaxRuntimes() {
+        return maxRuntimes;
+    }
+
+    public void setMaxRuntimes( int maxRuntimes ) {
+        this.maxRuntimes = maxRuntimes;
+    }
+
 
     public HashMap<String, String> getRuntimeTable() {
         return runtimeTable;
@@ -24,32 +43,25 @@ public class CloudInfo extends MachInfo {
         System.out.println( "updateRuntimeTable, runtimeTable=" + this.runtimeTable );
     }
 
-    public void setType( String type ) {
-        this.type = type;
-    }
-
-    public String getType() {
-        return type;
-    }
     public int getNumRuntimes() {
         return runtimeTable.size();
     }
 
-    public static int getTotalNumRuntimesLimit (Collection<CloudInfo> clouds) {
-        int numRuntimesLimit = 0;
+    public static int getTotalMaxRuntimes (Collection<CloudInfo> clouds) {
+        int maxRuntimes = 0;
 
         for (CloudInfo cloud : clouds)
-            numRuntimesLimit += cloud.getNumRuntimesLimit();
+            maxRuntimes += cloud.getMaxRuntimes();
 
-        return numRuntimesLimit;
+        return maxRuntimes;
     }
 
-    public static int getTotalNumRuntimesInUse (Collection<CloudInfo> clouds) {
-        int numRuntimesInUse = 0;
+    public static int getTotalNumRuntimes (Collection<CloudInfo> clouds) {
+        int numRuntimes = 0;
 
         for (CloudInfo cloud : clouds)
-            numRuntimesInUse += cloud.getRuntimeTable().size();
+            numRuntimes += cloud.getRuntimeTable().size();
 
-        return numRuntimesInUse;
+        return numRuntimes;
     }
 }

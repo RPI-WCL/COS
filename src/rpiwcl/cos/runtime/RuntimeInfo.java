@@ -9,11 +9,13 @@ public class RuntimeInfo implements Serializable {
     String user;
     String ipAddr;
     String cmd;
+    String sshOption;
     String parent;
 
     public RuntimeInfo( String id, /* runtimeId */
                         String profile, String title, /* terminal */
                         String user, String ipAddr, String cmd /* ssh */,
+                        String sshOption,
                         String parent /* for reply */ ) {
         this.id = id;
         this.profile = profile;
@@ -21,6 +23,7 @@ public class RuntimeInfo implements Serializable {
         this.user = user;
         this.ipAddr = ipAddr;
         this.cmd = cmd;
+        this.sshOption = sshOption;
         this.parent = parent;
     }
     
@@ -64,6 +67,13 @@ public class RuntimeInfo implements Serializable {
     }
     public String getCmd() {
         return cmd;
+    }
+
+    public void setSshOption( String sshOption ) {
+        this.sshOption = sshOption;
+    }
+    public String getSshOption() {
+        return sshOption;
     }
 
     public void setParent( String parent ) {

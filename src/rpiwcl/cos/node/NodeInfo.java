@@ -7,6 +7,9 @@ import rpiwcl.cos.util.CommChannel;
 
 public class NodeInfo extends MachInfo
 {
+    private String cpu;
+    private int cpuMark;        // retrieved from CpuDb
+    private int maxRuntimes;
     private HashSet<String> runtimeIds;
 
     public NodeInfo(String address, CommChannel contact) {
@@ -16,6 +19,30 @@ public class NodeInfo extends MachInfo
 
     public HashSet<String> getRuntimeIds() {
         return runtimeIds;
+    }
+
+    public String getCpu() {
+        return cpu;
+    }
+
+    public void setCpu( String cpu ) {
+        this.cpu = cpu;
+    }
+
+    public int getCpuMark() {
+        return cpuMark;
+    }
+
+    public void setCpuMark( int cpuMark ) {
+        this.cpuMark = cpuMark;
+    }
+
+    public int getMaxRuntimes() {
+        return maxRuntimes;
+    }
+
+    public void setMaxRuntimes( int maxRuntimes ) {
+        this.maxRuntimes = maxRuntimes;
     }
 
     public void addRuntimeIds( HashSet<String> runtimeIds ) {
@@ -32,21 +59,21 @@ public class NodeInfo extends MachInfo
         return runtimeIds.size();
     }
 
-    public static int getTotalNumRuntimesLimit (Collection<NodeInfo> nodes) {
-        int numRuntimesLimit = 0;
+    public static int getTotalMaxRuntimes (Collection<NodeInfo> nodes) {
+        int maxRuntimes = 0;
 
         for (NodeInfo node : nodes)
-            numRuntimesLimit += node.getNumRuntimesLimit();
+            maxRuntimes += node.getMaxRuntimes();
 
-        return numRuntimesLimit;
+        return maxRuntimes;
     }
 
-    public static int getTotalNumRuntimesInUse (Collection<NodeInfo> nodes) {
-        int numRuntimesInUse = 0;
+    public static int getTotalNumRuntimes (Collection<NodeInfo> nodes) {
+        int numRuntimes = 0;
 
         for (NodeInfo node : nodes)
-            numRuntimesInUse += node.getRuntimeIds().size();
+            numRuntimes += node.getRuntimeIds().size();
 
-        return numRuntimesInUse;
+        return numRuntimes;
     }
 }

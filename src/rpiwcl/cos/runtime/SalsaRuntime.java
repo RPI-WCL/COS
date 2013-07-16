@@ -19,7 +19,8 @@ public class SalsaRuntime implements AppRuntime {
         String classpath = (String)conf.get( "classpath" );
         String mainClass = (String)conf.get( "main_class" );
         String parent = (String)conf.get( "parent" );
-        String option = (String)conf.get( "option" );
+        String appOption = (String)conf.get( "app_option" );
+        String sshOption = (String)conf.get( "ssh_option" );
 
         if (basePort < 0)
             basePort = ((Integer)conf.get( "base_port" )).intValue();
@@ -29,11 +30,15 @@ public class SalsaRuntime implements AppRuntime {
             return null;
         }
 
-        String cmd = "java " + option + " -cp " + classpath + " " + mainClass + " " + port;
+        if (appOption.contains( "extip" ))
+            appOption = appOption.concat( "=" + ipAddr );
+
+        String cmd = "java " + appOption + " -cp " + classpath + " " + mainClass + " " + port;
         String id = ipAddr + ":" + port;
         String title = "[" + id + "] " + mainClass;
 
-        RuntimeInfo runtime = new RuntimeInfo( id, profile, title, user, ipAddr, cmd, parent );
+        RuntimeInfo runtime = new RuntimeInfo( id, profile, title, user, ipAddr, 
+                                               cmd, sshOption, parent );
 
         return runtime;
     }
