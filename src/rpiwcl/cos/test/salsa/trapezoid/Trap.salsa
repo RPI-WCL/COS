@@ -1,0 +1,75 @@
+module rpiwcl.cos.test.salsa.trapezoid;
+
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Vector;
+
+import rpiwcl.cos.test.salsa.trapezoid.*;
+import rpiwcl.cos.runtime.CosInterface;
+
+
+behavior Trap {
+	// input varialbles
+	int         numWorkers;
+    String      inputFile; 
+    String      outputFile; 
+    String      theatersFile;
+        
+    // disribution support
+	String      nameServer;
+	Vector      theaters;
+
+    long initialTime;
+
+    // Trap parameters
+    int a;
+    int b;
+    int n;
+
+    // COS support
+    String      cosIpAddr;
+    int         cosPort;
+	
+	void act( String args[] ) {
+		if ( args.length < 7 ) {
+			System.err.println ( "Error: invalid usage" );
+			System.err.println ( "Usage: java Trap <a> <b> <n> <#workers> <theaters file> <CosIpAddr> <CosPort>" );
+			return;
+		}
+
+        // parse input parameters
+        a = Integer.parseInt( args[0] );
+        b = Integer.parseInt( args[1] );
+        n = Integer.parseInt( args[2] );
+		numWorkers = Integer.parseInt( args[3] );
+        theatersFile = args[4];
+    	theaters = new Vector();
+	    String theater;
+		try {
+			BufferedReader in = new BufferedReader( new FileReader( theatersFile ) );
+			nameServer = in.readLine();
+	    	while ( (theater = in.readLine() )!= null ) {
+				theaters.add( theater );
+			}
+			in.close(); 
+		} catch ( IOException ex ) {
+			System.err.println( "Error: Can't open the file " + theatersFile + " for reading." );
+		}
+        
+        this.cosIpAddr = args[5];
+        this.cosPort = Integer.parseInt( args[6] );
+
+        startTrap();
+	}
+
+
+    void startTrap() {
+        TrapFarmer farmer = new TrapFarmer() at (new UAN( "uan://" + nameServer + "/trap" ), null );
+
+        farmer<-submitJob( a, b, n, numWorkers, 
+                           nameServer, theaters,
+                           cosIpAddr, cosPort, "Trap" )@currentContinuation;
+    }
+	
+}

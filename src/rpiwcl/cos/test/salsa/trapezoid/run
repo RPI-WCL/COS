@@ -1,0 +1,1 @@
+java -Dnogc rpiwcl.cos.test.salsa.trapezoid.Trap 0 10000 1000000 16 theaters.txt 10.0.2.15 49153

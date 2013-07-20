@@ -75,7 +75,7 @@ behavior MapReduce {
         join {
             try {
                 BufferedReader in = new BufferedReader( new FileReader( inputFile ) );
-                ArrayList uals = new ArrayList();
+                ArrayList uans = new ArrayList();
 
                 for (int i = 0; i < numWorkers; i++) {
                     // split texts to a process
@@ -88,18 +88,22 @@ behavior MapReduce {
                     }
 
                     // create an actor on the theater
+                    String uan = "uan://" + nameServer + "/a" + i;
                     String ual = "rmsp://" + theaters.get( i % theaters.size() ) + "/a" + i;
-                    uals.add( ual );
-                    System.out.println( " Creating actor uan://" + nameServer + "/a" + i + 
-                                        " on " + ual );
-                    workers[i] = new TaskTracker( i, mapper, combiner, reducer, this.getUAN().toString() ) at (
-                        new UAN( "uan://" + nameServer + "/a" + i ), new UAL( ual ) );
+                    uans.add( uan );
+                    System.out.println( " Creating actor " + uan + " on " + ual );
+                    workers[i] = new TaskTracker( i, 
+                                                  mapper, 
+                                                  combiner, 
+                                                  reducer, 
+                                                  this.getUAN().toString() ) at
+                        (new UAN( uan ), new UAL( ual ));
                     workers[i]<-runMapper( texts );
                     numTasks += texts.size();
                 }
 
                 cosIf.reportNumTasks( numTasks );
-                cosIf.registerWorkers( uals );
+                cosIf.registerWorkers( uans );
                 cosIf.reportProgress( 0 ); // initial report
 
                 in.close();
@@ -246,6 +250,7 @@ behavior MapReduce {
         System.out.println( "Finished (elapsed time = " + 
                             ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );
         System.out.println();
+        cosIf.close();
 
         try {
             PrintWriter pw = new PrintWriter( new BufferedWriter( new FileWriter( outputFile ) ) );

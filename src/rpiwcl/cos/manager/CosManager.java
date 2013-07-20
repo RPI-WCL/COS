@@ -159,8 +159,8 @@ public class CosManager extends Controller {
             System.out.println( "[CosManager] READY received from all clouds, maxRuntimes="
                                 + maxRuntimes );
             
-            // createPrivRuntimes( initialNumRuntimes );
-            createPubRuntimes( initialNumRuntimes );
+            createPrivRuntimes( initialNumRuntimes );
+            //createPubRuntimes( initialNumRuntimes );
         }
         else if (state == STATE_READY) {
             //TODO: new resource is added, notify CosManager the new maxRuntimes

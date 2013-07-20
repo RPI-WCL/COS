@@ -338,7 +338,7 @@ public class MapReduce extends UniversalActor  {
 				token_2_0.setJoinDirector();
 				try {
 					BufferedReader in = new BufferedReader(new FileReader(inputFile));
-					ArrayList uals = new ArrayList();
+					ArrayList uans = new ArrayList();
 					for (int i = 0; i<numWorkers; i++){
 						texts.clear();
 						String text;
@@ -346,10 +346,11 @@ public class MapReduce extends UniversalActor  {
 							texts.add(text);
 							currentDataSize += text.length()+1;
 						}
+						String uan = "uan://"+nameServer+"/a"+i;
 						String ual = "rmsp://"+theaters.get(i%theaters.size())+"/a"+i;
-						uals.add(ual);
-						System.out.println(" Creating actor uan://"+nameServer+"/a"+i+" on "+ual);
-						workers[i] = ((TaskTracker)new TaskTracker(new UAN("uan://"+nameServer+"/a"+i), new UAL(ual),this).construct(i, mapper, combiner, reducer, this.getUAN().toString()));
+						uans.add(uan);
+						System.out.println(" Creating actor "+uan+" on "+ual);
+						workers[i] = ((TaskTracker)new TaskTracker(new UAN(uan), new UAL(ual),this).construct(i, mapper, combiner, reducer, this.getUAN().toString()));
 						{
 							// workers[i]<-runMapper(texts)
 							{
@@ -361,7 +362,8 @@ public class MapReduce extends UniversalActor  {
 						numTasks += texts.size();
 					}
 					cosIf.reportNumTasks(numTasks);
-					cosIf.registerWorkers(uals);
+					cosIf.registerWorkers(uans);
+					cosIf.reportProgress(0);
 					in.close();
 				}
 				catch (IOException ex) {
@@ -514,6 +516,7 @@ public class MapReduce extends UniversalActor  {
 		public void writeOutput(Object[] objs) {
 			System.out.println("Finished (elapsed time = "+((double)(System.currentTimeMillis()-startTime)/1000)+"s)");
 			System.out.println();
+			cosIf.close();
 			try {
 				PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(outputFile)));
 				for (int i = 0; i<objs.length; i++){

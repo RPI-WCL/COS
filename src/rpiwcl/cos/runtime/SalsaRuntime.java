@@ -30,10 +30,14 @@ public class SalsaRuntime implements AppRuntime {
             return null;
         }
 
-        if (appOption.contains( "extip" ))
+        if ((appOption != null) && appOption.contains( "extip" ))
             appOption = appOption.concat( "=" + ipAddr );
 
-        String cmd = "java " + appOption + " -cp " + classpath + " " + mainClass + " " + port;
+        String cmd = null;
+        if (appOption != null)
+            cmd = "java " + appOption + " -cp " + classpath + " " + mainClass + " " + port;
+        else 
+            cmd = "java " + " -cp " + classpath + " " + mainClass + " " + port;
         String id = ipAddr + ":" + port;
         String title = "[" + id + "] " + mainClass;
 

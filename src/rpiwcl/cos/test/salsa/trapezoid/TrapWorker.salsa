@@ -1,0 +1,87 @@
+module rpiwcl.cos.test.salsa.trapezoid;
+
+import java.io.*;
+import rpiwcl.cos.test.salsa.trapezoid.*;
+
+/* TrapWorker.salsa -- 
+ *   Worker for Parallel Trapezoidal Rule
+ */
+
+behavior TrapWorker{
+    int REPORT_PROGRESS_INTERVAL = 10000; // report progress every this milliseconds
+    double BURST_PERCENTAGE = 0.01; 
+
+    int id;
+    ActorReference farmer;
+    TrapIntegral trap;
+    int numIter;
+    double integral;
+    int burstSize;
+
+
+    TrapWorker( int id, String farmerUAN ) {
+        this.id = id;
+        this.farmer = (TrapFarmer)TrapFarmer.getReferenceByName( farmerUAN  );
+        this.trap = new TrapIntegral();
+        this.numIter = 0;
+        this.integral = 0;
+        this.burstSize = 0;
+    }
+
+    long lastReportTime = 0;
+    int reportProgress( int iter ) {
+        long currentTime = System.currentTimeMillis();
+        
+        if (lastReportTime + REPORT_PROGRESS_INTERVAL <= currentTime) {
+            System.out.println( " Worker " + id + " completed " + iter + "/" + numIter );
+            farmer<-reportProgress( id, iter );
+            lastReportTime = currentTime;
+        }
+
+        return iter;
+    }
+
+
+    int addBurst( int iter ) {
+        int i;
+        for (i = iter; (i < iter+burstSize) && (i < numIter); i++)
+            integral += trap.add( i );
+            
+        return i;
+    }
+    
+
+    double addIter( int iter ) {
+        if (iter == numIter)
+            return integral;
+
+        addBurst( iter )@
+        reportProgress( token )@
+        addIter( token )@currentContinuation;
+    }
+
+
+    long startTime = 0;
+    Double trap(double local_a, double local_b, int local_n, double h) {
+        System.out.println( "Worker " + id + " started (#tasks=" + local_n + ")" );
+        startTime = System.currentTimeMillis();
+
+        numIter = local_n;
+        burstSize = (int)(local_n * BURST_PERCENTAGE);
+
+        trap.setParameters( local_a, local_b, h );
+        integral = trap.startIntegral();
+
+        addIter( 1 )@
+        convertToDouble( token )@currentContinuation;
+    }
+
+
+    Double convertToDouble(double d) {
+        System.out.println( "Worker " + id + " finished (elapsed time = " +
+                            ((double)(System.currentTimeMillis() - startTime) / 1000) + "s)" );  
+
+        return (new Double(d));
+    }
+
+}

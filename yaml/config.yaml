@@ -76,7 +76,7 @@ node-nimbus:
             main_class: wwc.messaging.Theater
             classpath: *app-runtime-cp
             base_port: *app-base-port
-            option: *app-option
+            app_option: *app-option
             parent: node-nimbus
         use_vm: *use-vm
         vm_support: true
@@ -99,7 +99,7 @@ node-cirrus:
             main_class: wwc.messaging.Theater
             classpath: *app-runtime-cp
             base_port: 4140
-            option: *app-option
+            app_option: *app-option
             parent: node-cirrus
         use_vm: *use-vm
         vm_support: true
