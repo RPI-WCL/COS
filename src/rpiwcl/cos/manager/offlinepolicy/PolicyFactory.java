@@ -1,8 +1,10 @@
 package rpiwcl.cos.manager.offlinepolicy;
 
+import java.util.HashMap;
+
 public class PolicyFactory {
 
-    public static Policy getPolicy( String type, double constraint, String option ) {
+    public static Policy getPolicy( String type, double constraint, HashMap option ) {
         Policy policy = null;
 
         switch (type) {

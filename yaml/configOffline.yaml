@@ -1,12 +1,13 @@
 app_name: Trap
-tasks: 3000
+tasks: 4800000
 throughputPerECU: 2768.54
+useWECU: false
 
 # unit in [sec] for deadline, [USD] for budget
 policy: 
     type: deadline
     constraint: 24.0
-    option: useECU
+    early_deadline_ratio: 0.05
 
 # assuming one for each cloud
 privcloud:

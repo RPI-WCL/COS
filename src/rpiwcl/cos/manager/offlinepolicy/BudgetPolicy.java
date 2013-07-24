@@ -1,20 +1,13 @@
 package rpiwcl.cos.manager.offlinepolicy;
 
-import java.util.ArrayList;
+import java.util.*;
 import rpiwcl.cos.manager.offlinepolicy.*;
 
 
 public class BudgetPolicy extends Policy {
-    private static final int DP_MULTI_COEEF = 100; // ECU integer for Dynamic Programming
 
-    private ResourceConfig resConf;
-    private boolean useWECU;
-    private int remainECU;
-
-    public BudgetPolicy( double constraint, String option ) {
+    public BudgetPolicy( double constraint, HashMap option ) {
         super( constraint );
-        useWECU = !option.equals( "useECU" ); // default is WECU
-        resConf = new ResourceConfig();
     }
 
 

@@ -4,45 +4,27 @@ public class InstanceInfo {
     private String type;  // public or private
     private String name;
     private int cpus;
-    private double WECU;
-    private double price;
+    private int ECU;
 
     // only for public cloud
-    private double ECU;
+    private double price;
 
     // only for private cloud
     private String ipAddr;
     private String user;
     private int instanceLimit;
 
-
     // for private cloud
-    public InstanceInfo( String type, String name, int cpus, double WECU, 
+    public InstanceInfo( String type, String name, int cpus, int ECU, double price,
                          String ipAddr, String user, int instanceLimit ) {
         this.type = type;
         this.name = name;
         this.cpus = cpus;
-        this.WECU = WECU;
-        this.price = 0;
-        this.ECU = (int)Math.floor( WECU );
+        this.ECU = ECU;
+        this.price = price;
         this.ipAddr = ipAddr;
         this.user = user;
         this.instanceLimit = instanceLimit;
-    }
-
-    // for public cloud
-    public InstanceInfo( String type, String name, int cpus, double WECU, 
-                         double price, double ECU ) {
-
-        this.type = type;
-        this.name = name;
-        this.cpus = cpus;
-        this.WECU = WECU;
-        this.price = price;
-        this.ECU = ECU;
-        this.ipAddr = null;
-        this.user = null;
-        this.instanceLimit = 0;
     }
 
 
@@ -58,15 +40,11 @@ public class InstanceInfo {
         return cpus;
     }
 
-    public double getWECU() {
-        return WECU;
-    }
-
     public double getPrice() {
         return price;
     }
 
-    public double getECU() {
+    public int getECU() {
         return ECU;
     }
 
@@ -84,8 +62,8 @@ public class InstanceInfo {
 
     public String toString() {
         String str = "[" +
-            // type=" + type +
-            "name=" + name +
+            "type=" + type +
+            ", name=" + name +
             // ", cpus=" + cpus +
             // ", WECU=" + WECU +
             ", price=" + price +
