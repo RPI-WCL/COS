@@ -13,6 +13,14 @@ public class ResourceConfig {
         time = 0.0;
     }
 
+    public HashMap<InstanceInfo, Integer> getInstances() {
+        return instances;
+    }
+
+    public void setInstances( HashMap<InstanceInfo, Integer> instances) {
+        this.instances = instances;
+    }
+
     public void addInstance( InstanceInfo instance, int num ) {
         Integer i = instances.get( instance );
 

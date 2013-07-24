@@ -1,10 +1,13 @@
 package rpiwcl.cos.manager.offlinepolicy;
 
+import java.util.*;
+
 public class InstanceInfo {
     private String type;  // public or private
     private String name;
     private int cpus;
     private int ECU;
+    private HashMap<String, ArrayList<Integer>> workerTasks;
 
     // only for public cloud
     private double price;
@@ -25,6 +28,7 @@ public class InstanceInfo {
         this.ipAddr = ipAddr;
         this.user = user;
         this.instanceLimit = instanceLimit;
+        this.workerTasks = new HashMap<String, ArrayList<Integer>>();
     }
 
 
@@ -60,14 +64,20 @@ public class InstanceInfo {
         return instanceLimit;
     }
 
+    public void addWorkerTasks( String instanceId, ArrayList<Integer> numTasks ) {
+        workerTasks.put( instanceId, numTasks );
+    }
+
+
     public String toString() {
         String str = "[" +
             "type=" + type +
             ", name=" + name +
-            // ", cpus=" + cpus +
+            ", cpus=" + cpus +
             // ", WECU=" + WECU +
             ", price=" + price +
             ", ECU=" + ECU +
+            ", workerTasks=" + workerTasks +
             // ", ipAddr=" + ipAddr +
             // ", user=" + user +
             // ", instanceLimit=" + instanceLimit +

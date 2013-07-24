@@ -6,6 +6,8 @@ import rpiwcl.cos.util.Utility;
 
 
 public class DeadlinePolicy extends Policy {
+    private static final int CPU_WORKER_RATIO = 2; // cpu:worker = 1:CPU_WORKER_RATIO
+
     private ResourceConfig resConf;
     private int targetECU;
     private double throughputPerECU;
@@ -46,6 +48,8 @@ public class DeadlinePolicy extends Policy {
         else if (schedulePubInstances()) {
             ;// targetECU == 0;
         }
+
+        assignWorkers();
 
         return resConf;
     }
@@ -148,6 +152,111 @@ public class DeadlinePolicy extends Policy {
         
         return true;
     }
+
+
+    public void assignWorkers() {
+        HashMap<InstanceInfo, Integer> instances = resConf.getInstances();
+        int totalECU = resConf.getTotalECU();
+        int totalTasks = tasks;
+        int totalInstances = instances.size();
+
+        System.out.println( "totalECU=" + totalECU + ", totalTasks=" + totalTasks );
+        
+        int i = 0;
+        for (Iterator it = instances.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry)it.next();
+            InstanceInfo instance = (InstanceInfo)entry.getKey();
+            int instanceNum = ((Integer)entry.getValue()).intValue();
+
+            int workersPerInstance = instance.getCpus() * CPU_WORKER_RATIO;
+            int tasksPerInstanceType = (int)(totalTasks * (double)instanceNum * instance.getECU() / totalECU);
+                                             
+            for (int j = 0; j < instanceNum; j++) {
+                ArrayList<Integer> numTasks = new ArrayList<Integer>();
+
+                String instanceId = instance.getName() + "[" + j + "]";
+                int tasksPerInstance = tasksPerInstanceType / instanceNum;
+                int tasksPerWorker = tasksPerInstance / workersPerInstance;
+
+                for (int k = 0; k < workersPerInstance; k++) {
+                    // if (k == workersPerInstance - 1) {
+                    //     numTasks.add( new Integer( extraTasks ) );
+                    // }
+                    // else
+                    numTasks.add( new Integer( tasksPerWorker ) );
+                    instance.addWorkerTasks( instanceId, numTasks );
+                }
+            }
+            i++;
+        }
+
+        System.out.println( "[Deadline] assignWorkers, resConf:" );
+        System.out.println( resConf );
+
+    }
+
+
+    public void assignWorkers2() {
+        HashMap<InstanceInfo, Integer> instances = resConf.getInstances();
+        int totalECU = resConf.getTotalECU();
+        int totalTasks = tasks;
+        int totalTasksRemain = totalTasks;
+        int totalInstances = instances.size();
+
+        System.out.println( "totalECU=" + totalECU + ", totalTasks=" + totalTasks );
+        
+        int i = 0;
+        for (Iterator it = instances.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry)it.next();
+            InstanceInfo instance = (InstanceInfo)entry.getKey();
+            int instanceNum = ((Integer)entry.getValue()).intValue();
+
+            int workersPerInstance = instance.getCpus() * CPU_WORKER_RATIO;
+            int tasksPerInstanceType;
+            if (i == totalInstances - 1)
+                tasksPerInstanceType = totalTasks;
+            else {
+                tasksPerInstanceType = (int)(totalTasks * (double)instanceNum * instance.getECU() / totalECU);
+                totalTasksRemain -= tasksPerInstanceType;
+            }
+            int tasksPerInstanceTypeRemain = tasksPerInstanceType;
+            System.out.println( "instance.getName()=" + instance.getName() + 
+                                ", tasksPerInstanceType=" + tasksPerInstanceType );
+                                             
+            for (int j = 0; j < instanceNum; j++) {
+                ArrayList<Integer> numTasks = new ArrayList<Integer>();
+
+                String instanceId = instance.getName() + "[" + j + "]";
+                int tasksPerInstance = tasksPerInstanceType / instanceNum;
+                int tasksPerInstanceRemain = tasksPerInstance;
+                int tasksPerWorker = tasksPerInstance / workersPerInstance;
+
+                for (int k = 0; k < workersPerInstance; k++) {
+                    if ((j == instanceNum - 1) && (k == workersPerInstance - 1))
+                        numTasks.add( new Integer( tasksPerInstanceTypeRemain ) );                        
+                    else if (k == (workersPerInstance - 1))
+                        numTasks.add( new Integer( tasksPerInstanceRemain ) );
+                    else 
+                        numTasks.add( new Integer( tasksPerWorker ) );
+                    tasksPerInstanceRemain -= tasksPerWorker;
+
+                    System.out.println( "instanceId=" + instanceId + 
+                                        ", tasksPerWorker=" + tasksPerWorker +
+                                        ", tasksPerInstanceRemain=" + tasksPerInstanceType );
+                }
+                tasksPerInstanceTypeRemain -= tasksPerInstance;
+
+                System.out.println( "instance=" + instance.getName() + 
+                                    ", numTasks=" + numTasks +
+                                    ", taskPerInstanceTypeRemain=" + tasksPerInstanceTypeRemain );
+
+                instance.addWorkerTasks( instanceId, numTasks );
+            }
+
+            i++;
+        }
+    }
+    
 }
 
     

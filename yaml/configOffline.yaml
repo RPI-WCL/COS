@@ -7,9 +7,9 @@ useWECU: false
 policy: 
     type: deadline
     constraint: 24.0
-    early_deadline_ratio: 0.05
+    early_deadline_ratio: 0.03
 
-# assuming one for each cloud
+# assuming one entry for each cloud
 privcloud:
     - name: node05
       cpus: 4
