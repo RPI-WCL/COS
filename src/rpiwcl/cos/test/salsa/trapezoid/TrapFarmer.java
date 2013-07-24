@@ -274,6 +274,7 @@ public class TrapFarmer extends UniversalActor  {
 		int cosPort;
 		String appName;
 		CosInterface cosIf;
+		boolean useCosIf = false;
 		public void submitJob(int a, int b, int n, int numWorkers, String nameServer, Vector theaters, String cosIpAddr, int cosPort, String appName) {
 			this.a = a;
 			this.b = b;
@@ -286,8 +287,8 @@ public class TrapFarmer extends UniversalActor  {
 			this.cosIpAddr = cosIpAddr;
 			this.cosPort = cosPort;
 			this.appName = appName;
-			this.cosIf = new CosInterface(cosIpAddr, cosPort, appName);
-			{
+			if (useCosIf) {this.cosIf = new CosInterface(cosIpAddr, cosPort, appName);
+}			{
 				Token token_2_0 = new Token();
 				Token token_2_1 = new Token();
 				// distributeWork()
@@ -332,11 +333,13 @@ public class TrapFarmer extends UniversalActor  {
 				}
 				workers[i] = ((TrapWorker)new TrapWorker(new UAN(uan), new UAL(ual),this).construct(i, this.getUAN().toString()));
 			}
-			cosIf.open();
-			cosIf.reportNumTasks(numTasks);
-			cosIf.registerWorkers(uans);
-			cosIf.reportProgress(0);
-			{
+			if (useCosIf) {{
+				cosIf.open();
+				cosIf.reportNumTasks(numTasks);
+				cosIf.registerWorkers(uans);
+				cosIf.reportProgress(0);
+			}
+}			{
 				// standardOutput<-println(">>>>>>Starting the computation")
 				{
 					Object _arguments[] = { ">>>>>>Starting the computation" };
@@ -375,9 +378,9 @@ public class TrapFarmer extends UniversalActor  {
 			long finalTime = System.currentTimeMillis();
 			long runningTime = finalTime-initialTime;
 			{
-				// standardOutput<-println("Running time for Trapezoidal"+" approximation is "+(runningTime/1000)+" sec")
+				// standardOutput<-println("Running time for Trapezoidal"+" approximation is "+((double)runningTime/1000)+" sec")
 				{
-					Object _arguments[] = { "Running time for Trapezoidal"+" approximation is "+(runningTime/1000)+" sec" };
+					Object _arguments[] = { "Running time for Trapezoidal"+" approximation is "+((double)runningTime/1000)+" sec" };
 					Message message = new Message( self, standardOutput, "println", _arguments, null, null );
 					__messages.add( message );
 				}
@@ -399,8 +402,8 @@ public class TrapFarmer extends UniversalActor  {
 					__messages.add( message );
 				}
 			}
-			cosIf.close();
-		}
+			if (useCosIf) {cosIf.close();
+}		}
 		long lastReportTime = 0;
 		public void reportProgress(int id, int completed) {
 			long currentTime = System.currentTimeMillis();
@@ -410,8 +413,8 @@ public class TrapFarmer extends UniversalActor  {
 				int sum = 0;
 				for (int i = 0; i<numWorkers; i++)sum += completedTasks[i];
 				System.out.println(" "+sum+"/"+numTasks+" ("+(100*sum/numTasks)+"%) completed");
-				cosIf.reportProgress(sum);
-			}
+				if (useCosIf) {cosIf.reportProgress(sum);
+}			}
 }		}
 	}
 }

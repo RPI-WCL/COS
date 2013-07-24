@@ -1,0 +1,61 @@
+app_name: Trap
+tasks: 3000
+throughputPerECU: 2768.54
+
+# unit in [sec] for deadline, [USD] for budget
+policy: 
+    type: deadline
+    constraint: 24.0
+    option: useECU
+
+# assuming one for each cloud
+privcloud:
+    - name: node05
+      cpus: 4
+      WECU: 4.6766
+      ipaddr: 128.213.60.25
+      user: imais
+      instance_limit: 1
+
+pubcloud:
+    - name: m1.small
+      cpus: 1
+      WECU: 1.00
+      ECU: 1.00
+      price: 0.06
+    - name: m1.medium
+      cpus: 1
+      WECU: 1.897
+      ECU: 2.00
+      price: 0.12
+    - name: m1.large
+      cpus: 2
+      WECU: 4.042
+      ECU: 4.0
+      price: 0.24
+    - name: c1.medium
+      cpus: 2
+      WECU: 4.038
+      ECU: 5.0
+      price: 0.145
+    - name: m1.xlarge
+      cpus: 4
+      WECU: 7.777
+      ECU: 8.0
+      price: 0.48
+    - name: m3.xlarge
+      cpus: 4
+      WECU: 8.194
+      ECU: 13.0
+      price: 0.50
+    - name: c1.xlarge
+      cpus: 8
+      WECU: 15.804
+      ECU: 20.0
+      price: 0.58
+    - name: m3.2xlarge
+      cpus: 8
+      WECU: 16.249
+      ECU: 26.0
+      price: 1.00
+

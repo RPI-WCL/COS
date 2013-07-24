@@ -40,20 +40,21 @@ public class DpTest {
 
                 if (wcu < (ecus[j] / i)) {
                     // all i workers are qualified
-                    System.out.println( "  A:cost=" + prices[j] );
+                    System.out.println( "A:assign " + i + " workers, cost=" + prices[j] );
                     q = Math.min( q, prices[j] );
                 } 
                 else if (0 < Math.floor( ecus[j] / wcu )) {
                         // [ecus[j]/w] workers are qualified, but the rest are not
                         int k = i - (int)Math.floor( ecus[j] / wcu );
-                        System.out.println( "  B:prices[" + j + "](" + prices[j] + 
+                        System.out.println( "B:assign " + (int)Math.floor( ecus[j] / wcu ) +
+                                            " workers, prices[" + j + "](" + prices[j] + 
                                             ") +  cost[" + k + "](" + cost[k] + ")=" + 
                                             (prices[j] + cost[k]) );
                         q = Math.min( q, prices[j] + cost[k] );
                 }
                 else {
                     // all i workers are not qualified
-                    System.out.println( "  C: N/A" );
+                    System.out.println( "C: N/A" );
                 }
             }
             cost[i] = q;

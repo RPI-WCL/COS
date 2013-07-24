@@ -43,6 +43,7 @@ behavior TrapFarmer {
     int         cosPort;
     String      appName;
     CosInterface cosIf;
+    boolean     useCosIf = false;
 
     void submitJob( int a, int b, int n, int numWorkers, 
                     String nameServer, Vector theaters,
@@ -58,7 +59,8 @@ behavior TrapFarmer {
         this.cosIpAddr = cosIpAddr;
         this.cosPort = cosPort;
         this.appName = appName;
-        this.cosIf = new CosInterface( cosIpAddr, cosPort, appName );
+        if (useCosIf)
+            this.cosIf = new CosInterface( cosIpAddr, cosPort, appName );
         
         distributeWork()@
         displayResults(token)@
@@ -85,10 +87,12 @@ behavior TrapFarmer {
                 (new UAN( uan ), new UAL( ual ));
         }
 
-        cosIf.open();
-        cosIf.reportNumTasks( numTasks );
-        cosIf.registerWorkers( uans );
-        cosIf.reportProgress( 0 ); // initial report
+        if (useCosIf) {
+            cosIf.open();
+            cosIf.reportNumTasks( numTasks );
+            cosIf.registerWorkers( uans );
+            cosIf.reportProgress( 0 ); // initial report
+        }
 
         //start computation
         standardOutput<-println(">>>>>>Starting the computation");
@@ -112,7 +116,7 @@ behavior TrapFarmer {
         long finalTime = System.currentTimeMillis();
         long runningTime = finalTime - initialTime;
         standardOutput<-println("Running time for Trapezoidal" + 
-                                " approximation is "+(runningTime/1000)+" sec");
+                                " approximation is "+((double)runningTime/1000)+" sec");
     }
 
     double addUpIntegrals(Object[] results){
@@ -127,7 +131,8 @@ behavior TrapFarmer {
     void displayResults(double result){
         standardOutput<-println("With n = "+n+" trapezoids, our estimate of the integral on ("+a+","+b+")="+result);
 
-        cosIf.close();
+        if (useCosIf)
+            cosIf.close();
     }
 
     long lastReportTime = 0;
@@ -144,8 +149,9 @@ behavior TrapFarmer {
 
             System.out.println( " " + sum + "/" + numTasks + " (" + 
                                 (100 * sum / numTasks) + "%) completed" );
-
-            cosIf.reportProgress( sum );
+            
+            if (useCosIf)
+                cosIf.reportProgress( sum );
         }
     }
 
