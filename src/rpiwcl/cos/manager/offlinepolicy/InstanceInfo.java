@@ -68,6 +68,9 @@ public class InstanceInfo {
         workerTasks.put( instanceId, numTasks );
     }
 
+    public HashMap<String, ArrayList<Integer>> getWorkerTasks() {
+        return workerTasks;
+    }
 
     public String toString() {
         String str = "[" +
@@ -77,7 +80,7 @@ public class InstanceInfo {
             // ", WECU=" + WECU +
             ", price=" + price +
             ", ECU=" + ECU +
-            ", workerTasks=" + workerTasks +
+            // ", workerTasks=" + workerTasks +
             // ", ipAddr=" + ipAddr +
             // ", user=" + user +
             // ", instanceLimit=" + instanceLimit +

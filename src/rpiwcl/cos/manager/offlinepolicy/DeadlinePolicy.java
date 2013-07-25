@@ -160,7 +160,7 @@ public class DeadlinePolicy extends Policy {
         int totalTasks = tasks;
         int totalInstances = instances.size();
 
-        System.out.println( "totalECU=" + totalECU + ", totalTasks=" + totalTasks );
+        System.out.println( "[Deadline] assignWorkers, totalECU=" + totalECU + ", totalTasks=" + totalTasks );
         
         int i = 0;
         for (Iterator it = instances.entrySet().iterator(); it.hasNext(); ) {
@@ -178,6 +178,8 @@ public class DeadlinePolicy extends Policy {
                 int tasksPerInstance = tasksPerInstanceType / instanceNum;
                 int tasksPerWorker = tasksPerInstance / workersPerInstance;
 
+                // System.out.print( instanceId + ": " );
+
                 for (int k = 0; k < workersPerInstance; k++) {
                     // if (k == workersPerInstance - 1) {
                     //     numTasks.add( new Integer( extraTasks ) );
@@ -185,14 +187,12 @@ public class DeadlinePolicy extends Policy {
                     // else
                     numTasks.add( new Integer( tasksPerWorker ) );
                     instance.addWorkerTasks( instanceId, numTasks );
-                }
+
+                }                    
+                // System.out.println( numTasks );
             }
             i++;
         }
-
-        System.out.println( "[Deadline] assignWorkers, resConf:" );
-        System.out.println( resConf );
-
     }
 
 

@@ -1,0 +1,75 @@
+module rpiwcl.cos.test.salsa.trapezoid2;
+
+import java.io.*;
+import java.util.*;
+import org.ho.yaml.Yaml;
+import rpiwcl.cos.test.salsa.trapezoid2.*;
+import rpiwcl.cos.runtime.CosInterface;
+
+
+behavior Trap {
+    // disribution support
+	String nameServer;
+
+    long initialTime;
+
+    // Trap parameters
+    int a;
+    int b;
+    int n;
+    int numWorkers;
+
+    // configuration
+    HashMap conf;
+
+	
+	void act( String args[] ) {
+		if ( args.length != 5 ) {
+			System.err.println ( "Usage: java Trap <a> <b> <n> <nameServer> <confFile>" );
+			return;
+		}
+
+        // parse input parameters
+        a = Integer.parseInt( args[0] );
+        b = Integer.parseInt( args[1] );
+        n = Integer.parseInt( args[2] );
+        nameServer = args[3];
+
+        conf = null;
+        try {
+            conf = (HashMap)Yaml.load(new File(args[4]));
+        } catch (FileNotFoundException ex) {
+            System.err.println( "File " + args[4] + " not found" );
+        }
+
+        numWorkers = 0;
+        ArrayList rpiNodes = (ArrayList)conf.get( "cloud-rpiwcl" );
+        for (int i = 0; i < rpiNodes.size(); i++) {
+            HashMap node = (HashMap)rpiNodes.get( i );
+            ArrayList workersList = (ArrayList)node.get( "workers" );
+            for (int j = 0; j < workersList.size(); j++) {
+                String workers = (String)workersList.get( j );
+                String[] splits = workers.split( "," );
+                numWorkers += splits.length;
+            }
+        }
+        ArrayList ec2Nodes = (ArrayList)conf.get( "cloud-ec2" );
+        for (int i = 0; i < ec2Nodes.size(); i++) {
+            HashMap node = (HashMap)rpiNodes.get( i );
+            ArrayList workersList = (ArrayList)node.get( "workers" );
+            for (int j = 0; j < workersList.size(); j++) {
+                String workers = (String)workersList.get( j );
+                String[] splits = workers.split( "," );
+                numWorkers += splits.length;
+            }
+        }
+
+        startTrap();
+	}
+
+    void startTrap() {
+        TrapFarmer farmer = new TrapFarmer() at (new UAN( "uan://" + nameServer + "/trap" ), null );
+        farmer<-submitJob( a, b, n, numWorkers, nameServer, conf )@currentContinuation;
+    }
+	
+}

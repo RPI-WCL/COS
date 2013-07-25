@@ -47,6 +47,40 @@ public class SalsaRuntime implements AppRuntime {
         return runtime;
     }
 
+
+    public RuntimeInfo createRuntime( HashMap conf, int port ) {
+        String ipAddr = (String)conf.get( "ipaddr" );
+        String user = (String)conf.get( "user" );
+        String profile = (String)conf.get( "terminal_profile" );
+        String classpath = (String)conf.get( "classpath" );
+        String mainClass = (String)conf.get( "main_class" );
+        String parent = (String)conf.get( "parent" );
+        String appOption = (String)conf.get( "app_option" );
+        String sshOption = (String)conf.get( "ssh_option" );
+
+        if (port < 0) {
+            System.err.println( "[SalsaRuntime] ERROR no valid port number found" );
+            return null;
+        }
+
+        if ((appOption != null) && appOption.contains( "extip" ))
+            appOption = appOption.concat( "=" + ipAddr );
+
+        String cmd = null;
+        if (appOption != null)
+            cmd = "java " + appOption + " -cp " + classpath + " " + mainClass + " " + port;
+        else 
+            cmd = "java " + " -cp " + classpath + " " + mainClass + " " + port;
+        String id = ipAddr + ":" + port;
+        String title = "[" + id + "] " + mainClass;
+
+        RuntimeInfo runtime = new RuntimeInfo( id, profile, title, user, ipAddr, 
+                                               cmd, sshOption, parent );
+
+        return runtime;
+    }
+
+
     private static int findAvailablePort() {
         boolean found = false;
 

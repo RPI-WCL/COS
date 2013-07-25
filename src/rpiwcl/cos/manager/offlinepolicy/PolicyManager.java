@@ -33,7 +33,7 @@ public class PolicyManager {
 
         // private cloud: assuming only one
         privCloud = new ArrayList<InstanceInfo>();
-        ArrayList privInstances = (ArrayList)config.get( "privcloud" );
+        ArrayList privInstances = (ArrayList)config.get( "cloud-rpiwcl" );
         for (int i = 0; i < privInstances.size(); i++) {
             HashMap instance = (HashMap)privInstances.get( i );
             int ecu = (useWECU) ? 
@@ -54,7 +54,7 @@ public class PolicyManager {
 
         // public cloud: assuming only one
         pubCloud = new ArrayList<InstanceInfo>();
-        ArrayList pubInstances = (ArrayList)config.get( "pubcloud" );
+        ArrayList pubInstances = (ArrayList)config.get( "cloud-ec2" );
         for (int i = 0; i < pubInstances.size(); i++) {
             HashMap instance = (HashMap)pubInstances.get( i );
             int ecu = (useWECU) ? 
@@ -93,5 +93,7 @@ public class PolicyManager {
             
         PolicyManager manager = new PolicyManager( config );
         ResourceConfig resConf = manager.schedule();
+        resConf.writeToFile( "./yaml/instanceConf.yaml" );
+        // System.out.println( resConf.toYamlWorkerAssignment() );
     }
 }

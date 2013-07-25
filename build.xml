@@ -6,7 +6,8 @@
   <property name="build.src" value="src" />
   <property name="build.dest" value="classes" />
   <property name="build.jar" value="${project}-${version}.jar" />
-  <property name="aws-credential" value="rpiwcl/cos/cloud/AwsCredentials.properties" />
+  <property name="aws-credential1" value="rpiwcl/cos/cloud/AwsCredentials.properties" />
+  <property name="aws-credential2" value="rpiwcl/cos/manager/offlinepolicy/AwsCredentials.properties" />
   <path id="classpath">
 	<fileset dir="lib">
 	  <include name="**/*.jar" />
@@ -31,8 +32,11 @@
 
   <target name="copy_credential">
 	<copy overwrite="no"
-		  file="${build.src}/${aws-credential}"
-		  tofile="${build.dest}/${aws-credential}" />
+		  file="${build.src}/${aws-credential1}"
+		  tofile="${build.dest}/${aws-credential1}" />
+	<copy overwrite="no"
+		  file="${build.src}/${aws-credential2}"
+		  tofile="${build.dest}/${aws-credential2}" />
   </target>
 
   <target name="clean">

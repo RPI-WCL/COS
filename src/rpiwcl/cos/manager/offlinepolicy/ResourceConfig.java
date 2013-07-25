@@ -1,5 +1,7 @@
 package rpiwcl.cos.manager.offlinepolicy;
 
+import org.ho.yaml.Yaml;
+import java.io.*;
 import java.util.*;
 
 public class ResourceConfig {
@@ -79,5 +81,60 @@ public class ResourceConfig {
         str += "time: " + time + " [sec]";
 
         return str;
+    }
+
+    
+    public void writeToFile( String filename ) {
+        HashMap<String, ArrayList> clouds = new HashMap<String, ArrayList>();
+        ArrayList<HashMap> privCloud = new ArrayList<HashMap>();
+        ArrayList<HashMap> pubCloud = new ArrayList<HashMap>();
+        clouds.put( "cloud-rpiwcl", privCloud );
+        clouds.put( "cloud-ec2", pubCloud );
+        
+        for (Iterator it = instances.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry)it.next();
+            InstanceInfo instance = (InstanceInfo)entry.getKey();
+            int instanceNum = ((Integer)entry.getValue()).intValue();
+
+            HashMap instance_ = new HashMap();
+            if (instance.getType().equals( "private" )) {
+                privCloud.add( instance_ );
+                instance_.put( "user", instance.getUser() );
+                instance_.put( "ipaddr", instance.getIpAddr() );
+            }
+            else {
+                pubCloud.add( instance_ );
+                instance_.put( "price", new Double( instance.getPrice() ) );
+            }
+
+            instance_.put( "cpus", new Integer( instance.getCpus() ) );
+            instance_.put( "name", instance.getName() );
+            instance_.put( "ECU", new Integer( instance.getECU() ) );
+            instance_.put( "num", new Integer( instanceNum ) );
+            ArrayList<String> workerTasks_ = new ArrayList<String>();
+            instance_.put( "workers", workerTasks_ );
+
+            HashMap<String, ArrayList<Integer>> workerTasks = instance.getWorkerTasks();
+            for (Iterator it_ = workerTasks.entrySet().iterator(); it_.hasNext(); ) {
+                String str = "";
+                Map.Entry entry_ = (Map.Entry)it_.next();
+                ArrayList<Integer> tasks = (ArrayList<Integer>)entry_.getValue();
+                for (int i = 0; i < tasks.size(); i++) {
+                    Integer task = (Integer)tasks.get( i );
+                    if (i < tasks.size() - 1)
+                        str += task + ",";
+                    else
+                        str += task;
+                }
+                workerTasks_.add( str );
+            }
+        }
+
+        try {
+            Yaml yaml = new Yaml();
+            yaml.dump( clouds, new File( filename ) );
+        } catch (IOException ex) {
+            System.err.println( "File not found: " + filename );
+        }
     }
 }
