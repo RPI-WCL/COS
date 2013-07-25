@@ -22,6 +22,7 @@ import salsa.messaging.*;
 import salsa.naming.NamingService;
 import salsa.naming.UAL;
 import salsa.resources.DbgPrint;
+import wwc.messaging.ShutdownMessage;
 import gc.*;
 
 
@@ -116,7 +117,17 @@ System.out.println("message loss:"+message);                  //message loss
                 return;
               }
 
-            if (received instanceof Actor) {
+            if (received instanceof ShutdownMessage) {
+              System.out.println( "Shutting down in 3 seconds..." );
+              try {
+                  Thread.sleep( 3000 );
+              } catch (Exception ex) {
+                  System.err.println( ex );
+              } finally {
+                  System.exit( 0 );
+              }
+            }
+            else if (received instanceof Actor) {
               Actor incomingActor = (Actor) received;
               DbgPrint.print( DbgPrint.DEBUG, "WWCRecp", "process, received actor" + incomingActor );
               processActor(incomingActor, incoming);
