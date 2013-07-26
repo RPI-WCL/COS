@@ -273,26 +273,25 @@ public class Trap extends UniversalActor  {
 		long initialTime;
 		int a;
 		int b;
-		int n;
 		int numWorkers;
 		HashMap conf;
 		public void act(String args[]) {
-			if (args.length!=5) {{
-				System.err.println("Usage: java Trap <a> <b> <n> <nameServer> <confFile>");
+			if (args.length!=4) {{
+				System.err.println("Usage: java Trap <a> <b> <nameServer> <confFile>");
 				return;
 			}
 }			a = Integer.parseInt(args[0]);
 			b = Integer.parseInt(args[1]);
-			n = Integer.parseInt(args[2]);
-			nameServer = args[3];
+			nameServer = args[2];
 			conf = null;
 			try {
-				conf = (HashMap)Yaml.load(new File(args[4]));
+				conf = (HashMap)Yaml.load(new File(args[3]));
 			}
 			catch (FileNotFoundException ex) {
-				System.err.println("File "+args[4]+" not found");
+				System.err.println("File "+args[3]+" not found");
 			}
 
+			System.out.println("Checkpoint 1");
 			numWorkers = 0;
 			ArrayList rpiNodes = (ArrayList)conf.get("cloud-rpiwcl");
 			for (int i = 0; i<rpiNodes.size(); i++){
@@ -304,6 +303,7 @@ public class Trap extends UniversalActor  {
 					numWorkers += splits.length;
 				}
 			}
+			System.out.println("Checkpoint 2");
 			ArrayList ec2Nodes = (ArrayList)conf.get("cloud-ec2");
 			for (int i = 0; i<ec2Nodes.size(); i++){
 				HashMap node = (HashMap)rpiNodes.get(i);
@@ -314,6 +314,7 @@ public class Trap extends UniversalActor  {
 					numWorkers += splits.length;
 				}
 			}
+			System.out.println("Checkpoint 3");
 			{
 				// startTrap()
 				{
@@ -322,13 +323,14 @@ public class Trap extends UniversalActor  {
 					__messages.add( message );
 				}
 			}
+			System.out.println("Checkpoint 4");
 		}
 		public void startTrap() {
 			TrapFarmer farmer = ((TrapFarmer)new TrapFarmer(new UAN("uan://"+nameServer+"/trap"), null,this).construct());
 			{
-				// farmer<-submitJob(a, b, n, numWorkers, nameServer, conf)
+				// farmer<-submitJob(a, b, numWorkers, nameServer, conf)
 				{
-					Object _arguments[] = { a, b, n, numWorkers, nameServer, conf };
+					Object _arguments[] = { a, b, numWorkers, nameServer, conf };
 					Message message = new Message( self, farmer, "submitJob", _arguments, null, currentMessage.getContinuationToken() );
 					__messages.add( message );
 				}

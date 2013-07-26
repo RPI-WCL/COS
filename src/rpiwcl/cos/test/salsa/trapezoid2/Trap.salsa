@@ -16,7 +16,6 @@ behavior Trap {
     // Trap parameters
     int a;
     int b;
-    int n;
     int numWorkers;
 
     // configuration
@@ -24,23 +23,25 @@ behavior Trap {
 
 	
 	void act( String args[] ) {
-		if ( args.length != 5 ) {
-			System.err.println ( "Usage: java Trap <a> <b> <n> <nameServer> <confFile>" );
+		if ( args.length != 4 ) {
+			System.err.println ( "Usage: java Trap <a> <b> <nameServer> <confFile>" );
 			return;
 		}
 
         // parse input parameters
         a = Integer.parseInt( args[0] );
         b = Integer.parseInt( args[1] );
-        n = Integer.parseInt( args[2] );
-        nameServer = args[3];
+        nameServer = args[2];
 
         conf = null;
         try {
-            conf = (HashMap)Yaml.load(new File(args[4]));
+            conf = (HashMap)Yaml.load(new File(args[3]));
         } catch (FileNotFoundException ex) {
-            System.err.println( "File " + args[4] + " not found" );
+            System.err.println( "File " + args[3] + " not found" );
         }
+
+
+        System.out.println( "Checkpoint 1" );
 
         numWorkers = 0;
         ArrayList rpiNodes = (ArrayList)conf.get( "cloud-rpiwcl" );
@@ -53,6 +54,9 @@ behavior Trap {
                 numWorkers += splits.length;
             }
         }
+
+        System.out.println( "Checkpoint 2" );
+
         ArrayList ec2Nodes = (ArrayList)conf.get( "cloud-ec2" );
         for (int i = 0; i < ec2Nodes.size(); i++) {
             HashMap node = (HashMap)rpiNodes.get( i );
@@ -64,12 +68,16 @@ behavior Trap {
             }
         }
 
+        System.out.println( "Checkpoint 3" );
+
         startTrap();
+
+        System.out.println( "Checkpoint 4" );
 	}
 
     void startTrap() {
         TrapFarmer farmer = new TrapFarmer() at (new UAN( "uan://" + nameServer + "/trap" ), null );
-        farmer<-submitJob( a, b, n, numWorkers, nameServer, conf )@currentContinuation;
+        farmer<-submitJob( a, b, numWorkers, nameServer, conf )@currentContinuation;
     }
 	
 }

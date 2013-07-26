@@ -3,7 +3,6 @@ module rpiwcl.cos.test.salsa.trapezoid2;
 import java.io.*;
 import java.util.*;
 import rpiwcl.cos.test.salsa.trapezoid2.*;
-import rpiwcl.cos.runtime.CosInterface;
 
 
 /* Trap.salsa -- Parallel Trapezoidal Rule
@@ -28,7 +27,6 @@ import rpiwcl.cos.runtime.CosInterface;
 behavior TrapFarmer {
     double      a = 0.0;        // Left endpoint             
     double      b = 1.0;        // Right endpoint            
-    int         n = 1024;       // Number of trapezoids      
     int         numWorkers = 2;   // The number of actors   
     long        initialTime;    // Starting Time
 
@@ -39,19 +37,15 @@ behavior TrapFarmer {
     int         numTasks = 0;
     int REPORT_PROGRESS_INTERVAL = 10000; // report progress every this milliseconds
     int[]       completedTasks;
-    String      cosIpAddr;
-    int         cosPort;
     String      appName;
-    CosInterface cosIf;
-    boolean     useCosIf = false;
 
-    void submitJob( int a, int b, int n, int numWorkers, String nameServer, HashMap conf ) {
+    void submitJob( int a, int b, int numWorkers, String nameServer, HashMap conf ) {
         this.a = a;
         this.b = b;
-        this.n = n;
-        this.numTasks = n;
+        this.numTasks = 0;
         this.numWorkers = numWorkers;
         this.nameServer = nameServer;
+        this.conf = conf;
         this.completedTasks = new int[numWorkers];
         
         distributeWork()@
@@ -59,9 +53,7 @@ behavior TrapFarmer {
         endTimer()@currentContinuation;
     }
 
-
     Double distributeWork(){
-        double h = (b-a)/n; // Trapezoid base length    
         TrapWorker[] workers = new TrapWorker[numWorkers];
         ArrayList uans = new ArrayList();
 
@@ -79,6 +71,7 @@ behavior TrapFarmer {
                 String[] splits = workerTasks.split( "," );
 
                 for (int l = 0; l < splits.length; l++) {
+                    numTasks += Integer.parseInt( splits[l] );
                     String uan = "uan://" + nameServer + "/a" + i;
                     String ual = "rmsp://" + theater + "/a" + i;
                     standardOutput<-println("Sending actor " + uan +" to " + ual );
@@ -101,6 +94,7 @@ behavior TrapFarmer {
                 String[] splits = workerTasks.split( "," );
 
                 for (int l = 0; l < splits.length; l++) {
+                    numTasks += Integer.parseInt( splits[l] );
                     String uan = "uan://" + nameServer + "/a" + i;
                     String ual = "rmsp://" + theater + "/a" + i;
                     standardOutput<-println("Sending actor " + uan +" to " + ual );
@@ -114,7 +108,8 @@ behavior TrapFarmer {
         //start computation
         standardOutput<-println(">>>>>>Starting the computation");
         initialTime = System.currentTimeMillis();
-        
+
+        double  h = (b-a)/numTasks; // Trapezoid base length    
         double  local_a;   // Left endpoint my process 
         double  local_b;   // Right endpoint my process
         int     total_n = 0;
@@ -179,10 +174,7 @@ behavior TrapFarmer {
     }
 
     void displayResults(double result){
-        standardOutput<-println("With n = "+n+" trapezoids, our estimate of the integral on ("+a+","+b+")="+result);
-
-        if (useCosIf)
-            cosIf.close();
+        standardOutput<-println("With n = "+numTasks+" trapezoids, our estimate of the integral on ("+a+","+b+")="+result);
     }
 
     long lastReportTime = 0;
@@ -199,9 +191,6 @@ behavior TrapFarmer {
 
             System.out.println( " " + sum + "/" + numTasks + " (" + 
                                 (100 * sum / numTasks) + "%) completed" );
-            
-            if (useCosIf)
-                cosIf.reportProgress( sum );
         }
     }
 

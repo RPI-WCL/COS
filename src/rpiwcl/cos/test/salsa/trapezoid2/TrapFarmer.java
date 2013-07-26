@@ -34,7 +34,6 @@ import salsa.resources.ActorService;
 import java.io.*;
 import java.util.*;
 import rpiwcl.cos.test.salsa.trapezoid2.*;
-import rpiwcl.cos.runtime.CosInterface;
 
 public class TrapFarmer extends UniversalActor  {
 	public static void main(String args[]) {
@@ -262,7 +261,6 @@ public class TrapFarmer extends UniversalActor  {
 
 		double a = 0.0;
 		double b = 1.0;
-		int n = 1024;
 		int numWorkers = 2;
 		long initialTime;
 		String nameServer;
@@ -270,18 +268,14 @@ public class TrapFarmer extends UniversalActor  {
 		int numTasks = 0;
 		int REPORT_PROGRESS_INTERVAL = 10000;
 		int[] completedTasks;
-		String cosIpAddr;
-		int cosPort;
 		String appName;
-		CosInterface cosIf;
-		boolean useCosIf = false;
-		public void submitJob(int a, int b, int n, int numWorkers, String nameServer, HashMap conf) {
+		public void submitJob(int a, int b, int numWorkers, String nameServer, HashMap conf) {
 			this.a = a;
 			this.b = b;
-			this.n = n;
-			this.numTasks = n;
+			this.numTasks = 0;
 			this.numWorkers = numWorkers;
 			this.nameServer = nameServer;
+			this.conf = conf;
 			this.completedTasks = new int[numWorkers];
 			{
 				Token token_2_0 = new Token();
@@ -308,7 +302,6 @@ public class TrapFarmer extends UniversalActor  {
 			}
 		}
 		public Double distributeWork() {
-			double h = (b-a)/n;
 			TrapWorker[] workers = new TrapWorker[numWorkers];
 			ArrayList uans = new ArrayList();
 			ArrayList rpiNodes = (ArrayList)conf.get("cloud-rpiwcl");
@@ -322,6 +315,7 @@ public class TrapFarmer extends UniversalActor  {
 					String workerTasks = (String)workersList.get(k);
 					String[] splits = workerTasks.split(",");
 					for (int l = 0; l<splits.length; l++){
+						numTasks += Integer.parseInt(splits[l]);
 						String uan = "uan://"+nameServer+"/a"+i;
 						String ual = "rmsp://"+theater+"/a"+i;
 						{
@@ -347,6 +341,7 @@ public class TrapFarmer extends UniversalActor  {
 					String workerTasks = (String)workersList.get(k);
 					String[] splits = workerTasks.split(",");
 					for (int l = 0; l<splits.length; l++){
+						numTasks += Integer.parseInt(splits[l]);
 						String uan = "uan://"+nameServer+"/a"+i;
 						String ual = "rmsp://"+theater+"/a"+i;
 						{
@@ -371,6 +366,7 @@ public class TrapFarmer extends UniversalActor  {
 				}
 			}
 			initialTime = System.currentTimeMillis();
+			double h = (b-a)/numTasks;
 			double local_a;
 			double local_b;
 			int total_n = 0;
@@ -456,15 +452,14 @@ public class TrapFarmer extends UniversalActor  {
 		}
 		public void displayResults(double result) {
 			{
-				// standardOutput<-println("With n = "+n+" trapezoids, our estimate of the integral on ("+a+","+b+")="+result)
+				// standardOutput<-println("With n = "+numTasks+" trapezoids, our estimate of the integral on ("+a+","+b+")="+result)
 				{
-					Object _arguments[] = { "With n = "+n+" trapezoids, our estimate of the integral on ("+a+","+b+")="+result };
+					Object _arguments[] = { "With n = "+numTasks+" trapezoids, our estimate of the integral on ("+a+","+b+")="+result };
 					Message message = new Message( self, standardOutput, "println", _arguments, null, null );
 					__messages.add( message );
 				}
 			}
-			if (useCosIf) {cosIf.close();
-}		}
+		}
 		long lastReportTime = 0;
 		public void reportProgress(int id, int completed) {
 			long currentTime = System.currentTimeMillis();
@@ -474,8 +469,7 @@ public class TrapFarmer extends UniversalActor  {
 				int sum = 0;
 				for (int i = 0; i<numWorkers; i++)sum += completedTasks[i];
 				System.out.println(" "+sum+"/"+numTasks+" ("+(100*sum/numTasks)+"%) completed");
-				if (useCosIf) {cosIf.reportProgress(sum);
-}			}
+			}
 }		}
 	}
 }

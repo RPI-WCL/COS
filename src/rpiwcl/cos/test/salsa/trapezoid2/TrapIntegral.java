@@ -1,4 +1,4 @@
-package rpiwcl.cos.test.salsa.trapezoid;
+package rpiwcl.cos.test.salsa.trapezoid2;
 
 public class TrapIntegral {
     private double local_a;
