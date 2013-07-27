@@ -264,18 +264,18 @@ public class TrapFarmer extends UniversalActor  {
 		int numWorkers = 2;
 		long initialTime;
 		String nameServer;
-		HashMap conf;
+		ArrayList configs;
 		int numTasks = 0;
 		int REPORT_PROGRESS_INTERVAL = 10000;
 		int[] completedTasks;
 		String appName;
-		public void submitJob(int a, int b, int numWorkers, String nameServer, HashMap conf) {
+		public void submitJob(int a, int b, int numTasks, int numWorkers, String nameServer, ArrayList configs) {
 			this.a = a;
 			this.b = b;
-			this.numTasks = 0;
+			this.numTasks = numTasks;
 			this.numWorkers = numWorkers;
 			this.nameServer = nameServer;
-			this.conf = conf;
+			this.configs = configs;
 			this.completedTasks = new int[numWorkers];
 			{
 				Token token_2_0 = new Token();
@@ -304,121 +304,49 @@ public class TrapFarmer extends UniversalActor  {
 		public Double distributeWork() {
 			TrapWorker[] workers = new TrapWorker[numWorkers];
 			ArrayList uans = new ArrayList();
-			ArrayList rpiNodes = (ArrayList)conf.get("cloud-rpiwcl");
-			int i = 0;
-			for (int j = 0; j<rpiNodes.size(); j++){
-				HashMap node = (HashMap)rpiNodes.get(j);
-				ArrayList runtimesList = (ArrayList)node.get("runtimes");
-				ArrayList workersList = (ArrayList)node.get("workers");
-				for (int k = 0; k<runtimesList.size(); k++){
-					String theater = (String)runtimesList.get(k);
-					String workerTasks = (String)workersList.get(k);
-					String[] splits = workerTasks.split(",");
-					for (int l = 0; l<splits.length; l++){
-						numTasks += Integer.parseInt(splits[l]);
-						String uan = "uan://"+nameServer+"/a"+i;
-						String ual = "rmsp://"+theater+"/a"+i;
-						{
-							// standardOutput<-println("Sending actor "+uan+" to "+ual)
-							{
-								Object _arguments[] = { "Sending actor "+uan+" to "+ual };
-								Message message = new Message( self, standardOutput, "println", _arguments, null, null );
-								__messages.add( message );
-							}
-						}
-						workers[i] = ((TrapWorker)new TrapWorker(new UAN(uan), new UAL(ual),this).construct(i, this.getUAN().toString()));
-						i++;
-					}
+			int id = 0;
+			for (int i = 0; i<configs.size(); i++){
+				String config = (String)configs.get(i);
+				String[] splits = config.split(",");
+				String theater = splits[1];
+				System.out.println("Sending "+splits[3]+" actors to "+splits[0]+"("+splits[2]+")");
+				for (int j = 0; j<Integer.parseInt(splits[3]); j++){
+					String uan = "uan://"+nameServer+"/a"+id;
+					String ual = "rmsp://"+theater+"/a"+id;
+					System.out.println(" Sending actor "+uan+" to "+ual);
+					workers[id] = ((TrapWorker)new TrapWorker(new UAN(uan), new UAL(ual),this).construct(id, this.getUAN().toString()));
+					id++;
 				}
 			}
-			ArrayList ec2Nodes = (ArrayList)conf.get("cloud-ec2");
-			for (int j = 0; j<ec2Nodes.size(); j++){
-				HashMap node = (HashMap)ec2Nodes.get(j);
-				ArrayList runtimesList = (ArrayList)node.get("runtimes");
-				ArrayList workersList = (ArrayList)node.get("workers");
-				for (int k = 0; k<runtimesList.size(); k++){
-					String theater = (String)runtimesList.get(k);
-					String workerTasks = (String)workersList.get(k);
-					String[] splits = workerTasks.split(",");
-					for (int l = 0; l<splits.length; l++){
-						numTasks += Integer.parseInt(splits[l]);
-						String uan = "uan://"+nameServer+"/a"+i;
-						String ual = "rmsp://"+theater+"/a"+i;
-						{
-							// standardOutput<-println("Sending actor "+uan+" to "+ual)
-							{
-								Object _arguments[] = { "Sending actor "+uan+" to "+ual };
-								Message message = new Message( self, standardOutput, "println", _arguments, null, null );
-								__messages.add( message );
-							}
-						}
-						workers[i] = ((TrapWorker)new TrapWorker(new UAN(uan), new UAL(ual),this).construct(i, this.getUAN().toString()));
-						i++;
-					}
-				}
-			}
-			{
-				// standardOutput<-println(">>>>>>Starting the computation")
-				{
-					Object _arguments[] = { ">>>>>>Starting the computation" };
-					Message message = new Message( self, standardOutput, "println", _arguments, null, null );
-					__messages.add( message );
-				}
-			}
+			System.out.println(">>>>>>Starting the computation");
 			initialTime = System.currentTimeMillis();
 			double h = (b-a)/numTasks;
+			int local_n;
 			double local_a;
 			double local_b;
 			int total_n = 0;
-			i = 0;
+			id = 0;
 			{
 				Token token_2_0 = new Token();
 				// join block
 				token_2_0.setJoinDirector();
-				for (int j = 0; j<rpiNodes.size(); j++){
-					HashMap node = (HashMap)rpiNodes.get(j);
-					ArrayList workersList = (ArrayList)node.get("workers");
-					for (int k = 0; k<workersList.size(); k++){
-						String workerTasks = (String)workersList.get(k);
-						String[] splits = workerTasks.split(",");
-						for (int l = 0; l<splits.length; l++){
-							int local_n = Integer.parseInt(splits[l]);
-							local_a = a+total_n;
-							local_b = local_a+local_n;
+				for (int i = 0; i<configs.size(); i++){
+					String config = (String)configs.get(i);
+					String[] splits = config.split(",");
+					for (int j = 4; j<splits.length; j++){
+						local_n = Integer.parseInt(splits[j]);
+						local_a = a+total_n*h;
+						local_b = local_a+local_n*h;
+						{
+							// workers[id]<-trap(local_a, local_b, local_n, h)
 							{
-								// workers[i]<-trap(local_a, local_b, local_n, h)
-								{
-									Object _arguments[] = { local_a, local_b, local_n, h };
-									Message message = new Message( self, workers[i], "trap", _arguments, null, token_2_0 );
-									__messages.add( message );
-								}
+								Object _arguments[] = { local_a, local_b, local_n, h };
+								Message message = new Message( self, workers[id], "trap", _arguments, null, token_2_0 );
+								__messages.add( message );
 							}
-							total_n += local_n;
-							i++;
 						}
-					}
-				}
-				for (int j = 0; j<ec2Nodes.size(); j++){
-					HashMap node = (HashMap)ec2Nodes.get(j);
-					ArrayList workersList = (ArrayList)node.get("workers");
-					for (int k = 0; k<workersList.size(); k++){
-						String workerTasks = (String)workersList.get(k);
-						String[] splits = workerTasks.split(",");
-						for (int l = 0; l<splits.length; l++){
-							int local_n = Integer.parseInt(splits[l]);
-							local_a = a+total_n;
-							local_b = local_a+local_n;
-							{
-								// workers[i]<-trap(local_a, local_b, local_n, h)
-								{
-									Object _arguments[] = { local_a, local_b, local_n, h };
-									Message message = new Message( self, workers[i], "trap", _arguments, null, token_2_0 );
-									__messages.add( message );
-								}
-							}
-							total_n += local_n;
-							i++;
-						}
+						total_n += local_n;
+						id++;
 					}
 				}
 				addJoinToken(token_2_0);

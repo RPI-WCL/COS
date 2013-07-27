@@ -274,47 +274,32 @@ public class Trap extends UniversalActor  {
 		int a;
 		int b;
 		int numWorkers;
-		HashMap conf;
+		int numTasks;
+		ArrayList configs;
 		public void act(String args[]) {
 			if (args.length!=4) {{
-				System.err.println("Usage: java Trap <a> <b> <nameServer> <confFile>");
+				System.err.println("Usage: java Trap <a> <b> <nameServer> <runtimes.txt>");
 				return;
 			}
 }			a = Integer.parseInt(args[0]);
 			b = Integer.parseInt(args[1]);
 			nameServer = args[2];
-			conf = null;
+			configs = new ArrayList();
 			try {
-				conf = (HashMap)Yaml.load(new File(args[3]));
+				BufferedReader in = new BufferedReader(new FileReader(args[3]));
+				String str = in.readLine();
+				String[] splits = str.split(",");
+				numWorkers = Integer.parseInt(splits[0]);
+				numTasks = Integer.parseInt(splits[1]);
+				while ((str=in.readLine())!=null) {
+					configs.add(str);
+				}
+				in.close();
 			}
-			catch (FileNotFoundException ex) {
-				System.err.println("File "+args[3]+" not found");
+			catch (IOException ex) {
+				System.err.println("Error: Can't open the file "+args[3]+" for reading.");
 			}
 
-			System.out.println("Checkpoint 1");
-			numWorkers = 0;
-			ArrayList rpiNodes = (ArrayList)conf.get("cloud-rpiwcl");
-			for (int i = 0; i<rpiNodes.size(); i++){
-				HashMap node = (HashMap)rpiNodes.get(i);
-				ArrayList workersList = (ArrayList)node.get("workers");
-				for (int j = 0; j<workersList.size(); j++){
-					String workers = (String)workersList.get(j);
-					String[] splits = workers.split(",");
-					numWorkers += splits.length;
-				}
-			}
-			System.out.println("Checkpoint 2");
-			ArrayList ec2Nodes = (ArrayList)conf.get("cloud-ec2");
-			for (int i = 0; i<ec2Nodes.size(); i++){
-				HashMap node = (HashMap)rpiNodes.get(i);
-				ArrayList workersList = (ArrayList)node.get("workers");
-				for (int j = 0; j<workersList.size(); j++){
-					String workers = (String)workersList.get(j);
-					String[] splits = workers.split(",");
-					numWorkers += splits.length;
-				}
-			}
-			System.out.println("Checkpoint 3");
 			{
 				// startTrap()
 				{
@@ -323,14 +308,13 @@ public class Trap extends UniversalActor  {
 					__messages.add( message );
 				}
 			}
-			System.out.println("Checkpoint 4");
 		}
 		public void startTrap() {
 			TrapFarmer farmer = ((TrapFarmer)new TrapFarmer(new UAN("uan://"+nameServer+"/trap"), null,this).construct());
 			{
-				// farmer<-submitJob(a, b, numWorkers, nameServer, conf)
+				// farmer<-submitJob(a, b, numTasks, numWorkers, nameServer, configs)
 				{
-					Object _arguments[] = { a, b, numWorkers, nameServer, conf };
+					Object _arguments[] = { a, b, numTasks, numWorkers, nameServer, configs };
 					Message message = new Message( self, farmer, "submitJob", _arguments, null, currentMessage.getContinuationToken() );
 					__messages.add( message );
 				}

@@ -2,7 +2,6 @@ package rpiwcl.cos.runtime;
 
 import java.io.*;
 import java.util.*;
-import org.ho.yaml.Yaml;
 import wwc.messaging.ShutdownMessage;
 
 public class SalsaShutdowner {
@@ -14,44 +13,25 @@ public class SalsaShutdowner {
 
     public static void main( String[] args ) {
         if (args.length != 1) {
-            System.err.println( "Usage: java SalsShutdowner <runtimes.yaml>" );
+            System.err.println( "Usage: java SalsaShutdowner <runtimes.txt>" );
         }
 
-        HashMap runtimes = null;
-        try {
-            runtimes = (HashMap)Yaml.load(new File(args[0]));
-        } catch (FileNotFoundException ex) {
-            System.err.println( "File " + args[0] + " not found" );
-        }
+		try {
+			BufferedReader in = new BufferedReader( new FileReader( args[0] ) );
+            String str = null;
+            in.readLine(); // skip the first line
+            do {
+                if ((str = in.readLine()) != null) {
+                    String[] splits = str.split( "," );
+                    System.out.println( "Shutting down: " + splits[1] );
+                    SalsaShutdowner.shutdown( splits[1] );
+                }
+            } while (str != null);
 
-        ArrayList<String> runtimeIds = new ArrayList<String>();
-        
-        ArrayList rpiCloud = (ArrayList)runtimes.get( "cloud-rpiwcl" );
-        // System.out.println( "rpiCloud: " + rpiCloud );
-        for (int i = 0; i < rpiCloud.size(); i++) {
-            HashMap map = (HashMap)rpiCloud.get( i );
-            ArrayList<String> runtimeIdList = (ArrayList<String>)map.get( "runtimes" );
-            if (runtimeIdList != null) {
-                for (String runtimeId: runtimeIdList)
-                    if (runtimeId != null)
-                        runtimeIds.add( runtimeId );
-            }
-        }
-
-        ArrayList ec2Cloud = (ArrayList)runtimes.get( "cloud-ec2" );
-        for (int i = 0; i < ec2Cloud.size(); i++) {
-            HashMap map = (HashMap)ec2Cloud.get( i );
-            ArrayList<String> runtimeIdList = (ArrayList<String>)map.get( "runtimes" );
-            if (runtimeIdList != null) {
-                for (String runtimeId: runtimeIdList)
-                    if (runtimeId != null)
-                        runtimeIds.add( runtimeId );
-            }
-        }
-            
-        System.out.println( "Shutting down: " + runtimeIds );
-        for (String runtimeId : runtimeIds)
-            SalsaShutdowner.shutdown( runtimeId );
+			in.close(); 
+		} catch ( IOException ex ) {
+			System.err.println( "Error: Can't open the file " + args[0] + " for reading." );
+		}
     }
 }
 

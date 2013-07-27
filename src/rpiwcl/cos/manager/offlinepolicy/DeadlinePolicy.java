@@ -12,11 +12,13 @@ public class DeadlinePolicy extends Policy {
     private int targetECU;
     private double throughputPerECU;
     private double earlyDeadlineRatio;
+    private String workerAssignmentPolicy;
 
     public DeadlinePolicy( double constraint, HashMap option ) {
         super( constraint );
         resConf = new ResourceConfig();
         earlyDeadlineRatio = ((Double)option.get( "early_deadline_ratio" )).doubleValue();
+        workerAssignmentPolicy = (String)option.get( "worker_assignment" );
 
         System.out.println( "[Deadline] deadline=" + constraint + " [sec]" + 
                             ", earlyDeadlineRatio=" + earlyDeadlineRatio );
@@ -32,24 +34,37 @@ public class DeadlinePolicy extends Policy {
         this.pubCloud = pubCloud;
         
         double newDeadline = constraint * (1.0 - earlyDeadlineRatio);
-        System.out.println( "[Deadline] new deadline=" + newDeadline );
+        System.out.println( "[Deadline] tasks=" + tasks + ", early deadline=" + newDeadline );
         double targetThroughput = (double)tasks / newDeadline;
-        targetECU = (int)Math.floor(targetThroughput / throughputPerECU);
-        
-        if (PolicyManager.useWECU)
-            targetECU *= PolicyManager.DP_WECU_MULTI_COEFF;
+
+        if (PolicyManager.useWECU) {
+            targetECU = (int)Math.ceil( PolicyManager.DP_WECU_MULTI_COEFF * 
+                                        targetThroughput / throughputPerECU );
+        }
+        else {
+            // take ceiling of targetECU, otherwise targetECU cannot achieve targetThoughput
+            targetECU = (int)Math.ceil(targetThroughput / throughputPerECU);
+        }
 
         System.out.println( "[Deadline] targetThroughput=" + targetThroughput + 
                             " [tasks/sec], targetECU=" + targetECU + " [ECU]" );
 
-        if (schedulePrivInstances()) {
+        if ((privCloud != null) && schedulePrivInstances()) {
             ;// targetECU == 0;
         }
         else if (schedulePubInstances()) {
             ;// targetECU == 0;
         }
-
-        assignWorkers();
+        
+        System.out.println( "[Deadline] workerAssigmentPolicy=" + workerAssignmentPolicy );
+        switch (workerAssignmentPolicy) {
+        case "fixed-workers":
+            assignFixedWorkers();
+            break;
+        case "variable-workers":
+            assignVariableWorkers();
+            break;
+        }
 
         return resConf;
     }
@@ -60,7 +75,7 @@ public class DeadlinePolicy extends Policy {
         double totalECU = 0.0;
 
         for (InstanceInfo instance : privCloud) {
-            targetECU -= instance.getECU();
+            targetECU = (targetECU < instance.getECU()) ? 0 : targetECU - instance.getECU();
             totalECU += instance.getECU();
             resConf.addInstance( instance, 1 ); // assuming always 1 per instance
 
@@ -77,7 +92,7 @@ public class DeadlinePolicy extends Policy {
         }
 
         System.out.println( "[Deadline] schedulePrivInstances, isEcuSatisfied=" + isEcuSatisfied +
-                            ", targetECU=" + targetECU +
+                            ", remaining targetECU=" + targetECU +
                             ", resConf:" );
         System.out.println( resConf );
 
@@ -103,7 +118,7 @@ public class DeadlinePolicy extends Policy {
                 if (ecu <= instance.getECU()) {
                     double p = instance.getPrice();
                     if (p <= q) {
-                        // if cost is the same, then proirity is given latter
+                        // if cost is the same, then proirity is given to the latter
                         Utility.debugPrint( "  A: q=" + q + "-> p=" + p );
                         q = p;
                         minInstances[ecu] = instance;
@@ -154,13 +169,13 @@ public class DeadlinePolicy extends Policy {
     }
 
 
-    public void assignWorkers() {
+    public void assignFixedWorkers() {
         HashMap<InstanceInfo, Integer> instances = resConf.getInstances();
         int totalECU = resConf.getTotalECU();
         int totalTasks = tasks;
         int totalInstances = instances.size();
 
-        System.out.println( "[Deadline] assignWorkers, totalECU=" + totalECU + ", totalTasks=" + totalTasks );
+        System.out.println( "[Deadline] assignFixedWorkers, totalECU=" + totalECU + ", totalTasks=" + totalTasks );
         
         int i = 0;
         for (Iterator it = instances.entrySet().iterator(); it.hasNext(); ) {
@@ -196,67 +211,89 @@ public class DeadlinePolicy extends Policy {
     }
 
 
-    public void assignWorkers2() {
+    public void assignVariableWorkers() {
         HashMap<InstanceInfo, Integer> instances = resConf.getInstances();
         int totalECU = resConf.getTotalECU();
         int totalTasks = tasks;
-        int totalTasksRemain = totalTasks;
         int totalInstances = instances.size();
 
-        System.out.println( "totalECU=" + totalECU + ", totalTasks=" + totalTasks );
+        System.out.println( "[Deadline] assignVariableWorkers, totalECU=" + totalECU + ", totalTasks=" + totalTasks );
         
-        int i = 0;
+        // first, determine minimum task unit
+        double minTasks = Double.MAX_VALUE;
+        int totalTasksRemain = totalTasks;
+        HashMap<String, Integer> tasksPerInstanceType = new HashMap<String, Integer>();
+
         for (Iterator it = instances.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry)it.next();
             InstanceInfo instance = (InstanceInfo)entry.getKey();
             int instanceNum = ((Integer)entry.getValue()).intValue();
 
-            int workersPerInstance = instance.getCpus() * CPU_WORKER_RATIO;
-            int tasksPerInstanceType;
-            if (i == totalInstances - 1)
-                tasksPerInstanceType = totalTasks;
-            else {
-                tasksPerInstanceType = (int)(totalTasks * (double)instanceNum * instance.getECU() / totalECU);
-                totalTasksRemain -= tasksPerInstanceType;
+            int minWorkersPerInstanceType = instanceNum * instance.getCpus() * CPU_WORKER_RATIO;
+            int tasksPerInstanceType_;
+            if (!it.hasNext()) {
+                tasksPerInstanceType_ = totalTasksRemain;
+                tasksPerInstanceType.put( instance.getName(), 
+                                          new Integer( tasksPerInstanceType_ ) );
             }
-            int tasksPerInstanceTypeRemain = tasksPerInstanceType;
-            System.out.println( "instance.getName()=" + instance.getName() + 
-                                ", tasksPerInstanceType=" + tasksPerInstanceType );
-                                             
-            for (int j = 0; j < instanceNum; j++) {
-                ArrayList<Integer> numTasks = new ArrayList<Integer>();
+            else {
+                tasksPerInstanceType_ = (int)(totalTasks * 
+                                              (double)instanceNum * 
+                                              instance.getECU() / totalECU);
+                tasksPerInstanceType.put( instance.getName(), 
+                                          new Integer( tasksPerInstanceType_ ) );
+                totalTasksRemain -= tasksPerInstanceType_;
+            }
 
-                String instanceId = instance.getName() + "[" + j + "]";
-                int tasksPerInstance = tasksPerInstanceType / instanceNum;
-                int tasksPerInstanceRemain = tasksPerInstance;
-                int tasksPerWorker = tasksPerInstance / workersPerInstance;
+            minTasks = Math.min( minTasks, (double)tasksPerInstanceType_ / minWorkersPerInstanceType );
+            // System.out.println( "[Deadline] " + instance.getName() + 
+            //                     ", minTasks=" + minTasks );
+        }
+        int tasksPerWorker = (int)Math.ceil( minTasks );
+        System.out.println( "[Deadline] tasksPerWorker=" + tasksPerWorker );
+        
+        // next, assign tasks
+        for (Iterator it = instances.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry)it.next();
+            InstanceInfo instance = (InstanceInfo)entry.getKey();
+            int instanceNum = ((Integer)entry.getValue()).intValue();
 
-                for (int k = 0; k < workersPerInstance; k++) {
-                    if ((j == instanceNum - 1) && (k == workersPerInstance - 1))
-                        numTasks.add( new Integer( tasksPerInstanceTypeRemain ) );                        
-                    else if (k == (workersPerInstance - 1))
-                        numTasks.add( new Integer( tasksPerInstanceRemain ) );
-                    else 
-                        numTasks.add( new Integer( tasksPerWorker ) );
-                    tasksPerInstanceRemain -= tasksPerWorker;
-
-                    System.out.println( "instanceId=" + instanceId + 
-                                        ", tasksPerWorker=" + tasksPerWorker +
-                                        ", tasksPerInstanceRemain=" + tasksPerInstanceType );
+            // compute taskPerInstance
+            int tasksPerInstanceType_ = tasksPerInstanceType.get( instance.getName() );
+            int tasksPerInstanceTypeRemain = tasksPerInstanceType_;
+            int tasksPerInstance;
+            for (int i = 0; i < instanceNum; i++) {
+                if (i == instanceNum - 1) 
+                    tasksPerInstance = tasksPerInstanceTypeRemain;
+                else {
+                    tasksPerInstance = tasksPerInstanceType_ / instanceNum;
+                    tasksPerInstanceTypeRemain -= tasksPerInstance;
                 }
-                tasksPerInstanceTypeRemain -= tasksPerInstance;
+                String instanceId = instance.getName() + "[" + i + "]";
 
-                System.out.println( "instance=" + instance.getName() + 
-                                    ", numTasks=" + numTasks +
-                                    ", taskPerInstanceTypeRemain=" + tasksPerInstanceTypeRemain );
-
+                // compute workerPerInstance
+                int tasksPerInstanceRemain = tasksPerInstance;
+                int workersPerInstance = 
+                    (int)Math.ceil( (double)tasksPerInstance / tasksPerWorker );
+                ArrayList<Integer> numTasks = new ArrayList<Integer>();
+                for (int j = 0; j < workersPerInstance; j++) {
+                    if (j == workersPerInstance - 1)
+                        numTasks.add( new Integer( tasksPerInstanceRemain ) );
+                    else if ((tasksPerInstanceRemain - tasksPerWorker) <
+                             (int)(0.05 * tasksPerWorker)) {
+                        // if the last one is too small, add it to the previous and quit
+                        numTasks.add( new Integer( tasksPerInstanceRemain ) );
+                        break;
+                    }
+                    else {
+                        numTasks.add( new Integer( tasksPerWorker ) );
+                        tasksPerInstanceRemain -= tasksPerWorker;
+                    }
+                }
                 instance.addWorkerTasks( instanceId, numTasks );
             }
-
-            i++;
         }
     }
-    
 }
 
     

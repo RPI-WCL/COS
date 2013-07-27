@@ -31,7 +31,7 @@ behavior TrapFarmer {
     long        initialTime;    // Starting Time
 
     String      nameServer;
-    HashMap     conf;
+    ArrayList   configs;
 
     // progress report
     int         numTasks = 0;
@@ -39,13 +39,14 @@ behavior TrapFarmer {
     int[]       completedTasks;
     String      appName;
 
-    void submitJob( int a, int b, int numWorkers, String nameServer, HashMap conf ) {
+    void submitJob( int a, int b, int numTasks, int numWorkers, 
+                    String nameServer, ArrayList configs ) {
         this.a = a;
         this.b = b;
-        this.numTasks = 0;
+        this.numTasks = numTasks;
         this.numWorkers = numWorkers;
         this.nameServer = nameServer;
-        this.conf = conf;
+        this.configs = configs;
         this.completedTasks = new int[numWorkers];
         
         distributeWork()@
@@ -57,103 +58,53 @@ behavior TrapFarmer {
         TrapWorker[] workers = new TrapWorker[numWorkers];
         ArrayList uans = new ArrayList();
 
-        // migrate actors to rpi nodes
-        ArrayList rpiNodes = (ArrayList)conf.get( "cloud-rpiwcl" );
-        int i = 0;
-        for (int j = 0; j < rpiNodes.size(); j++) {
-            HashMap node = (HashMap)rpiNodes.get( j );
-            ArrayList runtimesList = (ArrayList)node.get( "runtimes" );
-            ArrayList workersList = (ArrayList)node.get( "workers" );
+        // migrate actors to theaters
+        int id = 0;
+        for (int i = 0; i < configs.size(); i++) {
+            String config = (String)configs.get( i );
+            String[] splits = config.split( "," );
+            String theater = splits[1];
 
-            for (int k = 0; k < runtimesList.size(); k++) {
-                String theater = (String)runtimesList.get( k );
-                String workerTasks = (String)workersList.get( k );
-                String[] splits = workerTasks.split( "," );
-
-                for (int l = 0; l < splits.length; l++) {
-                    numTasks += Integer.parseInt( splits[l] );
-                    String uan = "uan://" + nameServer + "/a" + i;
-                    String ual = "rmsp://" + theater + "/a" + i;
-                    standardOutput<-println("Sending actor " + uan +" to " + ual );
-                    workers[i] = new TrapWorker( i, this.getUAN().toString() ) at  
+            System.out.println( "Sending " + splits[3] + " actors to " + 
+                                splits[0] + "(" + splits[2] + ")" );
+            
+            for (int j = 0; j < Integer.parseInt( splits[3] ); j++) {
+                String uan = "uan://" + nameServer + "/a" + id;
+                String ual = "rmsp://" + theater + "/a" + id;
+                System.out.println(" Sending actor " + uan +" to " + ual );
+                workers[id] = new TrapWorker( id, this.getUAN().toString() ) at  
                         (new UAN( uan ), new UAL( ual ));
-                    i++;
-                }
-            }
-        }
-        // migrate actors to ec2 nodes
-        ArrayList ec2Nodes = (ArrayList)conf.get( "cloud-ec2" );
-        for (int j = 0; j < ec2Nodes.size(); j++) {
-            HashMap node = (HashMap)ec2Nodes.get( j );
-            ArrayList runtimesList = (ArrayList)node.get( "runtimes" );
-            ArrayList workersList = (ArrayList)node.get( "workers" );
-
-            for (int k = 0; k < runtimesList.size(); k++) {
-                String theater = (String)runtimesList.get( k );
-                String workerTasks = (String)workersList.get( k );
-                String[] splits = workerTasks.split( "," );
-
-                for (int l = 0; l < splits.length; l++) {
-                    numTasks += Integer.parseInt( splits[l] );
-                    String uan = "uan://" + nameServer + "/a" + i;
-                    String ual = "rmsp://" + theater + "/a" + i;
-                    standardOutput<-println("Sending actor " + uan +" to " + ual );
-                    workers[i] = new TrapWorker( i, this.getUAN().toString() ) at  
-                        (new UAN( uan ), new UAL( ual ));
-                    i++;
-                }
+                id++;
             }
         }
 
         //start computation
-        standardOutput<-println(">>>>>>Starting the computation");
+        System.out.println(">>>>>>Starting the computation");
         initialTime = System.currentTimeMillis();
 
         double  h = (b-a)/numTasks; // Trapezoid base length    
+        int local_n;       // Number of trapezoids for
         double  local_a;   // Left endpoint my process 
         double  local_b;   // Right endpoint my process
         int     total_n = 0;
-        i = 0;
+
+        id = 0;
         join{
-            for (int j = 0; j < rpiNodes.size(); j++) {
-                HashMap node = (HashMap)rpiNodes.get( j );
-                ArrayList workersList = (ArrayList)node.get( "workers" );
+            for (int i = 0; i < configs.size(); i++) {
+                String config = (String)configs.get( i );
+                String[] splits = config.split( "," );
 
-                for (int k = 0; k < workersList.size(); k++) {
-                    String workerTasks = (String)workersList.get( k );
-                    String[] splits = workerTasks.split( "," );
+                for (int j = 4; j < splits.length; j++) {
+                    local_n = Integer.parseInt( splits[j] );
+                    local_a = a + total_n * h;
+                    local_b = local_a + local_n * h;
 
-                    for (int l = 0; l < splits.length; l++) {
-                        int local_n = Integer.parseInt( splits[l] );
-                        local_a = a + total_n;
-                        local_b = local_a + local_n;
-                        workers[i]<-trap(local_a, local_b, local_n, h);
-                        total_n += local_n;
-                        i++;
-                    }
+                    workers[id]<-trap(local_a, local_b, local_n, h);
+
+                    total_n += local_n;
+                    id++;
                 }
             }
-
-            for (int j = 0; j < ec2Nodes.size(); j++) {
-                HashMap node = (HashMap)ec2Nodes.get( j );
-                ArrayList workersList = (ArrayList)node.get( "workers" );
-
-                for (int k = 0; k < workersList.size(); k++) {
-                    String workerTasks = (String)workersList.get( k );
-                    String[] splits = workerTasks.split( "," );
-
-                    for (int l = 0; l < splits.length; l++) {
-                        int local_n = Integer.parseInt( splits[l] );
-                        local_a = a + total_n;
-                        local_b = local_a + local_n;
-                        workers[i]<-trap(local_a, local_b, local_n, h);
-                        total_n += local_n;
-                        i++;
-                    }
-                }
-            }
-
-
         }@addUpIntegrals(token)@currentContinuation;
     }
 

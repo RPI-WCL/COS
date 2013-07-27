@@ -84,7 +84,7 @@ public class ResourceConfig {
     }
 
     
-    public void writeToFile( String filename ) {
+    public HashMap<String, ArrayList> writeToFile( String filename ) {
         HashMap<String, ArrayList> clouds = new HashMap<String, ArrayList>();
         ArrayList<HashMap> privCloud = new ArrayList<HashMap>();
         ArrayList<HashMap> pubCloud = new ArrayList<HashMap>();
@@ -136,5 +136,7 @@ public class ResourceConfig {
         } catch (IOException ex) {
             System.err.println( "File not found: " + filename );
         }
+
+        return clouds;
     }
 }
